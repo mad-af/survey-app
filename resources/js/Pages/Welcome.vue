@@ -1,119 +1,221 @@
 <template>
-    <div class="min-h-screen bg-base-200 flex items-center justify-center p-4">
-        <div class="card w-full max-w-2xl bg-base-100 shadow-xl">
-            <div class="card-body">
-                <div class="flex items-center gap-2 mb-4">
-                    <Sparkles class="w-6 h-6 text-primary" />
-                    <div class="badge badge-primary badge-outline">
-                        Laravel + Inertia.js + Vue.js
-                    </div>
-                </div>
-                
-                <h1 class="card-title text-3xl mb-2">
-                    <Rocket class="w-8 h-8 text-secondary" />
-                    Selamat Datang di Survey App!
-                </h1>
-                
-                <p class="text-base-content/70 mb-6">
-                    Aplikasi Laravel Anda dengan Inertia.js, Vue.js, DaisyUI, dan Lucide Icons telah berhasil dikonfigurasi.
-                </p>
-                
-                <div class="flex flex-wrap gap-2 mb-6">
-                    <div class="badge badge-success gap-2">
-                        <CheckCircle class="w-4 h-4" />
-                        Laravel 12
-                    </div>
-                    <div class="badge badge-info gap-2">
-                        <Zap class="w-4 h-4" />
-                        Inertia.js
-                    </div>
-                    <div class="badge badge-accent gap-2">
-                        <Palette class="w-4 h-4" />
-                        Vue.js 3
-                    </div>
-                    <div class="badge badge-secondary gap-2">
-                        <Paintbrush class="w-4 h-4" />
-                        DaisyUI
-                    </div>
-                    <div class="badge badge-warning gap-2">
-                        <Star class="w-4 h-4" />
-                        Lucide Icons
-                    </div>
-                </div>
-                
-                <div class="card-actions justify-center">
-                    <button 
-                        @click="showMessage = !showMessage"
-                        class="btn btn-primary gap-2"
-                    >
-                        <component :is="showMessage ? EyeOff : Eye" class="w-4 h-4" />
-                        {{ showMessage ? 'Sembunyikan' : 'Tampilkan' }} Pesan
-                    </button>
-                </div>
-                
-                <div v-if="showMessage" class="alert alert-success mt-6">
-                    <CheckCircle class="w-6 h-6" />
-                    <div>
-                        <h3 class="font-bold">Berhasil!</h3>
-                        <div class="text-xs">🎉 Semua tools telah dikonfigurasi dengan sempurna!</div>
-                    </div>
-                </div>
-                
-                <div class="divider">Theme Switcher</div>
-                
-                <div class="flex justify-center gap-4">
-                    <a href="/test-daisy" class="btn btn-outline btn-primary">
-                        Test DaisyUI
-                    </a>
-                    <div class="dropdown dropdown-top">
-                        <div tabindex="0" role="button" class="btn btn-outline gap-2">
-                            <Palette class="w-4 h-4" />
-                            Ganti Theme
-                        </div>
-                        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52 max-h-64 overflow-y-auto">
-                            <li v-for="theme in themes" :key="theme">
-                                <a @click="changeTheme(theme)" class="capitalize">{{ theme }}</a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
+  <Head title="Selamat Datang" />
+  
+  <CenteredLayout 
+    title="Selamat Datang di Survey App!"
+    subtitle="Aplikasi survey modern dengan teknologi terdepan"
+    :title-icon="Rocket"
+    app-name="Survey App"
+  >
+    <!-- Welcome Message -->
+    <div class="alert alert-success mb-6">
+      <Sparkles class="w-6 h-6" />
+      <div>
+        <h3 class="font-bold">Konfigurasi Berhasil!</h3>
+        <div class="text-sm">🎉 Semua teknologi telah dikonfigurasi dengan sempurna!</div>
+      </div>
     </div>
+    
+    <!-- Tech Stack -->
+    <div class="card bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 mb-6">
+      <div class="card-body">
+        <h2 class="card-title gap-2 mb-4">
+          <Code class="w-5 h-5 text-primary" />
+          Teknologi yang Digunakan
+        </h2>
+        <p class="text-base-content/70 mb-4">
+          Aplikasi ini dibangun dengan teknologi modern dan terpercaya untuk memberikan pengalaman terbaik.
+        </p>
+                
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
+            <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
+              <span class="text-white font-bold text-sm">L</span>
+            </div>
+            <div>
+              <div class="font-semibold text-sm">Laravel 12</div>
+              <div class="text-xs text-base-content/60">Backend Framework</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
+            <Zap class="w-8 h-8 text-blue-500" />
+            <div>
+              <div class="font-semibold text-sm">Inertia.js</div>
+              <div class="text-xs text-base-content/60">SPA Bridge</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
+            <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+              <span class="text-white font-bold text-sm">V</span>
+            </div>
+            <div>
+              <div class="font-semibold text-sm">Vue.js 3</div>
+              <div class="text-xs text-base-content/60">Frontend Framework</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
+            <Paintbrush class="w-8 h-8 text-purple-500" />
+            <div>
+              <div class="font-semibold text-sm">DaisyUI</div>
+              <div class="text-xs text-base-content/60">UI Components</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
+            <Star class="w-8 h-8 text-yellow-500" />
+            <div>
+              <div class="font-semibold text-sm">Lucide Icons</div>
+              <div class="text-xs text-base-content/60">Icon Library</div>
+            </div>
+          </div>
+          
+          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
+            <Palette class="w-8 h-8 text-cyan-500" />
+            <div>
+              <div class="font-semibold text-sm">Tailwind CSS</div>
+              <div class="text-xs text-base-content/60">Styling</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+                
+    <!-- Quick Actions -->
+    <div class="card bg-base-100 border border-base-300 mb-6">
+      <div class="card-body">
+        <h2 class="card-title gap-2 mb-4">
+          <Zap class="w-5 h-5 text-warning" />
+          Mulai Sekarang
+        </h2>
+        <p class="text-base-content/70 mb-4">
+          Jelajahi fitur-fitur yang tersedia atau mulai membuat survey pertama Anda.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <a href="/dashboard" class="btn btn-primary gap-2">
+            <BarChart3 class="w-4 h-4" />
+            Dashboard
+          </a>
+          <a href="/surveys" class="btn btn-outline btn-secondary gap-2">
+            <FileText class="w-4 h-4" />
+            Lihat Survey
+          </a>
+          <a href="/test-daisy" class="btn btn-outline btn-accent gap-2">
+            <TestTube class="w-4 h-4" />
+            Test Components
+          </a>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Interactive Demo -->
+    <div class="card bg-base-100 border border-base-300">
+      <div class="card-body">
+        <h2 class="card-title gap-2 mb-4">
+          <Play class="w-5 h-5 text-info" />
+          Demo Interaktif
+        </h2>
+        <p class="text-base-content/70 mb-4">
+          Coba fitur-fitur interaktif untuk melihat bagaimana aplikasi bekerja.
+        </p>
+        
+        <div class="flex flex-wrap gap-4 mb-6">
+          <button 
+            @click="showMessage = !showMessage"
+            class="btn btn-outline gap-2"
+          >
+            <component :is="showMessage ? EyeOff : Eye" class="w-4 h-4" />
+            {{ showMessage ? 'Sembunyikan' : 'Tampilkan' }} Pesan
+          </button>
+          
+          <button 
+            @click="toggleAnimation = !toggleAnimation"
+            class="btn btn-outline gap-2"
+            :class="{ 'btn-active': toggleAnimation }"
+          >
+            <Sparkles class="w-4 h-4" :class="{ 'animate-spin': toggleAnimation }" />
+            {{ toggleAnimation ? 'Stop' : 'Start' }} Animasi
+          </button>
+        </div>
+        
+        <div v-if="showMessage" class="alert alert-info mb-4">
+          <Info class="w-6 h-6" />
+          <div>
+            <h3 class="font-bold">Pesan Demo</h3>
+            <div class="text-sm">Ini adalah contoh pesan interaktif menggunakan DaisyUI!</div>
+          </div>
+        </div>
+        
+        <div class="stats stats-vertical lg:stats-horizontal shadow w-full">
+          <div class="stat">
+            <div class="stat-figure text-primary">
+              <Users class="w-8 h-8" />
+            </div>
+            <div class="stat-title">Total Pengguna</div>
+            <div class="stat-value text-primary">1,247</div>
+            <div class="stat-desc">↗︎ 12% dari bulan lalu</div>
+          </div>
+          
+          <div class="stat">
+            <div class="stat-figure text-secondary">
+              <FileText class="w-8 h-8" />
+            </div>
+            <div class="stat-title">Survey Aktif</div>
+            <div class="stat-value text-secondary">25</div>
+            <div class="stat-desc">↗︎ 8% dari minggu lalu</div>
+          </div>
+          
+          <div class="stat">
+            <div class="stat-figure text-accent">
+              <CheckCircle class="w-8 h-8" />
+            </div>
+            <div class="stat-title">Response Rate</div>
+            <div class="stat-value text-accent">89%</div>
+            <div class="stat-desc">↗︎ 5% dari bulan lalu</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <template #actions>
+      <button class="btn btn-outline gap-2">
+        <BookOpen class="w-4 h-4" />
+        Dokumentasi
+      </button>
+      <button class="btn btn-primary gap-2">
+        <Rocket class="w-4 h-4" />
+        Mulai Sekarang
+      </button>
+    </template>
+  </CenteredLayout>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { Head } from '@inertiajs/vue3'
+import CenteredLayout from '@/Layouts/CenteredLayout.vue'
 import { 
-    Sparkles, 
-    Rocket, 
-    CheckCircle, 
-    Zap, 
-    Palette, 
-    Paintbrush, 
-    Star, 
-    Eye, 
-    EyeOff 
+  Sparkles, 
+  Rocket, 
+  CheckCircle, 
+  Zap, 
+  Palette, 
+  Paintbrush, 
+  Star, 
+  Eye, 
+  EyeOff,
+  Code,
+  BarChart3,
+  FileText,
+  TestTube,
+  Play,
+  Info,
+  Users,
+  BookOpen
 } from 'lucide-vue-next'
 
 const showMessage = ref(false)
-
-const themes = [
-    'light', 'dark', 'cupcake', 'bumblebee', 'emerald', 'corporate',
-    'synthwave', 'retro', 'cyberpunk', 'valentine', 'halloween', 'garden',
-    'forest', 'aqua', 'lofi', 'pastel', 'fantasy', 'wireframe', 'black',
-    'luxury', 'dracula', 'cmyk', 'autumn', 'business', 'acid', 'lemonade',
-    'night', 'coffee', 'winter'
-]
-
-const changeTheme = (theme) => {
-    document.documentElement.setAttribute('data-theme', theme)
-    localStorage.setItem('theme', theme)
-}
-
-onMounted(() => {
-    const savedTheme = localStorage.getItem('theme') || 'light'
-    document.documentElement.setAttribute('data-theme', savedTheme)
-})
+const toggleAnimation = ref(false)
 </script>
