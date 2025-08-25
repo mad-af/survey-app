@@ -2,17 +2,15 @@
   <Head title="Selamat Datang" />
   
   <CenteredLayout 
-    title="Selamat Datang di Survey App!"
+    title="🎉 Selamat Datang di Survey App!"
     subtitle="Aplikasi survey modern dengan teknologi terdepan"
-    :title-icon="Rocket"
-    app-name="Survey App"
   >
     <!-- Welcome Message -->
     <div class="alert alert-success mb-6">
       <Sparkles class="w-6 h-6" />
       <div>
         <h3 class="font-bold">Konfigurasi Berhasil!</h3>
-        <div class="text-sm">🎉 Semua teknologi telah dikonfigurasi dengan sempurna!</div>
+        <div class="text-sm"> Semua teknologi telah dikonfigurasi dengan sempurna!</div>
       </div>
     </div>
     

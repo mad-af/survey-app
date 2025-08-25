@@ -7,6 +7,10 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 });
 
+Route::get('/entry', function () {
+        return Inertia::render('Entry');
+    });
+
 
 Route::prefix('dashboard')->group(function () {
     Route::get('/dashboard', function () {
@@ -14,7 +18,7 @@ Route::prefix('dashboard')->group(function () {
     });
     
     Route::get('/surveys', function () {
-        return Inertia::render('Surveys/Index');
+        return Inertia::render('Entry');
     });
     
     Route::get('/surveys/create', function () {
