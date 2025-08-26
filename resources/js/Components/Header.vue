@@ -29,10 +29,7 @@
       <!-- User Profile -->
       <div tabindex="0" role="button" class="btn btn-ghost btn-sm px-2 py-1 h-auto min-h-0">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center">
-            <img v-if="profileImage && !imageError" :src="profileImage" alt="Profile" class="w-8 h-8 rounded-full object-cover" @error="handleImageError" />
-            <div v-else class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-content font-semibold text-xs">{{ userInitials }}</div>
-          </div>
+          <Avatar :src="profileImage" :name="userName" alt="Profile" />
           <div class="text-left hidden sm:block">
             <div class="text-sm font-medium text-base-content">{{ userName }}</div>
             <div class="text-xs text-base-content/60">{{ userRole }}</div>
@@ -45,9 +42,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Menu, Palette } from 'lucide-vue-next'
 import Breadcrumb from './Breadcrumb.vue'
+import Avatar from './Avatar.vue'
 
 // Props
 const props = defineProps({
@@ -65,8 +63,7 @@ const props = defineProps({
   }
 })
 
-// State
-const imageError = ref(false)
+// State (imageError removed as it's now handled by Avatar component)
 
 // Theme management - Survey-friendly themes only
 const themes = [
@@ -74,19 +71,9 @@ const themes = [
   'wireframe', 'business', 'winter', 'cupcake', 'aqua'
 ]
 
-// Computed
-const userInitials = computed(() => {
-  return props.userName
-    .split(' ')
-    .map(name => name.charAt(0))
-    .join('')
-    .toUpperCase()
-})
+// Computed (userInitials removed as it's now handled by Avatar component)
 
-// Methods
-const handleImageError = () => {
-  imageError.value = true
-}
+// Methods (handleImageError removed as it's now handled by Avatar component)
 
 const changeTheme = (theme) => {
   document.documentElement.setAttribute('data-theme', theme)

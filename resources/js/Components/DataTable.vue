@@ -16,18 +16,14 @@
                 <td v-for="column in columns" :key="column.key">
                   <!-- User type with avatar -->
                   <div v-if="column.type === 'user'" class="flex items-center gap-2">
-                    <div class="avatar">
-                      <div class="mask mask-squircle w-8 h-8">
-                        <img :src="item.avatar || '/api/placeholder/32/32'" :alt="item.name" />
-                      </div>
-                    </div>
+                    <Avatar :name="item.name" />
                     <div>
                       <div class="font-medium text-sm">{{ item.name }}</div>
                       <div class="text-xs opacity-50">{{ item.email }}</div>
                     </div>
                   </div>
                   <!-- Badge type -->
-                  <div v-else-if="column.type === 'badge'" :class="getCellClass(item, column)">
+                  <div v-else-if="column.type === 'badge'" :class="`badge badge-sm ${getCellClass(item, column)}`">
                     {{ formatCellValue(item, column) }}
                   </div>
                   <!-- Date type -->
@@ -102,6 +98,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { ChevronLeft, ChevronRight, EllipsisVertical } from 'lucide-vue-next'
+import Avatar from './Avatar.vue'
 
 // Props
 const props = defineProps({
@@ -245,4 +242,5 @@ watch([selectedItems, paginatedData], () => {
   selectAll.value = currentPageItemIds.length > 0 && 
     currentPageItemIds.every(id => selectedItems.value.includes(id))
 })
+
 </script>
