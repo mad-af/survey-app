@@ -25,7 +25,7 @@
         </div>
 
         <!-- Search -->
-        <div class="form-control flex-1 justify-items-end">
+        <div class="form-control flex-1 justify-items-start">
           <label class="input input-sm input-bordered flex items-center gap-2">
             <Search :size="16" class="opacity-50" />
             <input 

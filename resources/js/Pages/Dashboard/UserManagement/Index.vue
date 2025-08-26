@@ -25,101 +25,19 @@
         @update:filter="updateFilter"
       />
 
-      <!-- Users Table -->
-      <div class="card bg-base-100 shadow-sm">
-        <div class="card-body p-0">
-          <div class="overflow-x-auto">
-            <table class="table table-zebra">
-              <thead>
-                <tr>
-                  <th>
-                    <label>
-                      <input type="checkbox" class="checkbox" v-model="selectAll" @change="toggleSelectAll" />
-                    </label>
-                  </th>
-                  <th>User</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Last Login</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="user in filteredUsers" :key="user.id">
-                  <th>
-                    <label>
-                      <input type="checkbox" class="checkbox" v-model="selectedUsers" :value="user.id" />
-                    </label>
-                  </th>
-                  <td>
-                    <div class="flex items-center gap-3">
-                      <div class="avatar">
-                        <div class="mask mask-squircle w-12 h-12">
-                          <img :src="user.avatar || '/api/placeholder/48/48'" :alt="user.name" />
-                        </div>
-                      </div>
-                      <div>
-                        <div class="font-bold">{{ user.name }}</div>
-                        <div class="text-sm opacity-50">{{ user.email }}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="badge" :class="getRoleBadgeClass(user.role)">{{ user.role }}</div>
-                  </td>
-                  <td>
-                    <div class="badge" :class="getStatusBadgeClass(user.status)">{{ user.status }}</div>
-                  </td>
-                  <td>
-                    <span class="text-sm">{{ formatDate(user.last_login) }}</span>
-                  </td>
-                  <td>
-                    <span class="text-sm">{{ formatDate(user.created_at) }}</span>
-                  </td>
-                  <td>
-                    <div class="flex gap-2">
-                      <button class="btn btn-ghost btn-xs" @click="viewUser(user)">
-                        <Eye :size="16" />
-                      </button>
-                      <button class="btn btn-ghost btn-xs" @click="editUser(user)">
-                        <Edit :size="16" />
-                      </button>
-                      <button class="btn btn-ghost btn-xs text-error" @click="deleteUser(user)">
-                        <Trash2 :size="16" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pagination -->
-      <div class="flex justify-between items-center">
-        <div class="text-sm text-base-content/60">
-          Showing {{ (currentPage - 1) * itemsPerPage + 1 }} to {{ Math.min(currentPage * itemsPerPage, totalUsers) }} of {{ totalUsers }} users
-        </div>
-        <div class="btn-group">
-          <button class="btn btn-sm" :disabled="currentPage === 1" @click="currentPage--">
-            <ChevronLeft :size="16" />
-          </button>
-          <button 
-            v-for="page in visiblePages" 
-            :key="page"
-            class="btn btn-sm"
-            :class="{ 'btn-active': page === currentPage }"
-            @click="currentPage = page"
-          >
-            {{ page }}
-          </button>
-          <button class="btn btn-sm" :disabled="currentPage === totalPages" @click="currentPage++">
-            <ChevronRight :size="16" />
-          </button>
-        </div>
-      </div>
+      <!-- Dynamic Data Table with Pagination -->
+      <DataTable 
+        :data="filteredUsers"
+        :columns="tableColumns"
+        :actions="tableActions"
+        :items-per-page="itemsPerPage"
+        :selected-items="selectedUsers"
+        @view-user="viewUser"
+        @edit-user="editUser"
+        @delete-user="deleteUser"
+        @update:selected-items="selectedUsers = $event"
+        @update:current-page="currentPage = $event"
+      />
     </div>
   </DashboardLayout>
 </template>
@@ -129,27 +47,108 @@ import { ref, computed, onMounted } from 'vue'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
 import FilterSearch from '@/Components/FilterSearch.vue'
+import DataTable from '@/Components/DataTable.vue'
 import { 
   Users, 
   UserPlus, 
-  Search, 
-  Eye, 
-  Edit, 
-  Trash2, 
-  ChevronLeft, 
-  ChevronRight 
+  Search,
+  Eye,
+  Edit,
+  Trash2
 } from 'lucide-vue-next'
 
 // Breadcrumb will auto-generate from URL
+
+// Helper functions
+const getRoleBadgeClass = (role) => {
+  const classes = {
+    admin: 'badge badge-error',
+    moderator: 'badge badge-warning',
+    user: 'badge badge-info'
+  }
+  return classes[role] || 'badge badge-ghost'
+}
+
+const getStatusBadgeClass = (status) => {
+  const classes = {
+    active: 'badge badge-success',
+    inactive: 'badge badge-ghost',
+    suspended: 'badge badge-error'
+  }
+  return classes[status] || 'badge badge-ghost'
+}
 
 // Reactive data
 const searchQuery = ref('')
 const selectedRole = ref('')
 const selectedStatus = ref('')
-const selectAll = ref(false)
 const selectedUsers = ref([])
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
+
+// Table configuration
+const tableColumns = ref([
+  {
+    key: 'name',
+    label: 'User',
+    type: 'user',
+    formatter: (value, item) => `${item.name} (${item.email})`
+  },
+  {
+    key: 'role',
+    label: 'Role',
+    type: 'badge',
+    formatter: (value) => value,
+    class: getRoleBadgeClass
+  },
+  {
+    key: 'status',
+    label: 'Status',
+    type: 'badge',
+    formatter: (value) => value,
+    class: getStatusBadgeClass
+  },
+  {
+    key: 'last_login',
+    label: 'Last Login',
+    type: 'date'
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    type: 'date'
+  }
+])
+
+const tableActions = ref([
+  {
+    name: 'view',
+    event: 'view-user',
+    icon: Eye,
+    label: 'View',
+    tooltip: 'View User',
+    class: '',
+    visible: true
+  },
+  {
+    name: 'edit',
+    event: 'edit-user',
+    icon: Edit,
+    label: 'Edit',
+    tooltip: 'Edit User',
+    class: '',
+    visible: true
+  },
+  {
+    name: 'delete',
+    event: 'delete-user',
+    icon: Trash2,
+    label: 'Delete',
+    tooltip: 'Delete User',
+    class: 'text-error',
+    visible: true
+  }
+])
 
 const filterOptions = ref([
   {
@@ -243,58 +242,7 @@ const filteredUsers = computed(() => {
   return filtered
 })
 
-const totalUsers = computed(() => filteredUsers.value.length)
-const totalPages = computed(() => Math.ceil(totalUsers.value / itemsPerPage.value))
-
-const visiblePages = computed(() => {
-  const pages = []
-  const start = Math.max(1, currentPage.value - 2)
-  const end = Math.min(totalPages.value, currentPage.value + 2)
-  
-  for (let i = start; i <= end; i++) {
-    pages.push(i)
-  }
-  
-  return pages
-})
-
 // Methods
-const toggleSelectAll = () => {
-  if (selectAll.value) {
-    selectedUsers.value = filteredUsers.value.map(user => user.id)
-  } else {
-    selectedUsers.value = []
-  }
-}
-
-const getRoleBadgeClass = (role) => {
-  const classes = {
-    admin: 'badge-error',
-    moderator: 'badge-warning',
-    user: 'badge-info'
-  }
-  return classes[role] || 'badge-ghost'
-}
-
-const getStatusBadgeClass = (status) => {
-  const classes = {
-    active: 'badge-success',
-    inactive: 'badge-ghost',
-    suspended: 'badge-error'
-  }
-  return classes[status] || 'badge-ghost'
-}
-
-const formatDate = (dateString) => {
-  if (!dateString) return 'Never'
-  const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  })
-}
-
 const viewUser = (user) => {
   console.log('View user:', user)
   // Implement view user logic
