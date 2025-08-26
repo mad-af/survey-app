@@ -30,6 +30,19 @@
                   <span v-else-if="column.type === 'date'" class="text-xs">
                     {{ formatCellValue(item, column) }}
                   </span>
+                  <!-- Copy type with copy button -->
+                  <div v-else-if="column.type === 'copy'" class="flex items-center bg-base-200">
+                    <button 
+                      class="btn btn-ghost btn-xs p-1 min-h-6 h-6" 
+                      @click="copyToClipboard(formatCellValue(item, column))"
+                      :title="'Copy ' + formatCellValue(item, column)"
+                    >
+                      <Copy :size="12" />
+                    </button>
+                    <span class="font-mono text-xs  px-2 py-1 rounded">
+                      {{ formatCellValue(item, column) }}
+                    </span>
+                  </div>
                   <!-- Default type -->
                   <component 
                     v-else
@@ -97,7 +110,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { ChevronLeft, ChevronRight, EllipsisVertical } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight, EllipsisVertical, Copy } from 'lucide-vue-next'
 import Avatar from './Avatar.vue'
 
 // Props
@@ -137,7 +150,9 @@ const props = defineProps({
 // Emits - Dynamic events based on actions
 const emit = defineEmits([
   'update:selectedItems',
-  'update:currentPage'
+  'update:currentPage',
+  'copy-success',
+  'copy-error'
 ])
 
 // Reactive data
@@ -225,6 +240,16 @@ const formatDate = (dateString) => {
     month: 'short',
     day: 'numeric'
   })
+}
+
+const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text)
+    emit('copy-success', text)
+  } catch (err) {
+    console.error('Failed to copy: ', err)
+    emit('copy-error', text)
+  }
 }
 
 // Watchers

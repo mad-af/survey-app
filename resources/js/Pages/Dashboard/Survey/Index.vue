@@ -43,6 +43,8 @@
         @delete-survey="deleteSurvey"
         @update:selected-items="selectedSurveys = $event"
         @update:current-page="currentPage = $event"
+        @copy-success="handleCopySuccess"
+        @copy-error="handleCopyError"
       />
     </div>
 
@@ -51,7 +53,7 @@
       :is-open="isAddSurveyDrawerOpen"
       title="Add New Survey"
       @close="closeAddSurveyDrawer"
-      @submit="handleCreateSurvey"
+      @success="handleSurveySuccess"
     />
 
     <!-- Edit Survey Drawer -->
@@ -61,7 +63,7 @@
       :survey-data="editingSurvey"
       title="Edit Survey"
       @close="closeEditSurveyDrawer"
-      @submit="handleUpdateSurvey"
+      @success="handleSurveySuccess"
     />
   </DashboardLayout>
 </template>
@@ -79,7 +81,8 @@ import {
   Search,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  Copy
 } from 'lucide-vue-next'
 
 // Breadcrumb will auto-generate from URL
@@ -119,19 +122,34 @@ const surveys = ref([])
 // Inject toast function from layout
 const showToast = inject('showToast')
 
+// Copy event handlers
+const handleCopySuccess = (text) => {
+  showToast(`Code "${text}" copied to clipboard!`, 'success')
+}
+
+const handleCopyError = (text) => {
+  showToast('Failed to copy code', 'error')
+}
+
 // Table configuration
 const tableColumns = ref([
   {
     key: 'title',
-    label: 'Survey',
+    label: 'Survey Title',
     type: 'text',
-    formatter: (value, item) => `${item.title} (${item.code})`
+    formatter: (value) => value
   },
   {
     key: 'description',
     label: 'Description',
     type: 'text',
-    formatter: (value) => value?.length > 50 ? value.substring(0, 50) + '...' : value
+    formatter: (value) => value?.length > 35 ? value.substring(0, 35) + '...' : value
+  },
+  {
+    key: 'code',
+    label: 'Code',
+    type: 'copy',
+    formatter: (value) => value
   },
   {
     key: 'status',
@@ -167,7 +185,7 @@ const tableActions = ref([
     icon: Eye,
     label: 'View',
     tooltip: 'View Survey',
-    class: 'text-info',
+    class: '',
     visible: true
   },
   {
@@ -233,67 +251,7 @@ const fetchSurveys = async () => {
   }
 }
 
-const createSurvey = async (surveyData) => {
-  try {
-    isLoading.value = true
-    
-    const response = await axios.post('/api/surveys', {
-      title: surveyData.title,
-      description: surveyData.description,
-      status: surveyData.status || 'draft',
-      visibility: surveyData.visibility || 'private',
-      start_date: surveyData.start_date,
-      end_date: surveyData.end_date
-    })
-    
-    if (response.data.success) {
-      await fetchSurveys() // Refresh the list
-      showToast('Survey created successfully!', 'success')
-      return response.data.data
-    } else {
-      throw new Error(response.data.message || 'Failed to create survey')
-    }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || err.message || 'Failed to create survey'
-    showToast(errorMessage, 'error')
-    console.error('Error creating survey:', err)
-    throw err
-  } finally {
-    isLoading.value = false
-  }
-}
 
-const updateSurvey = async (surveyData) => {
-  try {
-    isLoading.value = true
-    
-    const updateData = {
-      title: surveyData.title,
-      description: surveyData.description,
-      status: surveyData.status,
-      visibility: surveyData.visibility,
-      start_date: surveyData.start_date,
-      end_date: surveyData.end_date
-    }
-    
-    const response = await axios.put(`/api/surveys/${surveyData.id}`, updateData)
-    
-    if (response.data.success) {
-      await fetchSurveys() // Refresh the list
-      showToast('Survey updated successfully!', 'success')
-      return response.data.data
-    } else {
-      throw new Error(response.data.message || 'Failed to update survey')
-    }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || err.message || 'Failed to update survey'
-    showToast(errorMessage, 'error')
-    console.error('Error updating survey:', err)
-    throw err
-  } finally {
-    isLoading.value = false
-  }
-}
 
 const removeSurvey = async (surveyId) => {
   try {
@@ -302,9 +260,8 @@ const removeSurvey = async (surveyId) => {
     const response = await axios.delete(`/api/surveys/${surveyId}`)
     
     if (response.data.success) {
-      await fetchSurveys() // Refresh the list
-      showToast('Survey deleted successfully!', 'success')
-      return true
+      surveys.value = surveys.value.filter(s => s.id !== surveyId)
+      showToast('Survey deleted successfully', 'success')
     } else {
       throw new Error(response.data.message || 'Failed to delete survey')
     }
@@ -386,24 +343,13 @@ const closeEditSurveyDrawer = () => {
   editingSurvey.value = null
 }
 
-const handleCreateSurvey = async (surveyData) => {
-  try {
-    await createSurvey(surveyData)
-    closeAddSurveyDrawer()
-    console.log('Survey created successfully')
-  } catch (err) {
-    console.error('Failed to create survey:', err)
-  }
-}
-
-const handleUpdateSurvey = async (surveyData) => {
-  try {
-    await updateSurvey(surveyData)
-    closeEditSurveyDrawer()
-    console.log('Survey updated successfully')
-  } catch (err) {
-    console.error('Failed to update survey:', err)
-  }
+const handleSurveySuccess = async (surveyData) => {
+  // Refresh the surveys list
+  await fetchSurveys()
+  
+  // Close any open drawers
+  closeAddSurveyDrawer()
+  closeEditSurveyDrawer()
 }
 
 const updateFilter = ({ key, value }) => {

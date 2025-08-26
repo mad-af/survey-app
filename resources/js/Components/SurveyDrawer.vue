@@ -157,7 +157,8 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, inject } from 'vue'
+import axios from 'axios'
 import { X } from 'lucide-vue-next'
 
 // Props
@@ -181,7 +182,10 @@ const props = defineProps({
 })
 
 // Emits
-const emit = defineEmits(['close', 'submit'])
+const emit = defineEmits(['close', 'submit', 'success'])
+
+// Toast notification
+const showToast = inject('showToast', () => {})
 
 // Reactive data
 const loading = ref(false)
@@ -271,24 +275,68 @@ const handleSubmit = async () => {
   loading.value = true
   
   try {
-    // Prepare data for submission
-    const submitData = { ...form }
-    
-    // For edit mode, include survey ID
-    if (props.isEditMode && props.surveyData) {
-      submitData.id = props.surveyData.id
+    // Prepare data for API submission
+    const submitData = {
+      title: form.title,
+      description: form.description,
+      status: form.status,
+      visibility: form.visibility,
+      start_date: form.start_date || null,
+      end_date: form.end_date || null
     }
     
-    // Emit the form data to parent component
-    emit('submit', submitData)
+    let response
     
-    // Reset form after successful submission
-    resetForm()
+    if (props.isEditMode && props.surveyData) {
+      // Update existing survey
+      response = await axios.put(`/api/surveys/${props.surveyData.id}`, submitData)
+    } else {
+      // Create new survey
+      response = await axios.post('/api/surveys', submitData)
+    }
+    
+    if (response.data.success) {
+      showToast(response.data.message, 'success')
+      emit('success', response.data.data)
+      emit('close')
+      resetForm()
+    } else {
+      throw new Error(response.data.message || 'Failed to save survey')
+    }
   } catch (error) {
     console.error('Error submitting survey:', error)
+    
+    // Handle validation errors
+    if (error.response?.status === 422 && error.response?.data?.errors) {
+      const validationErrors = error.response.data.errors
+      Object.keys(validationErrors).forEach(key => {
+        if (errors.hasOwnProperty(key)) {
+          errors[key] = validationErrors[key][0]
+        }
+      })
+    } else {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to save survey'
+      showToast(errorMessage, 'error')
+    }
   } finally {
     loading.value = false
   }
+}
+
+// Helper function to format datetime for input
+const formatDateTimeForInput = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  if (isNaN(date.getTime())) return ''
+  
+  // Format to YYYY-MM-DDTHH:MM for datetime-local input
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  
+  return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
 // Watch for drawer open/close and surveyData changes
@@ -299,8 +347,8 @@ watch(() => props.isOpen, (newValue) => {
     form.description = props.surveyData.description || ''
     form.status = props.surveyData.status || 'draft'
     form.visibility = props.surveyData.visibility || 'private'
-    form.start_date = props.surveyData.start_date || ''
-    form.end_date = props.surveyData.end_date || ''
+    form.start_date = formatDateTimeForInput(props.surveyData.starts_at)
+    form.end_date = formatDateTimeForInput(props.surveyData.ends_at)
   } else if (!newValue) {
     resetForm()
   }
@@ -313,8 +361,8 @@ watch(() => props.surveyData, (newValue) => {
     form.description = newValue.description || ''
     form.status = newValue.status || 'draft'
     form.visibility = newValue.visibility || 'private'
-    form.start_date = newValue.start_date || ''
-    form.end_date = newValue.end_date || ''
+    form.start_date = formatDateTimeForInput(newValue.starts_at)
+    form.end_date = formatDateTimeForInput(newValue.ends_at)
   }
 })
 </script>
