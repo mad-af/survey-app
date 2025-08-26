@@ -9,6 +9,8 @@
           :userName="userName" 
           :userRole="userRole" 
           :profileImage="profileImage" 
+          :pageTitle="pageTitle"
+          :breadcrumbItems="breadcrumbItems"
         />
 
         <!-- Main Content -->
@@ -42,6 +44,16 @@ const props = defineProps({
   profileImage: {
     type: String,
     default: null
+  },
+  pageTitle: {
+    type: String,
+    default: 'My Dashboard'
+  },
+  breadcrumbItems: {
+    type: Array,
+    default: () => [
+      { label: 'Home', href: '/dashboard' },
+    ]
   }
 })
 

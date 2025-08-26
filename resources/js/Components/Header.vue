@@ -6,7 +6,7 @@
       </label>
     </div>
     <div class="flex-1">
-      <h1 class="text-lg font-semibold text-base-content">My Dashboard</h1>
+      <h1 class="text-lg font-semibold text-base-content">{{ pageTitle }}</h1>
     </div>
     <div class="flex items-center gap-2">
       <!-- Theme Selector -->
@@ -41,11 +41,13 @@
       </div>
     </div>
   </div>
+          <Breadcrumb :items="breadcrumbItems" />
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { Menu, Palette } from 'lucide-vue-next'
+import Breadcrumb from './Breadcrumb.vue'
 
 // Props
 const props = defineProps({
@@ -60,6 +62,16 @@ const props = defineProps({
   profileImage: {
     type: String,
     default: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face'
+  },
+  pageTitle: {
+    type: String,
+    default: 'My Dashboard'
+  },
+  breadcrumbItems: {
+    type: Array,
+    default: () => [
+      { label: 'Home', href: '/dashboard' },
+    ]
   }
 })
 
