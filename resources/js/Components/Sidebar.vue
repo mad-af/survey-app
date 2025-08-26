@@ -97,53 +97,14 @@ const menuItems = [
     icon: Home,
     active: props.currentRoute === 'dashboard'
   },
-  {
-    name: 'Leads',
-    href: '#',
-    icon: Users,
-    active: false,
-    badge: '12'
-  },
-  {
-    name: 'Wallet',
-    href: '#',
-    icon: Wallet,
-    active: false
-  },
-  {
-    name: 'Contacts',
-    href: '#',
-    icon: Contact,
-    active: false
-  },
-  {
-    name: 'Products',
-    href: '#',
-    icon: Package,
-    active: false
-  }
 ]
 
 const otherMenuItems = [
   {
-    name: 'Sales Inbox',
-    href: '#',
-    icon: MessageSquare,
+    name: 'User Managements',
+    href: '/dashboard/user-management',
+    icon: Users,
     active: false,
-    badge: '3',
-    badgeType: 'success'
-  },
-  {
-    name: 'Analytics',
-    href: '#',
-    icon: BarChart3,
-    active: false
-  },
-  {
-    name: 'Settings',
-    href: '#',
-    icon: Settings,
-    active: false
   }
 ]
 

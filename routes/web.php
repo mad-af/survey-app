@@ -20,5 +20,9 @@ Route::prefix('dashboard')->group(function () {
         return Inertia::render('Dashboard/Index');
     });
     
+    Route::get('/user-management', function () {
+        return Inertia::render('Dashboard/UserManagement/Index');
+    });
+    
 });
 
