@@ -27,5 +27,23 @@ Route::prefix('dashboard')->group(function () {
     Route::get('/survey', function () {
         return Inertia::render('Dashboard/Survey/Index');
     });
+
+    Route::get('/survey/{survey}', function ($survey) {
+        return Inertia::render('Dashboard/Survey/Show', [
+            'surveyId' => $survey
+        ]);
+    });
+    
+    Route::get('/survey/{survey}/edit', function ($survey) {
+        return Inertia::render('Dashboard/Survey/Edit', [
+            'surveyId' => $survey
+        ]);
+    });
+    
+    Route::get('/survey/{survey}/responses', function ($survey) {
+        return Inertia::render('Dashboard/Survey/Responses', [
+            'surveyId' => $survey
+        ]);
+    });
 });
 
