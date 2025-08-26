@@ -13,8 +13,16 @@
       <!-- Survey Information Cards -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Survey Detail Information Card -->
-        <div class="lg:col-span-2">
+        <div class="lg:col-span-2 space-y-6">
           <SurveyDetailCard :survey="selectedSurvey" />
+
+          <SurveySectionList 
+            :sections="selectedSurvey.sections"
+            @add-section="handleAddSection"
+            @edit-section="handleEditSection"
+            @view-questions="handleViewQuestions"
+            @delete-section="handleDeleteSection"
+          />
         </div>
         
         <!-- Quick Actions and Statistics Cards -->
@@ -31,7 +39,6 @@
         </div>
       </div>
 
-      
 
     </div>
 
@@ -45,6 +52,7 @@ import PageHeader from '@/Components/PageHeader.vue'
 import SurveyDetailCard from '@/Components/SurveyDetailCard.vue'
 import SurveyQuickActions from '@/Components/SurveyQuickActions.vue'
 import SurveyStatistics from '@/Components/SurveyStatistics.vue'
+import SurveySectionList from '@/Components/SurveySectionList.vue'
 
 // Sample data - replace with actual data from API
 const selectedSurvey = ref({
@@ -62,7 +70,45 @@ const selectedSurvey = ref({
     name: 'John Doe',
     email: 'john.doe@example.com'
   },
-  sections: [],
+  sections: [
+    {
+      id: 1,
+      survey_id: 1,
+      title: 'Personal Information',
+      description: 'Basic demographic and contact information',
+      order: 1,
+      questions: [
+        { id: 1, title: 'Full Name', type: 'text' },
+        { id: 2, title: 'Email Address', type: 'email' },
+        { id: 3, title: 'Age Group', type: 'select' }
+      ]
+    },
+    {
+      id: 2,
+      survey_id: 1,
+      title: 'Product Experience',
+      description: 'Questions about your experience with our products',
+      order: 2,
+      questions: [
+        { id: 4, title: 'Overall Satisfaction', type: 'rating' },
+        { id: 5, title: 'Product Quality', type: 'rating' },
+        { id: 6, title: 'Value for Money', type: 'rating' },
+        { id: 7, title: 'Additional Comments', type: 'textarea' }
+      ]
+    },
+    {
+      id: 3,
+      survey_id: 1,
+      title: 'Service Feedback',
+      description: 'Feedback about our customer service and support',
+      order: 3,
+      questions: [
+        { id: 8, title: 'Service Quality', type: 'rating' },
+        { id: 9, title: 'Response Time', type: 'rating' },
+        { id: 10, title: 'Staff Helpfulness', type: 'rating' }
+      ]
+    }
+  ],
   responses: [],
   respondents: []
 })
@@ -99,5 +145,26 @@ const handleExportData = () => {
 const handleDeleteSurvey = () => {
   console.log('Delete survey clicked')
   // Show confirmation modal and delete survey
+}
+
+// Event handlers for section actions
+const handleAddSection = () => {
+  console.log('Add section clicked')
+  // Navigate to add section page or open add section modal
+}
+
+const handleEditSection = (section) => {
+  console.log('Edit section clicked:', section)
+  // Navigate to edit section page or open edit section modal
+}
+
+const handleViewQuestions = (section) => {
+  console.log('View questions clicked:', section)
+  // Navigate to questions page or open questions modal
+}
+
+const handleDeleteSection = (section) => {
+  console.log('Delete section clicked:', section)
+  // Show confirmation modal and delete section
 }
 </script>

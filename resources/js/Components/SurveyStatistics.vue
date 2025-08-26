@@ -6,7 +6,7 @@
         Statistics
       </h2>
       
-      <div class="space-y-1">
+      <div class="space-y-3">
         <div class="stat bg-base-200 rounded-lg p-3">
           <div class="stat-title text-xs">Total Sections</div>
           <div class="stat-value text-xl text-primary">{{ statistics?.totalSections || 5 }}</div>
