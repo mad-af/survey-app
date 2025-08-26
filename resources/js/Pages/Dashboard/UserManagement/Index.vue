@@ -10,7 +10,7 @@
       >
         <template #action>
           <button class="btn btn-sm btn-primary gap-2" @click="openAddUserDrawer">
-            <UserPlus :size="15" />
+            <Plus :size="15" />
             Add New User
           </button>
         </template>
@@ -76,7 +76,7 @@ import DataTable from '@/Components/DataTable.vue'
 import UserDrawer from '@/Components/UserDrawer.vue'
 import { 
   Users, 
-  UserPlus, 
+  Plus, 
   Search,
   Eye,
   Edit,

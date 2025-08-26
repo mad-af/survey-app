@@ -10,7 +10,7 @@
       >
         <template #action>
           <button class="btn btn-sm btn-primary gap-2" @click="openAddSurveyDrawer">
-            <FileText :size="15" />
+            <Plus :size="15" />
             Add New Survey
           </button>
         </template>
@@ -75,7 +75,6 @@ import FilterSearch from '@/Components/FilterSearch.vue'
 import DataTable from '@/Components/DataTable.vue'
 import SurveyDrawer from '@/Components/SurveyDrawer.vue'
 import { 
-  FileText, 
   Plus, 
   Search,
   Eye,
