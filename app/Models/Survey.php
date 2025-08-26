@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\SurveyStatus;
+use App\Enums\SurveyVisibility;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -28,6 +30,8 @@ class Survey extends Model
         'is_anonymous' => 'boolean',
         'starts_at' => 'datetime',
         'ends_at' => 'datetime',
+        'status' => SurveyStatus::class,
+        'visibility' => SurveyVisibility::class,
     ];
 
     public function owner(): BelongsTo

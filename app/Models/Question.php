@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\QuestionType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,7 @@ class Question extends Model
         'required' => 'boolean',
         'order' => 'integer',
         'score_weight' => 'decimal:2',
+        'type' => QuestionType::class,
     ];
 
     public function section(): BelongsTo
