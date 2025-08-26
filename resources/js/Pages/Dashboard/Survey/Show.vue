@@ -5,10 +5,33 @@
     <div class="space-y-6">
       <!-- Header Section -->
       <PageHeader 
-        title="Survey Management" 
-        description="Manage surveys and their configurations"
+        title="Survey Details" 
+        description="View detailed information about surveys including sections, responses, and configurations"
         :showBackButton="true"
       />
+
+      <!-- Survey Information Cards -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Survey Detail Information Card -->
+        <div class="lg:col-span-2">
+          <SurveyDetailCard :survey="selectedSurvey" />
+        </div>
+        
+        <!-- Quick Actions and Statistics Cards -->
+        <div class="space-y-6">
+          <SurveyQuickActions 
+            @edit-survey="handleEditSurvey"
+            @view-responses="handleViewResponses"
+            @share-survey="handleShareSurvey"
+            @export-data="handleExportData"
+            @delete-survey="handleDeleteSurvey"
+          />
+          
+          <SurveyStatistics :statistics="surveyStatistics" />
+        </div>
+      </div>
+
+      
 
     </div>
 
@@ -16,303 +39,65 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject } from 'vue'
-import axios from 'axios'
+import { ref, reactive } from 'vue'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
-import FilterSearch from '@/Components/FilterSearch.vue'
-import DataTable from '@/Components/DataTable.vue'
-import SurveyDrawer from '@/Components/SurveyDrawer.vue'
-import { 
-  Plus, 
-  Search,
-  Eye,
-  Edit,
-  Trash2,
-  Copy
-} from 'lucide-vue-next'
+import SurveyDetailCard from '@/Components/SurveyDetailCard.vue'
+import SurveyQuickActions from '@/Components/SurveyQuickActions.vue'
+import SurveyStatistics from '@/Components/SurveyStatistics.vue'
 
-// Helper functions
-const getStatusBadgeClass = (status) => {
-  const classes = {
-    draft: 'badge badge-ghost',
-    active: 'badge badge-success',
-    closed: 'badge badge-error'
-  }
-  return classes[status] || 'badge badge-ghost'
-}
-
-const getVisibilityBadgeClass = (visibility) => {
-  const classes = {
-    private: 'badge badge-warning',
-    link: 'badge badge-info',
-    public: 'badge badge-success'
-  }
-  return classes[visibility] || 'badge badge-ghost'
-}
-
-// Reactive data
-const searchQuery = ref('')
-const selectedStatus = ref('')
-const selectedVisibility = ref('')
-const selectedSurveys = ref([])
-const currentPage = ref(1)
-const itemsPerPage = ref(10)
-const isAddSurveyDrawerOpen = ref(false)
-const isEditSurveyDrawerOpen = ref(false)
-const editingSurvey = ref(null)
-const isLoading = ref(false)
-const surveys = ref([])
-
-// Inject toast function from layout
-const showToast = inject('showToast')
-
-// Copy event handlers
-const handleCopySuccess = (text) => {
-  showToast(`Code "${text}" copied to clipboard!`, 'success')
-}
-
-const handleCopyError = (text) => {
-  showToast('Failed to copy code', 'error')
-}
-
-// Table configuration
-const tableColumns = ref([
-  {
-    key: 'title',
-    label: 'Survey Title',
-    type: 'text',
-    formatter: (value) => value
+// Sample data - replace with actual data from API
+const selectedSurvey = ref({
+  id: 1,
+  title: 'Customer Satisfaction Survey 2024',
+  code: 'SRV-2024-001',
+  description: 'This comprehensive survey aims to gather valuable feedback from our customers about their experience with our products and services. Your responses will help us improve and better serve you in the future.',
+  status: 'active',
+  visibility: 'public',
+  is_anonymous: false,
+  starts_at: '2024-01-15T09:00:00Z',
+  ends_at: '2024-01-31T23:59:00Z',
+  owner: {
+    id: 1,
+    name: 'John Doe',
+    email: 'john.doe@example.com'
   },
-  {
-    key: 'description',
-    label: 'Description',
-    type: 'text',
-    formatter: (value) => value?.length > 35 ? value.substring(0, 35) + '...' : value
-  },
-  {
-    key: 'code',
-    label: 'Code',
-    type: 'copy',
-    formatter: (value) => value
-  },
-  {
-    key: 'status',
-    label: 'Status',
-    type: 'badge',
-    formatter: (value) => value,
-    class: getStatusBadgeClass
-  },
-  {
-    key: 'visibility',
-    label: 'Visibility',
-    type: 'badge',
-    formatter: (value) => value,
-    class: getVisibilityBadgeClass
-  },
-  {
-    key: 'owner',
-    label: 'Owner',
-    type: 'text',
-    formatter: (value, item) => item.owner?.name || 'Unknown'
-  },
-  {
-    key: 'created_at',
-    label: 'Created',
-    type: 'date'
-  }
-])
-
-const tableActions = ref([
-  {
-    name: 'view',
-    event: 'view-survey',
-    icon: Eye,
-    label: 'View',
-    tooltip: 'View Survey',
-    class: '',
-    visible: true
-  },
-  {
-    name: 'edit',
-    event: 'edit-survey',
-    icon: Edit,
-    label: 'Edit',
-    tooltip: 'Edit Survey',
-    class: '',
-    visible: true
-  },
-  {
-    name: 'delete',
-    event: 'delete-survey',
-    icon: Trash2,
-    label: 'Delete',
-    tooltip: 'Delete Survey',
-    class: 'text-error',
-    visible: true
-  }
-])
-
-const filterOptions = ref([
-  {
-    key: 'status',
-    value: '',
-    placeholder: 'All Status',
-    options: [
-      { value: 'draft', label: 'Draft' },
-      { value: 'active', label: 'Active' },
-      { value: 'closed', label: 'Closed' }
-    ]
-  },
-  {
-    key: 'visibility',
-    value: '',
-    placeholder: 'All Visibility',
-    options: [
-      { value: 'private', label: 'Private' },
-      { value: 'link', label: 'Link Only' },
-      { value: 'public', label: 'Public' }
-    ]
-  }
-])
-
-// API Functions
-const fetchSurveys = async () => {
-  try {
-    isLoading.value = true
-    const response = await axios.get('/api/surveys')
-    
-    if (response.data.success) {
-      surveys.value = response.data.data
-    } else {
-      throw new Error(response.data.message || 'Failed to fetch surveys')
-    }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch surveys'
-    showToast(errorMessage, 'error')
-    console.error('Error fetching surveys:', err)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-
-
-const removeSurvey = async (surveyId) => {
-  try {
-    isLoading.value = true
-    
-    const response = await axios.delete(`/api/surveys/${surveyId}`)
-    
-    if (response.data.success) {
-      surveys.value = surveys.value.filter(s => s.id !== surveyId)
-      showToast('Survey deleted successfully', 'success')
-    } else {
-      throw new Error(response.data.message || 'Failed to delete survey')
-    }
-  } catch (err) {
-    const errorMessage = err.response?.data?.message || err.message || 'Failed to delete survey'
-    showToast(errorMessage, 'error')
-    console.error('Error deleting survey:', err)
-    throw err
-  } finally {
-    isLoading.value = false
-  }
-}
-
-// Computed properties
-const filteredSurveys = computed(() => {
-  let filtered = surveys.value
-  
-  // Search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(survey => 
-      survey.title.toLowerCase().includes(query) ||
-      survey.description?.toLowerCase().includes(query) ||
-      survey.code?.toLowerCase().includes(query)
-    )
-  }
-  
-  // Status filter
-  if (selectedStatus.value) {
-    filtered = filtered.filter(survey => survey.status === selectedStatus.value)
-  }
-  
-  // Visibility filter
-  if (selectedVisibility.value) {
-    filtered = filtered.filter(survey => survey.visibility === selectedVisibility.value)
-  }
-  
-  return filtered
+  sections: [],
+  responses: [],
+  respondents: []
 })
 
-const viewSurvey = (survey) => {
-  console.log('View survey:', survey)
-  // Navigate to survey detail page or open modal
-  // router.push(`/dashboard/surveys/${survey.id}`)
-}
-
-const editSurvey = (survey) => {
-  console.log('Edit survey:', survey)
-  editingSurvey.value = survey
-  isEditSurveyDrawerOpen.value = true
-}
-
-const deleteSurvey = async (survey) => {
-  if (confirm(`Are you sure you want to delete survey "${survey.title}"?`)) {
-    try {
-      await removeSurvey(survey.id)
-      console.log('Survey deleted successfully')
-    } catch (err) {
-      console.error('Failed to delete survey:', err)
-    }
-  }
-}
-
-const openAddSurveyDrawer = () => {
-  isAddSurveyDrawerOpen.value = true
-}
-
-const closeAddSurveyDrawer = () => {
-  isAddSurveyDrawerOpen.value = false
-}
-
-const openEditSurveyDrawer = (survey) => {
-  editingSurvey.value = survey
-  isEditSurveyDrawerOpen.value = true
-}
-
-const closeEditSurveyDrawer = () => {
-  isEditSurveyDrawerOpen.value = false
-  editingSurvey.value = null
-}
-
-const handleSurveySuccess = async (surveyData) => {
-  // Refresh the surveys list
-  await fetchSurveys()
-  
-  // Close any open drawers
-  closeAddSurveyDrawer()
-  closeEditSurveyDrawer()
-}
-
-const updateFilter = ({ key, value }) => {
-  if (key === 'status') {
-    selectedStatus.value = value
-  } else if (key === 'visibility') {
-    selectedVisibility.value = value
-  }
-  
-  // Update the filter options to reflect current values
-  const filterOption = filterOptions.value.find(f => f.key === key)
-  if (filterOption) {
-    filterOption.value = value
-  }
-}
-
-// Lifecycle
-onMounted(() => {
-  fetchSurveys()
+const surveyStatistics = reactive({
+  totalSections: 5,
+  totalQuestions: 24,
+  totalResponses: 156,
+  completionRate: 87.5,
+  averageTime: 12.3
 })
+
+// Event handlers for quick actions
+const handleEditSurvey = () => {
+  console.log('Edit survey clicked')
+  // Navigate to edit page or open edit modal
+}
+
+const handleViewResponses = () => {
+  console.log('View responses clicked')
+  // Navigate to responses page
+}
+
+const handleShareSurvey = () => {
+  console.log('Share survey clicked')
+  // Open share modal or copy link
+}
+
+const handleExportData = () => {
+  console.log('Export data clicked')
+  // Export survey data
+}
+
+const handleDeleteSurvey = () => {
+  console.log('Delete survey clicked')
+  // Show confirmation modal and delete survey
+}
 </script>
