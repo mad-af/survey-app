@@ -89,18 +89,16 @@ const getStatusBadgeClass = (status) => {
   const classes = {
     draft: 'badge badge-ghost',
     active: 'badge badge-success',
-    paused: 'badge badge-warning',
-    completed: 'badge badge-info',
-    archived: 'badge badge-error'
+    closed: 'badge badge-error'
   }
   return classes[status] || 'badge badge-ghost'
 }
 
 const getVisibilityBadgeClass = (visibility) => {
   const classes = {
-    public: 'badge badge-success',
     private: 'badge badge-warning',
-    restricted: 'badge badge-error'
+    link: 'badge badge-info',
+    public: 'badge badge-success'
   }
   return classes[visibility] || 'badge badge-ghost'
 }
@@ -200,9 +198,7 @@ const filterOptions = ref([
     options: [
       { value: 'draft', label: 'Draft' },
       { value: 'active', label: 'Active' },
-      { value: 'paused', label: 'Paused' },
-      { value: 'completed', label: 'Completed' },
-      { value: 'archived', label: 'Archived' }
+      { value: 'closed', label: 'Closed' }
     ]
   },
   {
@@ -210,9 +206,9 @@ const filterOptions = ref([
     value: '',
     placeholder: 'All Visibility',
     options: [
-      { value: 'public', label: 'Public' },
       { value: 'private', label: 'Private' },
-      { value: 'restricted', label: 'Restricted' }
+      { value: 'link', label: 'Link Only' },
+      { value: 'public', label: 'Public' }
     ]
   }
 ])

@@ -56,24 +56,21 @@
           </div>
 
           <!-- Status Field -->
-          <div class="form-control relative z-[9999]">
+          <div class="form-control">
             <label class="label text-sm">
               <span class="label-text">Status</span>
               <span class="label-text-alt text-error">*</span>
             </label>
             <select 
               v-model="form.status"
-              class="select select-bordered select-sm w-full relative z-[9999]"
+              class="select select-bordered select-sm w-full"
               :class="{ 'select-error': errors.status }"
               required
-              style="z-index: 9999 !important;"
             >
               <option value="">Select status</option>
               <option value="draft">Draft</option>
               <option value="active">Active</option>
-              <option value="paused">Paused</option>
-              <option value="completed">Completed</option>
-              <option value="archived">Archived</option>
+              <option value="closed">Closed</option>
             </select>
             <label v-if="errors.status" class="label">
               <span class="label-text-alt text-error">{{ errors.status }}</span>
@@ -81,22 +78,21 @@
           </div>
 
           <!-- Visibility Field -->
-          <div class="form-control relative z-[9998]">
+          <div class="form-control">
             <label class="label text-sm">
               <span class="label-text">Visibility</span>
               <span class="label-text-alt text-error">*</span>
             </label>
             <select 
               v-model="form.visibility"
-              class="select select-bordered select-sm w-full relative z-[9998]"
+              class="select select-bordered select-sm w-full"
               :class="{ 'select-error': errors.visibility }"
               required
-              style="z-index: 9998 !important;"
             >
               <option value="">Select visibility</option>
-              <option value="public">Public</option>
               <option value="private">Private</option>
-              <option value="restricted">Restricted</option>
+              <option value="link">Link</option>
+              <option value="public">Public</option>
             </select>
             <label v-if="errors.visibility" class="label">
               <span class="label-text-alt text-error">{{ errors.visibility }}</span>
@@ -194,7 +190,7 @@ const form = reactive({
   title: '',
   description: '',
   status: 'draft',
-  visibility: 'private',
+  visibility: 'public',
   start_date: '',
   end_date: ''
 })
