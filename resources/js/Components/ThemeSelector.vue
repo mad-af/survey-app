@@ -3,7 +3,7 @@
   <div class="fixed bottom-4 right-4 z-50">
     <div class="dropdown dropdown-top dropdown-end">
       <div tabindex="0" role="button" class="btn btn-lg btn-circle btn-ghost bg-base-100/80 backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-200">
-        <Palette class="size-7 text-base-content/70" />
+        <Palette class="size-5.5 text-base-content/70" />
       </div>
       <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-2xl bg-base-100/90 backdrop-blur-md rounded-box w-52 max-h-96 overflow-y-auto border border-base-300/50">
         <li class="menu-title">

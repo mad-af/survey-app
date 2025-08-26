@@ -1,11 +1,7 @@
 <template>
   <Head title="Dashboard" />
   
-  <CenteredLayout 
-    title="Dashboard"
-    subtitle="Selamat datang di dashboard survey app Anda"
-    :title-icon="BarChart3"
-    :breadcrumbs="breadcrumbs"
+  <DashboardLayout 
   >
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -178,13 +174,13 @@
         Pengaturan
       </button>
     </template>
-  </CenteredLayout>
+  </DashboardLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { Head } from '@inertiajs/vue3'
-import CenteredLayout from '@/Layouts/CenteredLayout.vue'
+import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import {
   BarChart3,
   FileText,

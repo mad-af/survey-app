@@ -16,7 +16,7 @@ Route::get('/login', function () {
 });
 
 Route::prefix('dashboard')->group(function () {
-    Route::get('/dashboard', function () {
+    Route::get('/', function () {
         return Inertia::render('Dashboard');
     });
     
