@@ -17,23 +17,8 @@ Route::get('/login', function () {
 
 Route::prefix('dashboard')->group(function () {
     Route::get('/', function () {
-        return Inertia::render('Dashboard');
+        return Inertia::render('Dashboard/Index');
     });
     
-    Route::get('/surveys', function () {
-        return Inertia::render('Entry');
-    });
-    
-    Route::get('/surveys/create', function () {
-        return Inertia::render('Surveys/Create');
-    });
-    
-    Route::get('/surveys/{id}', function ($id) {
-        return Inertia::render('Surveys/Show');
-    });
-    
-    Route::get('/survey/{slug}', function () {
-        return Inertia::render('Survey/Take');
-    });
 });
 
