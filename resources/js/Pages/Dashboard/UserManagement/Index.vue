@@ -9,7 +9,7 @@
         description="Manage system users and their permissions"
       >
         <template #action>
-          <button class="btn btn-sm btn-primary gap-2">
+          <button class="btn btn-sm btn-primary gap-2" @click="openAddUserDrawer">
             <UserPlus :size="15" />
             Add New User
           </button>
@@ -39,6 +39,14 @@
         @update:current-page="currentPage = $event"
       />
     </div>
+
+    <!-- User Drawer -->
+    <UserDrawer 
+      :is-open="isAddUserDrawerOpen"
+      title="Add New User"
+      @close="closeAddUserDrawer"
+      @submit="handleCreateUser"
+    />
   </DashboardLayout>
 </template>
 
@@ -48,6 +56,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
 import FilterSearch from '@/Components/FilterSearch.vue'
 import DataTable from '@/Components/DataTable.vue'
+import UserDrawer from '@/Components/UserDrawer.vue'
 import { 
   Users, 
   UserPlus, 
@@ -85,6 +94,7 @@ const selectedStatus = ref('')
 const selectedUsers = ref([])
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
+const isAddUserDrawerOpen = ref(false)
 
 // Table configuration
 const tableColumns = ref([
@@ -256,6 +266,42 @@ const editUser = (user) => {
 const deleteUser = (user) => {
   console.log('Delete user:', user)
   // Implement delete user logic with confirmation
+}
+
+const openAddUserDrawer = () => {
+  isAddUserDrawerOpen.value = true
+}
+
+const closeAddUserDrawer = () => {
+  isAddUserDrawerOpen.value = false
+}
+
+const handleCreateUser = (userData) => {
+  console.log('Creating user:', userData)
+  
+  // Generate new user ID
+  const newId = Math.max(...users.value.map(u => u.id)) + 1
+  
+  // Create new user object
+  const newUser = {
+    id: newId,
+    name: userData.name,
+    email: userData.email,
+    role: userData.role,
+    status: 'active',
+    avatar: null,
+    last_login: null,
+    created_at: new Date().toISOString()
+  }
+  
+  // Add to users array
+  users.value.push(newUser)
+  
+  // Close drawer
+  closeAddUserDrawer()
+  
+  // Show success message (you can implement toast notification here)
+  console.log('User created successfully:', newUser)
 }
 
 const updateFilter = ({ key, value }) => {

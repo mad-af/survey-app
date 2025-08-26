@@ -19,7 +19,10 @@
       </div>
 
       <!-- Sidebar -->
-      <Sidebar :currentRoute="currentRoute" />
+      <div class="drawer-side">
+        <label for="drawer-toggle" aria-label="close sidebar" class="drawer-overlay"></label>
+        <Sidebar :currentRoute="currentRoute" />
+      </div>
     </div>
   </div>
 </template>
