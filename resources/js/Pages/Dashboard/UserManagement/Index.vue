@@ -4,58 +4,26 @@
   >
     <div class="space-y-6">
       <!-- Header Section -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 class="text-2xl font-bold text-base-content">User Management</h1>
-          <p class="text-base-content/60 mt-1">Manage system users and their permissions</p>
-        </div>
-        <button class="btn btn-primary gap-2">
-          <UserPlus :size="20" />
-          Add New User
-        </button>
-      </div>
+      <PageHeader 
+        title="User Management" 
+        description="Manage system users and their permissions"
+      >
+        <template #action>
+          <button class="btn btn-sm btn-primary gap-2">
+            <UserPlus :size="15" />
+            Add New User
+          </button>
+        </template>
+      </PageHeader>
 
-      <!-- Filters and Search -->
-      <div class="card bg-base-100 shadow-sm">
-        <div class="card-body">
-          <div class="flex flex-col lg:flex-row gap-4">
-            <!-- Search -->
-            <div class="form-control flex-1">
-              <div class="input-group">
-                <input 
-                  type="text" 
-                  placeholder="Search users..." 
-                  class="input input-bordered flex-1"
-                  v-model="searchQuery"
-                />
-                <button class="btn btn-square btn-outline">
-                  <Search :size="20" />
-                </button>
-              </div>
-            </div>
-            
-            <!-- Role Filter -->
-            <div class="form-control w-full lg:w-48">
-              <select class="select select-bordered" v-model="selectedRole">
-                <option value="">All Roles</option>
-                <option value="admin">Admin</option>
-                <option value="user">User</option>
-                <option value="moderator">Moderator</option>
-              </select>
-            </div>
-            
-            <!-- Status Filter -->
-            <div class="form-control w-full lg:w-48">
-              <select class="select select-bordered" v-model="selectedStatus">
-                <option value="">All Status</option>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-                <option value="suspended">Suspended</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Filter Section -->
+      <FilterSearch
+        :search-query="searchQuery"
+        search-placeholder="Search users..."
+        :filters="filterOptions"
+        @update:search-query="searchQuery = $event"
+        @update:filter="updateFilter"
+      />
 
       <!-- Users Table -->
       <div class="card bg-base-100 shadow-sm">
@@ -159,6 +127,8 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
+import PageHeader from '@/Components/PageHeader.vue'
+import FilterSearch from '@/Components/FilterSearch.vue'
 import { 
   Users, 
   UserPlus, 
@@ -180,6 +150,18 @@ const selectAll = ref(false)
 const selectedUsers = ref([])
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
+
+const filterOptions = ref([
+  {
+    key: 'role',
+    value: '',
+    placeholder: 'All Roles',
+    options: [
+      { value: 'admin', label: 'Admin' },
+      { value: 'surveyor', label: 'Surveyor' }
+    ]
+  }
+])
 
 // Mock data - replace with actual API calls
 const users = ref([
@@ -326,6 +308,20 @@ const editUser = (user) => {
 const deleteUser = (user) => {
   console.log('Delete user:', user)
   // Implement delete user logic with confirmation
+}
+
+const updateFilter = ({ key, value }) => {
+  if (key === 'role') {
+    selectedRole.value = value
+  } else if (key === 'status') {
+    selectedStatus.value = value
+  }
+  
+  // Update the filter options to reflect current values
+  const filterOption = filterOptions.value.find(f => f.key === key)
+  if (filterOption) {
+    filterOption.value = value
+  }
 }
 
 // Lifecycle
