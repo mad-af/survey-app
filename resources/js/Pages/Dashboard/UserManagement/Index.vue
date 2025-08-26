@@ -16,15 +16,6 @@
         </template>
       </PageHeader>
 
-      <!-- Error Alert -->
-      <div v-if="error" class="alert alert-error">
-        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>{{ error }}</span>
-        <button class="btn btn-sm btn-ghost" @click="error = null">×</button>
-      </div>
-
       <!-- Filter Section -->
       <FilterSearch
         :search-query="searchQuery"
@@ -76,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
 import axios from 'axios'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
@@ -124,8 +115,10 @@ const isAddUserDrawerOpen = ref(false)
 const isEditUserDrawerOpen = ref(false)
 const editingUser = ref(null)
 const isLoading = ref(false)
-const error = ref(null)
 const users = ref([])
+
+// Inject toast function from layout
+const showToast = inject('showToast')
 
 // Table configuration
 const tableColumns = ref([
@@ -186,7 +179,6 @@ const filterOptions = ref([
 const fetchUsers = async () => {
   try {
     isLoading.value = true
-    error.value = null
     const response = await axios.get('/api/users')
     
     if (response.data.success) {
@@ -195,7 +187,8 @@ const fetchUsers = async () => {
       throw new Error(response.data.message || 'Failed to fetch users')
     }
   } catch (err) {
-    error.value = err.response?.data?.message || err.message || 'Failed to fetch users'
+    const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch users'
+    showToast(errorMessage, 'error')
     console.error('Error fetching users:', err)
   } finally {
     isLoading.value = false
@@ -205,7 +198,6 @@ const fetchUsers = async () => {
 const createUser = async (userData) => {
   try {
     isLoading.value = true
-    error.value = null
     
     const response = await axios.post('/api/users', {
       name: userData.name,
@@ -215,12 +207,14 @@ const createUser = async (userData) => {
     
     if (response.data.success) {
       await fetchUsers() // Refresh the list
+      showToast('User created successfully!', 'success')
       return response.data.data
     } else {
       throw new Error(response.data.message || 'Failed to create user')
     }
   } catch (err) {
-    error.value = err.response?.data?.message || err.message || 'Failed to create user'
+    const errorMessage = err.response?.data?.message || err.message || 'Failed to create user'
+    showToast(errorMessage, 'error')
     console.error('Error creating user:', err)
     throw err
   } finally {
@@ -231,7 +225,6 @@ const createUser = async (userData) => {
 const updateUser = async (userData) => {
   try {
     isLoading.value = true
-    error.value = null
     
     const updateData = {
       name: userData.name,
@@ -243,12 +236,14 @@ const updateUser = async (userData) => {
     
     if (response.data.success) {
       await fetchUsers() // Refresh the list
+      showToast('User updated successfully!', 'success')
       return response.data.data
     } else {
       throw new Error(response.data.message || 'Failed to update user')
     }
   } catch (err) {
-    error.value = err.response?.data?.message || err.message || 'Failed to update user'
+    const errorMessage = err.response?.data?.message || err.message || 'Failed to update user'
+    showToast(errorMessage, 'error')
     console.error('Error updating user:', err)
     throw err
   } finally {
@@ -259,18 +254,19 @@ const updateUser = async (userData) => {
 const removeUser = async (userId) => {
   try {
     isLoading.value = true
-    error.value = null
     
     const response = await axios.delete(`/api/users/${userId}`)
     
     if (response.data.success) {
       await fetchUsers() // Refresh the list
+      showToast('User deleted successfully!', 'success')
       return true
     } else {
       throw new Error(response.data.message || 'Failed to delete user')
     }
   } catch (err) {
-    error.value = err.response?.data?.message || err.message || 'Failed to delete user'
+    const errorMessage = err.response?.data?.message || err.message || 'Failed to delete user'
+    showToast(errorMessage, 'error')
     console.error('Error deleting user:', err)
     throw err
   } finally {

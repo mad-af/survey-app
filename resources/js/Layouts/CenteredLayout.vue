@@ -15,13 +15,23 @@
 
     <!-- Theme Selector Component -->
     <ThemeSelector />
+
+    <!-- Global Toast Notification -->
+    <Toast 
+      :message="toastMessage" 
+      :type="toastType" 
+      :show="isToastVisible" 
+      @close="closeToast"
+    />
    
   </div>
 </template>
 
 <script setup>
+import { ref, provide } from 'vue'
 import ThemeSelector from '@/Components/ThemeSelector.vue'
 import ContentCard from '@/Components/ContentCard.vue'
+import Toast from '@/Components/Toast.vue'
 
 // Props
 const props = defineProps({
@@ -42,4 +52,23 @@ const props = defineProps({
     default: 'max-w-4xl'
   }
 })
+
+// Toast functionality
+const isToastVisible = ref(false)
+const toastMessage = ref('')
+const toastType = ref('info')
+
+const showToastNotification = (message, type = 'info') => {
+  toastMessage.value = message
+  toastType.value = type
+  isToastVisible.value = true
+}
+
+const closeToast = () => {
+  isToastVisible.value = false
+  toastMessage.value = ''
+}
+
+// Provide toast functions to child components
+provide('showToast', showToastNotification)
 </script>
