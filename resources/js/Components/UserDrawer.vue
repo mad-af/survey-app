@@ -6,30 +6,31 @@
     </div>
     <div class="drawer-side">
       <label for="user-drawer-toggle" aria-label="close sidebar" class="drawer-overlay z-40" @click="closeDrawer"></label>
-      <div class="bg-base-200 text-base-content min-h-full w-80 p-4 relative z-50 overflow-y-auto">
+      <div class="bg-base-200 text-base-content min-h-full w-72 p-3 relative z-50 overflow-y-auto">
         <!-- Drawer Header -->
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-lg font-semibold">{{ title }}</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-base font-semibold">{{ title }}</h3>
           <button 
-            class="btn btn-sm btn-circle btn-ghost" 
+            class="btn btn-xs btn-circle btn-ghost" 
             @click="closeDrawer"
           >
-            <X :size="16" />
+            <X :size="14" />
           </button>
         </div>
 
         <!-- Form -->
-        <form @submit.prevent="handleSubmit" class="space-y-4">
+        <form @submit.prevent="handleSubmit" class="space-y-3">
           <!-- Name Field -->
           <div class="form-control">
-            <label class="label">
-              <span class="label-text">Name *</span>
+            <label class="label text-sm">
+              <span class="label-text">Name</span>
+              <span class="label-text-alt text-error">*</span>
             </label>
             <input 
               type="text" 
               v-model="form.name"
               placeholder="Enter full name" 
-              class="input input-bordered w-full"
+              class="input input-bordered input-sm w-full"
               :class="{ 'input-error': errors.name }"
               required
             />
@@ -40,14 +41,15 @@
 
           <!-- Email Field -->
           <div class="form-control">
-            <label class="label">
-              <span class="label-text">Email *</span>
+            <label class="label text-sm">
+              <span class="label-text">Email</span>
+              <span class="label-text-alt text-error">*</span>
             </label>
             <input 
               type="email" 
               v-model="form.email"
               placeholder="Enter email address" 
-              class="input input-bordered w-full"
+              class="input input-bordered input-sm w-full"
               :class="{ 'input-error': errors.email }"
               required
             />
@@ -56,70 +58,15 @@
             </label>
           </div>
 
-          <!-- Password Field -->
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Password *</span>
-            </label>
-            <div class="relative">
-              <input 
-                :type="showPassword ? 'text' : 'password'"
-                v-model="form.password"
-                placeholder="Enter password" 
-                class="input input-bordered w-full pr-10"
-                :class="{ 'input-error': errors.password }"
-                required
-              />
-              <button 
-                type="button"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center"
-                @click="showPassword = !showPassword"
-              >
-                <Eye v-if="!showPassword" :size="16" class="text-gray-400" />
-                <EyeOff v-else :size="16" class="text-gray-400" />
-              </button>
-            </div>
-            <label v-if="errors.password" class="label">
-              <span class="label-text-alt text-error">{{ errors.password }}</span>
-            </label>
-          </div>
-
-          <!-- Confirm Password Field -->
-          <div class="form-control">
-            <label class="label">
-              <span class="label-text">Confirm Password *</span>
-            </label>
-            <div class="relative">
-              <input 
-                :type="showConfirmPassword ? 'text' : 'password'"
-                v-model="form.password_confirmation"
-                placeholder="Confirm password" 
-                class="input input-bordered w-full pr-10"
-                :class="{ 'input-error': errors.password_confirmation }"
-                required
-              />
-              <button 
-                type="button"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center"
-                @click="showConfirmPassword = !showConfirmPassword"
-              >
-                <Eye v-if="!showConfirmPassword" :size="16" class="text-gray-400" />
-                <EyeOff v-else :size="16" class="text-gray-400" />
-              </button>
-            </div>
-            <label v-if="errors.password_confirmation" class="label">
-              <span class="label-text-alt text-error">{{ errors.password_confirmation }}</span>
-            </label>
-          </div>
-
           <!-- Role Field -->
           <div class="form-control">
-            <label class="label">
-              <span class="label-text">Role *</span>
+            <label class="label text-sm">
+              <span class="label-text">Role</span>
+              <span class="label-text-alt text-error">*</span>
             </label>
             <select 
               v-model="form.role"
-              class="select select-bordered w-full"
+              class="select select-bordered select-sm w-full"
               :class="{ 'select-error': errors.role }"
               required
             >
@@ -133,10 +80,10 @@
           </div>
 
           <!-- Form Actions -->
-          <div class="flex gap-2 pt-4">
+          <div class="flex gap-2 pt-3">
             <button 
               type="button" 
-              class="btn btn-outline flex-1"
+              class="btn btn-sm flex-1"
               @click="closeDrawer"
               :disabled="loading"
             >
@@ -144,10 +91,10 @@
             </button>
             <button 
               type="submit" 
-              class="btn btn-primary flex-1"
+              class="btn btn-primary btn-sm flex-1"
               :disabled="loading"
             >
-              <span v-if="loading" class="loading loading-spinner loading-sm"></span>
+              <span v-if="loading" class="loading loading-spinner loading-xs"></span>
               {{ loading ? 'Creating...' : 'Create User' }}
             </button>
           </div>
