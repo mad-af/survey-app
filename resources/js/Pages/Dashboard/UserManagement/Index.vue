@@ -16,6 +16,15 @@
         </template>
       </PageHeader>
 
+      <!-- Error Alert -->
+      <div v-if="error" class="alert alert-error">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ error }}</span>
+        <button class="btn btn-sm btn-ghost" @click="error = null">×</button>
+      </div>
+
       <!-- Filter Section -->
       <FilterSearch
         :search-query="searchQuery"
@@ -25,8 +34,15 @@
         @update:filter="updateFilter"
       />
 
+      <!-- Loading State -->
+      <div v-if="isLoading" class="flex justify-center items-center py-12">
+        <span class="loading loading-spinner loading-sm"></span>
+        <span class="ml-3 text-sm text-base-content/70">Loading users...</span>
+      </div>
+
       <!-- Dynamic Data Table with Pagination -->
       <DataTable 
+        v-else
         :data="filteredUsers"
         :columns="tableColumns"
         :actions="tableActions"
@@ -61,6 +77,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import axios from 'axios'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
 import FilterSearch from '@/Components/FilterSearch.vue'
@@ -106,6 +123,9 @@ const itemsPerPage = ref(10)
 const isAddUserDrawerOpen = ref(false)
 const isEditUserDrawerOpen = ref(false)
 const editingUser = ref(null)
+const isLoading = ref(false)
+const error = ref(null)
+const users = ref([])
 
 // Table configuration
 const tableColumns = ref([
@@ -121,18 +141,6 @@ const tableColumns = ref([
     type: 'badge',
     formatter: (value) => value,
     class: getRoleBadgeClass
-  },
-  {
-    key: 'status',
-    label: 'Status',
-    type: 'badge',
-    formatter: (value) => value,
-    class: getStatusBadgeClass
-  },
-  {
-    key: 'last_login',
-    label: 'Last Login',
-    type: 'date'
   },
   {
     key: 'created_at',
@@ -174,59 +182,101 @@ const filterOptions = ref([
   }
 ])
 
-// Mock data - replace with actual API calls
-const users = ref([
-  {
-    id: 1,
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'admin',
-    status: 'active',
-    avatar: null,
-    last_login: '2024-01-15T10:30:00Z',
-    created_at: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    role: 'user',
-    status: 'active',
-    avatar: null,
-    last_login: '2024-01-14T15:45:00Z',
-    created_at: '2024-01-02T00:00:00Z'
-  },
-  {
-    id: 3,
-    name: 'Bob Johnson',
-    email: 'bob@example.com',
-    role: 'moderator',
-    status: 'inactive',
-    avatar: null,
-    last_login: '2024-01-10T09:15:00Z',
-    created_at: '2024-01-03T00:00:00Z'
-  },
-  {
-    id: 4,
-    name: 'Alice Brown',
-    email: 'alice@example.com',
-    role: 'user',
-    status: 'suspended',
-    avatar: null,
-    last_login: '2024-01-05T14:20:00Z',
-    created_at: '2024-01-04T00:00:00Z'
-  },
-  {
-    id: 5,
-    name: 'Charlie Wilson',
-    email: 'charlie@example.com',
-    role: 'user',
-    status: 'active',
-    avatar: null,
-    last_login: '2024-01-13T11:30:00Z',
-    created_at: '2024-01-05T00:00:00Z'
+// API Functions
+const fetchUsers = async () => {
+  try {
+    isLoading.value = true
+    error.value = null
+    const response = await axios.get('/api/users')
+    
+    if (response.data.success) {
+      users.value = response.data.data
+    } else {
+      throw new Error(response.data.message || 'Failed to fetch users')
+    }
+  } catch (err) {
+    error.value = err.response?.data?.message || err.message || 'Failed to fetch users'
+    console.error('Error fetching users:', err)
+  } finally {
+    isLoading.value = false
   }
-])
+}
+
+const createUser = async (userData) => {
+  try {
+    isLoading.value = true
+    error.value = null
+    
+    const response = await axios.post('/api/users', {
+      name: userData.name,
+      email: userData.email,
+      role: userData.role
+    })
+    
+    if (response.data.success) {
+      await fetchUsers() // Refresh the list
+      return response.data.data
+    } else {
+      throw new Error(response.data.message || 'Failed to create user')
+    }
+  } catch (err) {
+    error.value = err.response?.data?.message || err.message || 'Failed to create user'
+    console.error('Error creating user:', err)
+    throw err
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const updateUser = async (userData) => {
+  try {
+    isLoading.value = true
+    error.value = null
+    
+    const updateData = {
+      name: userData.name,
+      email: userData.email,
+      role: userData.role
+    }
+    
+    const response = await axios.put(`/api/users/${userData.id}`, updateData)
+    
+    if (response.data.success) {
+      await fetchUsers() // Refresh the list
+      return response.data.data
+    } else {
+      throw new Error(response.data.message || 'Failed to update user')
+    }
+  } catch (err) {
+    error.value = err.response?.data?.message || err.message || 'Failed to update user'
+    console.error('Error updating user:', err)
+    throw err
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const removeUser = async (userId) => {
+  try {
+    isLoading.value = true
+    error.value = null
+    
+    const response = await axios.delete(`/api/users/${userId}`)
+    
+    if (response.data.success) {
+      await fetchUsers() // Refresh the list
+      return true
+    } else {
+      throw new Error(response.data.message || 'Failed to delete user')
+    }
+  } catch (err) {
+    error.value = err.response?.data?.message || err.message || 'Failed to delete user'
+    console.error('Error deleting user:', err)
+    throw err
+  } finally {
+    isLoading.value = false
+  }
+}
 
 // Computed properties
 const filteredUsers = computed(() => {
@@ -260,9 +310,15 @@ const editUser = (user) => {
   isEditUserDrawerOpen.value = true
 }
 
-const deleteUser = (user) => {
-  console.log('Delete user:', user)
-  // Implement delete user logic with confirmation
+const deleteUser = async (user) => {
+  if (confirm(`Are you sure you want to delete user ${user.name}?`)) {
+    try {
+      await removeUser(user.id)
+      console.log('User deleted successfully')
+    } catch (err) {
+      console.error('Failed to delete user:', err)
+    }
+  }
 }
 
 const openAddUserDrawer = () => {
@@ -283,52 +339,23 @@ const closeEditUserDrawer = () => {
   editingUser.value = null
 }
 
-const handleCreateUser = (userData) => {
-  console.log('Creating user:', userData)
-  
-  // Generate new user ID
-  const newId = Math.max(...users.value.map(u => u.id)) + 1
-  
-  // Create new user object
-  const newUser = {
-    id: newId,
-    name: userData.name,
-    email: userData.email,
-    role: userData.role,
-    status: 'active',
-    avatar: null,
-    last_login: null,
-    created_at: new Date().toISOString()
+const handleCreateUser = async (userData) => {
+  try {
+    await createUser(userData)
+    closeAddUserDrawer()
+    console.log('User created successfully')
+  } catch (err) {
+    console.error('Failed to create user:', err)
   }
-  
-  // Add to users array
-  users.value.push(newUser)
-  
-  // Close drawer
-  closeAddUserDrawer()
-  
-  // Show success message (you can implement toast notification here)
-  console.log('User created successfully:', newUser)
 }
 
-const handleUpdateUser = (userData) => {
-  console.log('Updating user:', userData)
-  
-  // Find and update the user
-  const userIndex = users.value.findIndex(u => u.id === userData.id)
-  if (userIndex !== -1) {
-    // Update user data
-    users.value[userIndex] = {
-      ...users.value[userIndex],
-      name: userData.name,
-      email: userData.email,
-      role: userData.role,
-      // Only update password if provided
-      ...(userData.password && { password: userData.password })
-    }
-    
-    // Close drawer
+const handleUpdateUser = async (userData) => {
+  try {
+    await updateUser(userData)
     closeEditUserDrawer()
+    console.log('User updated successfully')
+  } catch (err) {
+    console.error('Failed to update user:', err)
   }
 }
 
@@ -348,7 +375,6 @@ const updateFilter = ({ key, value }) => {
 
 // Lifecycle
 onMounted(() => {
-  // Load users data
-  console.log('User Management page mounted')
+  fetchUsers()
 })
 </script>
