@@ -41,7 +41,7 @@
       </div>
     </div>
   </div>
-          <Breadcrumb :items="breadcrumbItems" />
+          <Breadcrumb />
 </template>
 
 <script setup>
@@ -62,12 +62,6 @@ const props = defineProps({
   profileImage: {
     type: String,
     default: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face'
-  },
-  breadcrumbItems: {
-    type: Array,
-    default: () => [
-      { label: 'Home', href: '/dashboard' },
-    ]
   }
 })
 

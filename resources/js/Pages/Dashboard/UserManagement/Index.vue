@@ -1,7 +1,6 @@
 <template>
   <DashboardLayout 
     :pageTitle="'User Management'"
-    :breadcrumbItems="breadcrumbItems"
   >
     <div class="space-y-6">
       <!-- Header Section -->
@@ -171,11 +170,7 @@ import {
   ChevronRight 
 } from 'lucide-vue-next'
 
-// Breadcrumb items
-const breadcrumbItems = [
-  { label: 'Dashboard', href: '/dashboard' },
-  { label: 'User Management' }
-]
+// Breadcrumb will auto-generate from URL
 
 // Reactive data
 const searchQuery = ref('')
