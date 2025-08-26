@@ -58,15 +58,17 @@
             </label>
           </div>
 
+
+
           <!-- Role Field -->
-          <div class="form-control">
+          <div class="form-control relative z-[60]">
             <label class="label text-sm">
               <span class="label-text">Role</span>
               <span class="label-text-alt text-error">*</span>
             </label>
             <select 
               v-model="form.role"
-              class="select select-bordered select-sm w-full"
+              class="select select-bordered select-sm w-full relative z-[60]"
               :class="{ 'select-error': errors.role }"
               required
             >
@@ -95,7 +97,7 @@
               :disabled="loading"
             >
               <span v-if="loading" class="loading loading-spinner loading-xs"></span>
-              {{ loading ? 'Creating...' : 'Create User' }}
+              {{ loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update User' : 'Create User') }}
             </button>
           </div>
         </form>
@@ -106,7 +108,7 @@
 
 <script setup>
 import { ref, reactive, watch } from 'vue'
-import { X, Eye, EyeOff } from 'lucide-vue-next'
+import { X } from 'lucide-vue-next'
 
 // Props
 const props = defineProps({
@@ -117,6 +119,14 @@ const props = defineProps({
   title: {
     type: String,
     default: 'Add New User'
+  },
+  userData: {
+    type: Object,
+    default: null
+  },
+  isEditMode: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -124,23 +134,17 @@ const props = defineProps({
 const emit = defineEmits(['close', 'submit'])
 
 // Reactive data
-const showPassword = ref(false)
-const showConfirmPassword = ref(false)
 const loading = ref(false)
 
 const form = reactive({
   name: '',
   email: '',
-  password: '',
-  password_confirmation: '',
   role: ''
 })
 
 const errors = reactive({
   name: '',
   email: '',
-  password: '',
-  password_confirmation: '',
   role: ''
 })
 
@@ -154,8 +158,6 @@ const closeDrawer = () => {
 const resetForm = () => {
   form.name = ''
   form.email = ''
-  form.password = ''
-  form.password_confirmation = ''
   form.role = ''
   
   // Clear errors
@@ -187,23 +189,7 @@ const validateForm = () => {
     isValid = false
   }
   
-  // Password validation
-  if (!form.password) {
-    errors.password = 'Password is required'
-    isValid = false
-  } else if (form.password.length < 8) {
-    errors.password = 'Password must be at least 8 characters'
-    isValid = false
-  }
-  
-  // Password confirmation validation
-  if (!form.password_confirmation) {
-    errors.password_confirmation = 'Please confirm your password'
-    isValid = false
-  } else if (form.password !== form.password_confirmation) {
-    errors.password_confirmation = 'Passwords do not match'
-    isValid = false
-  }
+
   
   // Role validation
   if (!form.role) {
@@ -222,24 +208,44 @@ const handleSubmit = async () => {
   loading.value = true
   
   try {
+    // Prepare data for submission
+    const submitData = { ...form }
+    
+    // For edit mode, include user ID
+    if (props.isEditMode && props.userData) {
+      submitData.id = props.userData.id
+    }
+    
     // Emit the form data to parent component
-    emit('submit', { ...form })
+    emit('submit', submitData)
     
     // Reset form after successful submission
     resetForm()
   } catch (error) {
-    console.error('Error creating user:', error)
+    console.error('Error submitting user:', error)
   } finally {
     loading.value = false
   }
 }
 
-// Watch for drawer close to reset form
+// Watch for drawer open/close and userData changes
 watch(() => props.isOpen, (newValue) => {
-  if (!newValue) {
+  if (newValue && props.isEditMode && props.userData) {
+    // Fill form with user data for editing
+    form.name = props.userData.name || ''
+    form.email = props.userData.email || ''
+    form.role = props.userData.role || ''
+  } else if (!newValue) {
     resetForm()
-    showPassword.value = false
-    showConfirmPassword.value = false
+  }
+})
+
+watch(() => props.userData, (newValue) => {
+  if (props.isOpen && props.isEditMode && newValue) {
+    // Fill form with user data when userData changes
+    form.name = newValue.name || ''
+    form.email = newValue.email || ''
+    form.role = newValue.role || ''
   }
 })
 </script>

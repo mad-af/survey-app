@@ -55,7 +55,7 @@
                     :style="`position-anchor: --anchor-${getItemId(item)}`"
                   >
                     <li v-for="action in actions" :key="action.name" v-show="action.visible !== false">
-                      <a @click="$emit(action.event, item)" class="text-xs flex items-center gap-2">
+                      <a @click="$emit(action.event, item); $event.target.closest('[popover]').hidePopover()" :class="`text-xs flex items-center gap-2 ${action.class || ''}`">
                         <component :is="action.icon" :size="12" v-if="action.icon" />
                         {{ action.label }}
                       </a>

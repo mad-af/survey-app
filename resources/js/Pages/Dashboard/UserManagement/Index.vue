@@ -32,7 +32,6 @@
         :actions="tableActions"
         :items-per-page="itemsPerPage"
         :selected-items="selectedUsers"
-        @view-user="viewUser"
         @edit-user="editUser"
         @delete-user="deleteUser"
         @update:selected-items="selectedUsers = $event"
@@ -40,12 +39,22 @@
       />
     </div>
 
-    <!-- User Drawer -->
+    <!-- Add User Drawer -->
     <UserDrawer 
       :is-open="isAddUserDrawerOpen"
       title="Add New User"
       @close="closeAddUserDrawer"
       @submit="handleCreateUser"
+    />
+
+    <!-- Edit User Drawer -->
+    <UserDrawer 
+      :is-open="isEditUserDrawerOpen"
+      :is-edit-mode="true"
+      :user-data="editingUser"
+      title="Edit User"
+      @close="closeEditUserDrawer"
+      @submit="handleUpdateUser"
     />
   </DashboardLayout>
 </template>
@@ -95,6 +104,8 @@ const selectedUsers = ref([])
 const currentPage = ref(1)
 const itemsPerPage = ref(10)
 const isAddUserDrawerOpen = ref(false)
+const isEditUserDrawerOpen = ref(false)
+const editingUser = ref(null)
 
 // Table configuration
 const tableColumns = ref([
@@ -131,15 +142,6 @@ const tableColumns = ref([
 ])
 
 const tableActions = ref([
-  {
-    name: 'view',
-    event: 'view-user',
-    icon: Eye,
-    label: 'View',
-    tooltip: 'View User',
-    class: '',
-    visible: true
-  },
   {
     name: 'edit',
     event: 'edit-user',
@@ -252,15 +254,10 @@ const filteredUsers = computed(() => {
   return filtered
 })
 
-// Methods
-const viewUser = (user) => {
-  console.log('View user:', user)
-  // Implement view user logic
-}
-
 const editUser = (user) => {
   console.log('Edit user:', user)
-  // Implement edit user logic
+  editingUser.value = user
+  isEditUserDrawerOpen.value = true
 }
 
 const deleteUser = (user) => {
@@ -274,6 +271,16 @@ const openAddUserDrawer = () => {
 
 const closeAddUserDrawer = () => {
   isAddUserDrawerOpen.value = false
+}
+
+const openEditUserDrawer = (user) => {
+  editingUser.value = user
+  isEditUserDrawerOpen.value = true
+}
+
+const closeEditUserDrawer = () => {
+  isEditUserDrawerOpen.value = false
+  editingUser.value = null
 }
 
 const handleCreateUser = (userData) => {
@@ -302,6 +309,27 @@ const handleCreateUser = (userData) => {
   
   // Show success message (you can implement toast notification here)
   console.log('User created successfully:', newUser)
+}
+
+const handleUpdateUser = (userData) => {
+  console.log('Updating user:', userData)
+  
+  // Find and update the user
+  const userIndex = users.value.findIndex(u => u.id === userData.id)
+  if (userIndex !== -1) {
+    // Update user data
+    users.value[userIndex] = {
+      ...users.value[userIndex],
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
+      // Only update password if provided
+      ...(userData.password && { password: userData.password })
+    }
+    
+    // Close drawer
+    closeEditUserDrawer()
+  }
 }
 
 const updateFilter = ({ key, value }) => {
