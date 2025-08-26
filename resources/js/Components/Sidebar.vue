@@ -69,6 +69,8 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 import { 
   ClipboardList,
   Home, 
@@ -81,32 +83,28 @@ import {
   Settings, 
   LogOut
 } from 'lucide-vue-next'
-// Props
-const props = defineProps({
-  currentRoute: {
-    type: String,
-    default: 'dashboard'
-  }
-})
 
-// Menu items
-const menuItems = [
+// Get current page info
+const page = usePage()
+
+// Computed menu items with active state based on current URL
+const menuItems = computed(() => [
   {
     name: 'Home',
     href: '/dashboard',
     icon: Home,
-    active: props.currentRoute === 'dashboard'
+    active: page.url === '/dashboard'
   },
-]
+])
 
-const otherMenuItems = [
+const otherMenuItems = computed(() => [
   {
     name: 'User Managements',
     href: '/dashboard/user-management',
     icon: Users,
-    active: false,
+    active: page.url === '/dashboard/user-management',
   }
-]
+])
 
 // Methods
 const handleLogout = () => {
