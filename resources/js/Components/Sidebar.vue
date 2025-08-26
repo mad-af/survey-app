@@ -78,7 +78,8 @@ import {
   MessageSquare,
   BarChart3, 
   Settings, 
-  LogOut
+  LogOut,
+  FileText
 } from 'lucide-vue-next'
 
 // Get current page info
@@ -91,6 +92,12 @@ const menuItems = computed(() => [
     href: '/dashboard',
     icon: Home,
     active: page.url === '/dashboard'
+  },
+  {
+    name: 'Survey',
+    href: '/dashboard/survey',
+    icon: FileText,
+    active: page.url === '/dashboard/survey'
   },
 ])
 

@@ -24,5 +24,8 @@ Route::prefix('dashboard')->group(function () {
         return Inertia::render('Dashboard/UserManagement/Index');
     });
     
+    Route::get('/survey', function () {
+        return Inertia::render('Dashboard/Survey/Index');
+    });
 });
 
