@@ -58,16 +58,25 @@
      <div class="text-center mt-6">
        <p class="text-sm text-base-content/70">
          Tidak memiliki token? 
-         <a href="#" class="link link-primary">Hubungi administrator</a>
+         <Link :href="route('login')" class="link link-primary">Login sebagai administrator</Link>
        </p>
      </div>
   </CenteredLayout>
 </template>
 
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3'
+import { Head, useForm, Link } from '@inertiajs/vue3'
 import CenteredLayout from '@/Layouts/CenteredLayout.vue'
-import { KeyRound, Key, LogIn, Info } from 'lucide-vue-next'
+import { Key, LogIn, Info } from 'lucide-vue-next'
+
+// Route helper
+const route = (name) => {
+  const routes = {
+    'login': '/login',
+    'survey.enter': '/survey/enter'
+  }
+  return routes[name] || '/'
+}
 
 // Form handling
 const form = useForm({

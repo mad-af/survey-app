@@ -8,9 +8,12 @@ Route::get('/', function () {
 });
 
 Route::get('/entry', function () {
-        return Inertia::render('Entry');
-    });
+    return Inertia::render('Entry');
+});
 
+Route::get('/login', function () {
+    return Inertia::render('Login');
+});
 
 Route::prefix('dashboard')->group(function () {
     Route::get('/dashboard', function () {
