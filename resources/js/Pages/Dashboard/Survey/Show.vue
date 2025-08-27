@@ -23,12 +23,9 @@
           <SurveyDetailCard :survey="selectedSurvey" />
 
           <SurveySectionList 
-            :sections="selectedSurvey.sections || []"
+            :sections="surveySections"
             :survey-id="props.surveyId"
-            @add-section="handleAddSection"
-            @edit-section="handleEditSection"
-            @view-questions="handleViewQuestions"
-            @delete-section="handleDeleteSection"
+            :is-loading="isSectionsLoading"
           />
         </div>
         
@@ -103,12 +100,12 @@ const showToast = inject('showToast', (message, type) => {
 
 // Reactive data
 const selectedSurvey = ref(null)
+const surveySections = ref([])
 const isLoading = ref(false)
+const isSectionsLoading = ref(false)
 const isDrawerOpen = ref(false)
 const drawerTitle = ref('Edit Survey')
 const isEditMode = ref(false)
-
-
 
 // API Functions
 const fetchSurvey = async () => {
@@ -127,6 +124,25 @@ const fetchSurvey = async () => {
     console.error('Error fetching survey:', err)
   } finally {
     isLoading.value = false
+  }
+}
+
+const fetchSurveySections = async () => {
+  try {
+    isSectionsLoading.value = true
+    const response = await axios.get(`/api/surveys/${props.surveyId}/sections`)
+    
+    if (response.data.success) {
+      surveySections.value = response.data.data
+    } else {
+      throw new Error(response.data.message || 'Failed to fetch survey sections')
+    }
+  } catch (err) {
+    const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch survey sections'
+    showToast(errorMessage, 'error')
+    console.error('Error fetching survey sections:', err)
+  } finally {
+    isSectionsLoading.value = false
   }
 }
 
@@ -203,27 +219,6 @@ const handleDeleteSurvey = async () => {
   }
 }
 
-// Event handlers for section actions
-const handleAddSection = () => {
-  console.log('Add section clicked')
-  // Navigate to add section page or open add section modal
-}
-
-const handleEditSection = (section) => {
-  console.log('Edit section clicked:', section)
-  // Navigate to edit section page or open edit section modal
-}
-
-const handleViewQuestions = (section) => {
-  console.log('View questions clicked:', section)
-  // Navigate to questions page or open questions modal
-}
-
-const handleDeleteSection = (section) => {
-  console.log('Delete section clicked:', section)
-  // Show confirmation modal and delete section
-}
-
 // Drawer event handlers
 const closeDrawer = () => {
   isDrawerOpen.value = false
@@ -233,14 +228,16 @@ const closeDrawer = () => {
 const handleDrawerSuccess = (updatedSurvey) => {
   // Update the current survey data
   selectedSurvey.value = updatedSurvey
-  // Refresh the survey data and statistics
+  // Refresh the survey data, sections, and statistics
   fetchSurvey()
+  fetchSurveySections()
   fetchSurveyStatistics()
 }
 
 // Lifecycle
 onMounted(() => {
   fetchSurvey()
+  fetchSurveySections()
   fetchSurveyStatistics()
 })
 </script>
