@@ -9,7 +9,7 @@
         description="Manage surveys and their configurations"
       >
         <template #action>
-          <button class="btn btn-sm btn-primary gap-2" @click="openAddSurveyDrawer">
+          <button class="gap-2 btn btn-sm btn-primary" @click="openAddSurveyDrawer">
             <Plus :size="15" />
             Add New Survey
           </button>
