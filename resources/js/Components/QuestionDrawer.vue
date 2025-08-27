@@ -114,54 +114,59 @@
           <div v-if="form.type === 'single_choice' || form.type === 'multiple_choice'" class="form-control">
             <div class="space-y-3">
               <div v-for="(choice, index) in form.choices" :key="index">
-                <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border p-4">
-                  <legend class="fieldset-legend flex justify-between items-center w-full">
+                <fieldset class="p-4 border fieldset bg-base-200 border-base-300 rounded-box">
+                  <legend class="flex justify-between items-center w-full fieldset-legend">
                     <span>Choice {{ index + 1 }}</span>
-                    <button v-if="form.choices.length > 1" type="button" @click="removeChoice(index)" class="btn btn-xs btn-ghost btn-circle text-error ml-2">
+                    <button v-if="form.choices.length > 1" type="button" @click="removeChoice(index)"
+                      class="ml-2 btn btn-xs btn-ghost btn-circle text-error">
                       <X :size="12" />
                     </button>
                   </legend>
-                  
+
                   <div class="space-y-3">
                     <div>
                       <label class="label">
                         <span class="label-text">Label</span>
                         <span class="label-text-alt text-error">*</span>
                       </label>
-                      <input v-model="choice.label" type="text" placeholder="Choice label" class="input input-bordered input-sm w-full" required />
+                      <input v-model="choice.label" type="text" placeholder="Choice label"
+                        class="w-full input input-bordered input-sm" required />
                     </div>
-                    
+
                     <div>
                       <label class="label">
                         <span class="label-text">Value</span>
                       </label>
-                      <input v-model="choice.value" type="text" placeholder="Choice value (optional)" class="input input-bordered input-sm w-full" />
+                      <input v-model="choice.value" type="text" placeholder="Choice value (optional)"
+                        class="w-full input input-bordered input-sm" />
                     </div>
-                    
+
                     <div class="grid grid-cols-2 gap-3">
                       <div>
                         <label class="label">
                           <span class="label-text">Score</span>
                         </label>
-                        <input v-model.number="choice.score" type="number" placeholder="0" class="input input-bordered input-sm w-full" step="0.01" />
+                        <input v-model.number="choice.score" type="number" placeholder="Score weight (optional)"
+                          class="w-full input input-bordered input-sm" step="0.01" />
                       </div>
-                      
+
                       <div>
                         <label class="label">
                           <span class="label-text">Order</span>
                         </label>
-                        <input v-model.number="choice.order" type="number" placeholder="1" class="input input-bordered input-sm w-full" min="1" />
+                        <input v-model.number="choice.order" type="number" placeholder="Leave empty for auto-order"
+                          class="w-full input input-bordered input-sm" min="1" />
                       </div>
                     </div>
                   </div>
                 </fieldset>
               </div>
             </div>
-            
-            <button type="button" @click="addChoice" class="mt-3 btn btn-sm btn-outline w-full">
+
+            <button type="button" @click="addChoice" class="mt-3 w-full btn btn-sm btn-outline">
               Add Choice
             </button>
-            
+
             <label v-if="errors.choices" class="label">
               <span class="text-xs label-text-alt text-error">{{ errors.choices }}</span>
             </label>
@@ -450,7 +455,7 @@ watch(() => props.sectionId, (newSectionId) => {
   form.section_id = newSectionId
 }, { immediate: true })
 
-// Watch for question type changes to manage choices
+// Watch for question type changes
 watch(() => form.type, (newType) => {
   if (newType === 'single_choice' || newType === 'multiple_choice') {
     if (form.choices.length === 0) {
@@ -461,7 +466,18 @@ watch(() => form.type, (newType) => {
   }
 })
 
+// Watch for choices changes and auto-reorder
+watch(() => form.choices.length, () => {
+  reorderChoices()
+}, { deep: true })
+
 // Choice management methods
+const reorderChoices = () => {
+  form.choices.forEach((choice, index) => {
+    choice.order = index + 1
+  })
+}
+
 const addChoice = () => {
   form.choices.push({
     label: '',
@@ -469,13 +485,11 @@ const addChoice = () => {
     score: '',
     order: ''
   })
+  reorderChoices()
 }
 
 const removeChoice = (index) => {
   form.choices.splice(index, 1)
-  // Reorder remaining choices
-  form.choices.forEach((choice, idx) => {
-    choice.order = idx + 1
-  })
+  reorderChoices()
 }
 </script>
