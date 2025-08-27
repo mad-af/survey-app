@@ -1,13 +1,8 @@
 <template>
-  <DashboardLayout 
-    :pageTitle="'Survey Management'"
-  >
+  <DashboardLayout :pageTitle="'Survey Management'">
     <div class="space-y-6">
       <!-- Header Section -->
-      <PageHeader 
-        title="Survey Management" 
-        description="Manage surveys and their configurations"
-      >
+      <PageHeader title="Survey Management" description="Manage surveys and their configurations">
         <template #action>
           <button class="gap-2 btn btn-sm btn-primary" @click="openAddSurveyDrawer">
             <Plus :size="15" />
@@ -17,13 +12,8 @@
       </PageHeader>
 
       <!-- Filter Section -->
-      <FilterSearch
-        :search-query="searchQuery"
-        search-placeholder="Search surveys..."
-        :filters="filterOptions"
-        @update:search-query="searchQuery = $event"
-        @update:filter="updateFilter"
-      />
+      <FilterSearch :search-query="searchQuery" search-placeholder="Search surveys..." :filters="filterOptions"
+        @update:search-query="searchQuery = $event" @update:filter="updateFilter" />
 
       <!-- Loading State -->
       <div v-if="isLoading" class="flex justify-center items-center py-12">
@@ -32,41 +22,20 @@
       </div>
 
       <!-- Dynamic Data Table with Pagination -->
-      <DataTable 
-        v-else
-        :data="filteredSurveys"
-        :columns="tableColumns"
-        :actions="tableActions"
-        :items-per-page="itemsPerPage"
-        :selected-items="selectedSurveys"
-        @manage-survey="manageSurvey"
-        @view-survey="viewSurvey"
-        @edit-survey="editSurvey"
-        @delete-survey="deleteSurvey"
-        @update:selected-items="selectedSurveys = $event"
-        @update:current-page="currentPage = $event"
-        @copy-success="handleCopySuccess"
-        @copy-error="handleCopyError"
-      />
+      <DataTable v-else :data="filteredSurveys" :columns="tableColumns" :actions="tableActions"
+        :items-per-page="itemsPerPage" :selected-items="selectedSurveys" @manage-survey="manageSurvey"
+        @view-survey="viewSurvey" @edit-survey="editSurvey" @delete-survey="deleteSurvey"
+        @update:selected-items="selectedSurveys = $event" @update:current-page="currentPage = $event"
+        @copy-success="handleCopySuccess" @copy-error="handleCopyError" />
     </div>
 
     <!-- Add Survey Drawer -->
-    <SurveyDrawer 
-      :is-open="isAddSurveyDrawerOpen"
-      title="Add New Survey"
-      @close="closeAddSurveyDrawer"
-      @success="handleSurveySuccess"
-    />
+    <SurveyDrawer :is-open="isAddSurveyDrawerOpen" title="Add New Survey" @close="closeAddSurveyDrawer"
+      @success="handleSurveySuccess" />
 
     <!-- Edit Survey Drawer -->
-    <SurveyDrawer 
-      :is-open="isEditSurveyDrawerOpen"
-      :is-edit-mode="true"
-      :survey-data="editingSurvey"
-      title="Edit Survey"
-      @close="closeEditSurveyDrawer"
-      @success="handleSurveySuccess"
-    />
+    <SurveyDrawer :is-open="isEditSurveyDrawerOpen" :is-edit-mode="true" :survey-data="editingSurvey"
+      title="Edit Survey" @close="closeEditSurveyDrawer" @success="handleSurveySuccess" />
   </DashboardLayout>
 </template>
 
@@ -79,8 +48,8 @@ import PageHeader from '@/Components/PageHeader.vue'
 import FilterSearch from '@/Components/FilterSearch.vue'
 import DataTable from '@/Components/DataTable.vue'
 import SurveyDrawer from '@/Components/SurveyDrawer.vue'
-import { 
-  Plus, 
+import {
+  Plus,
   Eye,
   Edit,
   Trash2,
@@ -92,7 +61,7 @@ import {
 // Helper functions
 const getStatusBadgeClass = (status) => {
   const classes = {
-    draft: 'badge badge-ghost',
+    draft: 'badge badge-neutral badge-outline',
     active: 'badge badge-success',
     closed: 'badge badge-error'
   }
@@ -247,7 +216,7 @@ const fetchSurveys = async () => {
   try {
     isLoading.value = true
     const response = await axios.get('/api/surveys')
-    
+
     if (response.data.success) {
       surveys.value = response.data.data
     } else {
@@ -267,9 +236,9 @@ const fetchSurveys = async () => {
 const removeSurvey = async (surveyId) => {
   try {
     isLoading.value = true
-    
+
     const response = await axios.delete(`/api/surveys/${surveyId}`)
-    
+
     if (response.data.success) {
       surveys.value = surveys.value.filter(s => s.id !== surveyId)
       showToast('Survey deleted successfully', 'success')
@@ -289,27 +258,27 @@ const removeSurvey = async (surveyId) => {
 // Computed properties
 const filteredSurveys = computed(() => {
   let filtered = surveys.value
-  
+
   // Search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(survey => 
+    filtered = filtered.filter(survey =>
       survey.title.toLowerCase().includes(query) ||
       survey.description?.toLowerCase().includes(query) ||
       survey.code?.toLowerCase().includes(query)
     )
   }
-  
+
   // Status filter
   if (selectedStatus.value) {
     filtered = filtered.filter(survey => survey.status === selectedStatus.value)
   }
-  
+
   // Visibility filter
   if (selectedVisibility.value) {
     filtered = filtered.filter(survey => survey.visibility === selectedVisibility.value)
   }
-  
+
   return filtered
 })
 
@@ -363,7 +332,7 @@ const closeEditSurveyDrawer = () => {
 const handleSurveySuccess = async (surveyData) => {
   // Refresh the surveys list
   await fetchSurveys()
-  
+
   // Close any open drawers
   closeAddSurveyDrawer()
   closeEditSurveyDrawer()
@@ -375,7 +344,7 @@ const updateFilter = ({ key, value }) => {
   } else if (key === 'visibility') {
     selectedVisibility.value = value
   }
-  
+
   // Update the filter options to reflect current values
   const filterOption = filterOptions.value.find(f => f.key === key)
   if (filterOption) {

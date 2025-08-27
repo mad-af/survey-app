@@ -1,15 +1,10 @@
 <template>
-  <DashboardLayout 
-    :pageTitle="'User Management'"
-  >
+  <DashboardLayout :pageTitle="'User Management'">
     <div class="space-y-6">
       <!-- Header Section -->
-      <PageHeader 
-        title="User Management" 
-        description="Manage system users and their permissions"
-      >
+      <PageHeader title="User Management" description="Manage system users and their permissions">
         <template #action>
-          <button class="btn btn-sm btn-primary gap-2" @click="openAddUserDrawer">
+          <button class="gap-2 btn btn-sm btn-primary" @click="openAddUserDrawer">
             <Plus :size="15" />
             Add New User
           </button>
@@ -17,13 +12,8 @@
       </PageHeader>
 
       <!-- Filter Section -->
-      <FilterSearch
-        :search-query="searchQuery"
-        search-placeholder="Search users..."
-        :filters="filterOptions"
-        @update:search-query="searchQuery = $event"
-        @update:filter="updateFilter"
-      />
+      <FilterSearch :search-query="searchQuery" search-placeholder="Search users..." :filters="filterOptions"
+        @update:search-query="searchQuery = $event" @update:filter="updateFilter" />
 
       <!-- Loading State -->
       <div v-if="isLoading" class="flex justify-center items-center py-12">
@@ -32,37 +22,18 @@
       </div>
 
       <!-- Dynamic Data Table with Pagination -->
-      <DataTable 
-        v-else
-        :data="filteredUsers"
-        :columns="tableColumns"
-        :actions="tableActions"
-        :items-per-page="itemsPerPage"
-        :selected-items="selectedUsers"
-        @edit-user="editUser"
-        @delete-user="deleteUser"
-        @update:selected-items="selectedUsers = $event"
-        @update:current-page="currentPage = $event"
-      />
+      <DataTable v-else :data="filteredUsers" :columns="tableColumns" :actions="tableActions"
+        :items-per-page="itemsPerPage" :selected-items="selectedUsers" @edit-user="editUser" @delete-user="deleteUser"
+        @update:selected-items="selectedUsers = $event" @update:current-page="currentPage = $event" />
     </div>
 
     <!-- Add User Drawer -->
-    <UserDrawer 
-      :is-open="isAddUserDrawerOpen"
-      title="Add New User"
-      @close="closeAddUserDrawer"
-      @submit="handleCreateUser"
-    />
+    <UserDrawer :is-open="isAddUserDrawerOpen" title="Add New User" @close="closeAddUserDrawer"
+      @submit="handleCreateUser" />
 
     <!-- Edit User Drawer -->
-    <UserDrawer 
-      :is-open="isEditUserDrawerOpen"
-      :is-edit-mode="true"
-      :user-data="editingUser"
-      title="Edit User"
-      @close="closeEditUserDrawer"
-      @submit="handleUpdateUser"
-    />
+    <UserDrawer :is-open="isEditUserDrawerOpen" :is-edit-mode="true" :user-data="editingUser" title="Edit User"
+      @close="closeEditUserDrawer" @submit="handleUpdateUser" />
   </DashboardLayout>
 </template>
 
@@ -74,9 +45,9 @@ import PageHeader from '@/Components/PageHeader.vue'
 import FilterSearch from '@/Components/FilterSearch.vue'
 import DataTable from '@/Components/DataTable.vue'
 import UserDrawer from '@/Components/UserDrawer.vue'
-import { 
-  Users, 
-  Plus, 
+import {
+  Users,
+  Plus,
   Search,
   Eye,
   Edit,
@@ -89,8 +60,7 @@ import {
 const getRoleBadgeClass = (role) => {
   const classes = {
     admin: 'badge badge-error',
-    moderator: 'badge badge-warning',
-    user: 'badge badge-info'
+    surveyor: 'badge badge-info'
   }
   return classes[role] || 'badge badge-ghost'
 }
@@ -180,7 +150,7 @@ const fetchUsers = async () => {
   try {
     isLoading.value = true
     const response = await axios.get('/api/users')
-    
+
     if (response.data.success) {
       users.value = response.data.data
     } else {
@@ -198,13 +168,13 @@ const fetchUsers = async () => {
 const createUser = async (userData) => {
   try {
     isLoading.value = true
-    
+
     const response = await axios.post('/api/users', {
       name: userData.name,
       email: userData.email,
       role: userData.role
     })
-    
+
     if (response.data.success) {
       await fetchUsers() // Refresh the list
       showToast('User created successfully!', 'success')
@@ -225,15 +195,15 @@ const createUser = async (userData) => {
 const updateUser = async (userData) => {
   try {
     isLoading.value = true
-    
+
     const updateData = {
       name: userData.name,
       email: userData.email,
       role: userData.role
     }
-    
+
     const response = await axios.put(`/api/users/${userData.id}`, updateData)
-    
+
     if (response.data.success) {
       await fetchUsers() // Refresh the list
       showToast('User updated successfully!', 'success')
@@ -254,9 +224,9 @@ const updateUser = async (userData) => {
 const removeUser = async (userId) => {
   try {
     isLoading.value = true
-    
+
     const response = await axios.delete(`/api/users/${userId}`)
-    
+
     if (response.data.success) {
       await fetchUsers() // Refresh the list
       showToast('User deleted successfully!', 'success')
@@ -277,26 +247,26 @@ const removeUser = async (userId) => {
 // Computed properties
 const filteredUsers = computed(() => {
   let filtered = users.value
-  
+
   // Search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(user => 
+    filtered = filtered.filter(user =>
       user.name.toLowerCase().includes(query) ||
       user.email.toLowerCase().includes(query)
     )
   }
-  
+
   // Role filter
   if (selectedRole.value) {
     filtered = filtered.filter(user => user.role === selectedRole.value)
   }
-  
+
   // Status filter
   if (selectedStatus.value) {
     filtered = filtered.filter(user => user.status === selectedStatus.value)
   }
-  
+
   return filtered
 })
 
@@ -361,7 +331,7 @@ const updateFilter = ({ key, value }) => {
   } else if (key === 'status') {
     selectedStatus.value = value
   }
-  
+
   // Update the filter options to reflect current values
   const filterOption = filterOptions.value.find(f => f.key === key)
   if (filterOption) {
