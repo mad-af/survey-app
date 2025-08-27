@@ -27,4 +27,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Survey Management API Routes
     Route::apiResource('surveys', SurveyController::class);
+    
+    // Survey Statistics Route
+    Route::get('surveys/{survey}/statistics', [SurveyController::class, 'statistics']);
 });

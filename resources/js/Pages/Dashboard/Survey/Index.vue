@@ -39,6 +39,8 @@
         :actions="tableActions"
         :items-per-page="itemsPerPage"
         :selected-items="selectedSurveys"
+        @manage-survey="manageSurvey"
+        @view-survey="viewSurvey"
         @edit-survey="editSurvey"
         @delete-survey="deleteSurvey"
         @update:selected-items="selectedSurveys = $event"
@@ -70,6 +72,7 @@
 
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
+import { router } from '@inertiajs/vue3'
 import axios from 'axios'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
@@ -78,11 +81,10 @@ import DataTable from '@/Components/DataTable.vue'
 import SurveyDrawer from '@/Components/SurveyDrawer.vue'
 import { 
   Plus, 
-  Search,
   Eye,
   Edit,
   Trash2,
-  Copy
+  ListOrdered,
 } from 'lucide-vue-next'
 
 // Breadcrumb will auto-generate from URL
@@ -143,7 +145,7 @@ const tableColumns = ref([
     key: 'description',
     label: 'Description',
     type: 'text',
-    formatter: (value) => value?.length > 35 ? value.substring(0, 35) + '...' : value
+    formatter: (value) => value ? (value.length > 35 ? value.substring(0, 35) + '...' : value) : '-'
   },
   {
     key: 'code',
@@ -179,6 +181,15 @@ const tableColumns = ref([
 ])
 
 const tableActions = ref([
+  {
+    name: 'manage',
+    event: 'manage-survey',
+    icon: ListOrdered,
+    label: 'Manage',
+    tooltip: 'Manage Survey',
+    class: '',
+    visible: true
+  },
   {
     name: 'view',
     event: 'view-survey',
@@ -302,10 +313,16 @@ const filteredSurveys = computed(() => {
   return filtered
 })
 
+const manageSurvey = (survey) => {
+  console.log('Manage survey:', survey)
+  // Navigate to survey manage page
+  router.visit(`/dashboard/survey/${survey.id}/manage`)
+}
+
 const viewSurvey = (survey) => {
   console.log('View survey:', survey)
-  // Navigate to survey detail page or open modal
-  // router.push(`/dashboard/surveys/${survey.id}`)
+  // Navigate to survey detail page
+  router.visit(`/dashboard/survey/${survey.id}`)
 }
 
 const editSurvey = (survey) => {

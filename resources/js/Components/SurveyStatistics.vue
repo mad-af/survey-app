@@ -1,40 +1,40 @@
 <template>
-  <div class="card card-sm bg-base-100 shadow-xl">
-    <div class="card-body p-4">
-      <h2 class="card-title text-lg mb-3 flex items-center gap-2">
-        <BarChart3 class="h-5 w-5" />
+  <div class="shadow-xl card card-sm bg-base-100">
+    <div class="p-4 card-body">
+      <h2 class="flex gap-2 items-center mb-3 text-lg card-title">
+        <BarChart3 class="w-5 h-5" />
         Statistics
       </h2>
       
       <div class="space-y-3">
-        <div class="stat bg-base-200 rounded-lg p-3">
-          <div class="stat-title text-xs">Total Sections</div>
-          <div class="stat-value text-xl text-primary">{{ statistics?.totalSections || 5 }}</div>
-          <div class="stat-desc text-xs">Survey sections</div>
+        <div class="p-3 rounded-lg stat bg-base-200">
+          <div class="text-xs stat-title">Total Sections</div>
+          <div class="text-xl stat-value text-primary">{{ statistics?.totalSections || 0 }}</div>
+          <div class="text-xs stat-desc">Survey sections</div>
         </div>
         
-        <div class="stat bg-base-200 rounded-lg p-3">
-          <div class="stat-title text-xs">Total Questions</div>
-          <div class="stat-value text-xl text-secondary">{{ statistics?.totalQuestions || 24 }}</div>
-          <div class="stat-desc text-xs">All questions</div>
+        <div class="p-3 rounded-lg stat bg-base-200">
+          <div class="text-xs stat-title">Total Questions</div>
+          <div class="text-xl stat-value text-secondary">{{ statistics?.totalQuestions || 0 }}</div>
+          <div class="text-xs stat-desc">All questions</div>
         </div>
         
-        <div class="stat bg-base-200 rounded-lg p-3">
-          <div class="stat-title text-xs">Responses</div>
-          <div class="stat-value text-xl text-accent">{{ statistics?.totalResponses || 156 }}</div>
-          <div class="stat-desc text-xs">Total responses</div>
+        <div class="p-3 rounded-lg stat bg-base-200">
+          <div class="text-xs stat-title">Responses</div>
+          <div class="text-xl stat-value text-accent">{{ statistics?.totalResponses || 0 }}</div>
+          <div class="text-xs stat-desc">Total responses</div>
         </div>
         
-        <div class="stat bg-base-200 rounded-lg p-3">
-          <div class="stat-title text-xs">Completion Rate</div>
-          <div class="stat-value text-xl text-success">{{ formatPercentage(statistics?.completionRate) || '87%' }}</div>
-          <div class="stat-desc text-xs">Response rate</div>
+        <div class="p-3 rounded-lg stat bg-base-200">
+          <div class="text-xs stat-title">Completion Rate</div>
+          <div class="text-xl stat-value text-success">{{ statistics?.completionRate || '0%' }}</div>
+          <div class="text-xs stat-desc">Response rate</div>
         </div>
         
-        <div class="stat bg-base-200 rounded-lg p-3">
-          <div class="stat-title text-xs">Avg. Time</div>
-          <div class="stat-value text-lg text-info">{{ formatTime(statistics?.averageTime) || '12m' }}</div>
-          <div class="stat-desc text-xs">Completion time</div>
+        <div class="p-3 rounded-lg stat bg-base-200">
+          <div class="text-xs stat-title">Avg. Time</div>
+          <div class="text-lg stat-value text-info">{{ statistics?.averageTime || '0m' }}</div>
+          <div class="text-xs stat-desc">Completion time</div>
         </div>
       </div>
     </div>
@@ -49,29 +49,13 @@ const props = defineProps({
   statistics: {
     type: Object,
     default: () => ({
-      totalSections: 5,
-      totalQuestions: 24,
-      totalResponses: 156,
-      completionRate: 87,
-      averageTime: 12
+      totalSections: 0,
+      totalQuestions: 0,
+      totalResponses: 0,
+      completionRate: 0,
+      averageTime: 0
     })
   }
 })
 
-const formatPercentage = (value) => {
-  if (value === null || value === undefined) return null
-  return `${Math.round(value)}%`
-}
-
-const formatTime = (minutes) => {
-  if (minutes === null || minutes === undefined) return null
-  
-  if (minutes < 60) {
-    return `${Math.round(minutes)}m`
-  } else {
-    const hours = Math.floor(minutes / 60)
-    const remainingMinutes = Math.round(minutes % 60)
-    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`
-  }
-}
 </script>

@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class SurveyController extends Controller
 {
@@ -184,6 +185,62 @@ class SurveyController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to delete survey',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get survey statistics.
+     */
+    public function statistics(Survey $survey): JsonResponse
+    {
+        try {
+            // Load necessary relationships
+            $survey->load(['sections.questions', 'responses']);
+            
+            // Calculate statistics
+            $totalSections = $survey->sections->count();
+            $totalQuestions = $survey->sections->sum(function ($section) {
+                return $section->questions->count();
+            });
+            $totalResponses = $survey->responses->count();
+            
+            // Calculate completion rate
+            $completedResponses = $survey->responses->whereNotNull('submitted_at')->count();
+            $completionRate = $totalResponses > 0 ? round(($completedResponses / $totalResponses) * 100) . '%' : '0%';
+            
+            // Calculate average completion time
+            $completedResponsesWithTime = $survey->responses
+                ->whereNotNull('submitted_at')
+                ->whereNotNull('started_at');
+            
+            $averageTime = '0m';
+            if ($completedResponsesWithTime->count() > 0) {
+                $totalMinutes = $completedResponsesWithTime->sum(function ($response) {
+                    $start = Carbon::parse($response->started_at);
+                    $end = Carbon::parse($response->submitted_at);
+                    return $start->diffInMinutes($end);
+                });
+                $avgMinutes = round($totalMinutes / $completedResponsesWithTime->count());
+                $averageTime = $avgMinutes . 'm';
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'totalSections' => $totalSections,
+                    'totalQuestions' => $totalQuestions,
+                    'totalResponses' => $totalResponses,
+                    'completionRate' => $completionRate,
+                    'averageTime' => $averageTime
+                ],
+                'message' => 'Survey statistics retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve survey statistics',
                 'error' => $e->getMessage()
             ], 500);
         }

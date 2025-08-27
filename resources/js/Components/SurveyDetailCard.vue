@@ -1,12 +1,12 @@
 <template>
-  <div class="card card-sm bg-base-100 shadow-lg">
-    <div class="card-body p-4">
-      <h2 class="card-title text-lg mb-3 flex items-center gap-2">
-        <FileText class="h-5 w-5" />
+  <div class="shadow-lg card card-sm bg-base-100">
+    <div class="p-4 card-body">
+      <h2 class="flex gap-2 items-center mb-3 text-lg card-title">
+        <FileText class="w-5 h-5" />
         Survey Information
       </h2>
       
-      <div class="grid grid-cols-2 md:grid-cols-2 gap-3">
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-2">
         <!-- Title -->
         <div class="space-y-1">
           <div>
@@ -21,10 +21,10 @@
             <span class="text-xs font-medium text-base-content/60">Code</span>
           </div>
           <div class="flex items-center w-fit bg-base-200">
-            <button class="btn btn-xs btn-ghost p-1" @click="copyToClipboard(survey?.code || 'SRV-2024-001')">
-              <Copy class="h-3 w-3" />
+            <button class="p-1 btn btn-xs btn-ghost" @click="copyToClipboard(survey?.code || 'SRV-2024-001')">
+              <Copy class="w-3 h-3" />
             </button>
-            <code class="px-2 py-1 rounded text-xs font-mono truncate">{{ survey?.code || 'SRV-2024-001' }}</code>
+            <code class="px-2 py-1 font-mono text-xs truncate rounded">{{ survey?.code || 'SRV-2024-001' }}</code>
           </div>
         </div>
         
@@ -51,7 +51,7 @@
           <div>
             <span class="text-xs font-medium text-base-content/60">Owner</span>
           </div>
-          <div class="flex items-center gap-1">
+          <div class="flex gap-1 items-center">
             <span class="text-xs">{{ survey?.owner?.name || 'John Doe' }}</span>
           </div>
         </div>
@@ -86,8 +86,8 @@
         <div>
           <span class="text-xs font-medium text-base-content/60">Description</span>
         </div>
-        <p class="text-xs bg-base-200 p-2 rounded text-base-content/80">
-          {{ survey?.description || 'This is a sample survey description that provides detailed information about the purpose and scope of the survey.' }}
+        <p class="p-2 text-xs rounded bg-base-200 text-base-content/80">
+          {{ survey?.description || '-' }}
         </p>
       </div>
     </div>
