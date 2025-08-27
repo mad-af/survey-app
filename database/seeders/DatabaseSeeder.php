@@ -22,84 +22,222 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create admin user
-        $admin = User::factory()->admin()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@example.com',
+        // Create Users
+        $admin = User::create([
+            'name' => 'Administrator',
+            'email' => 'admin@survey.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin',
         ]);
 
-        // Create surveyor users
-        $surveyors = User::factory()->surveyor()->count(3)->create();
+        $surveyor = User::create([
+            'name' => 'John Surveyor',
+            'email' => 'surveyor@survey.com',
+            'password' => bcrypt('password'),
+            'role' => 'surveyor',
+        ]);
 
-        // Create respondents
-        $respondents = Respondent::factory()->count(20)->create();
-
-        // Create surveys with sections, questions, and choices
-        $surveys = Survey::factory()->count(5)->create([
+        // Create Surveys
+        $survey1 = Survey::create([
             'owner_id' => $admin->id,
+            'code' => 'SURVEY001',
+            'title' => 'Customer Satisfaction Survey',
+            'description' => 'Survey untuk mengukur kepuasan pelanggan terhadap layanan kami',
+            'status' => 'active',
+            'is_anonymous' => true,
+            'visibility' => 'public',
+            'starts_at' => now(),
+            'ends_at' => now()->addDays(30),
         ]);
 
-        foreach ($surveys as $survey) {
-            // Create sections for each survey
-            $sections = SurveySection::factory()->count(3)->create([
-                'survey_id' => $survey->id,
-            ]);
+        $survey2 = Survey::create([
+            'owner_id' => $surveyor->id,
+            'code' => 'SURVEY002',
+            'title' => 'Employee Engagement Survey',
+            'description' => 'Survey untuk mengukur tingkat keterlibatan karyawan',
+            'status' => 'draft',
+            'is_anonymous' => false,
+            'visibility' => 'private',
+            'starts_at' => now()->addDays(7),
+            'ends_at' => now()->addDays(37),
+        ]);
 
-            // Create result categories for each survey
-            ResultCategory::factory()->count(4)->create([
-                'survey_id' => $survey->id,
-            ]);
+        // Create Survey Sections for Survey 1
+        $section1 = SurveySection::create([
+            'survey_id' => $survey1->id,
+            'title' => 'Informasi Umum',
+            'description' => 'Bagian untuk informasi umum responden',
+            'order' => 1,
+        ]);
 
-            foreach ($sections as $section) {
-                // Create questions for each section
-                $questions = Question::factory()->count(5)->create([
-                    'section_id' => $section->id,
-                ]);
+        $section2 = SurveySection::create([
+            'survey_id' => $survey1->id,
+            'title' => 'Kepuasan Layanan',
+            'description' => 'Bagian untuk menilai kepuasan terhadap layanan',
+            'order' => 2,
+        ]);
 
-                foreach ($questions as $question) {
-                    // Create choices for multiple choice questions
-                    if (in_array($question->type, ['multiple_choice', 'single_choice'])) {
-                        Choice::factory()->count(4)->create([
-                            'question_id' => $question->id,
-                        ]);
-                    }
-                }
-            }
+        // Create Survey Sections for Survey 2
+        $section3 = SurveySection::create([
+            'survey_id' => $survey2->id,
+            'title' => 'Profil Karyawan',
+            'description' => 'Informasi dasar karyawan',
+            'order' => 1,
+        ]);
 
-            // Enroll respondents to surveys
-            $enrolledRespondents = $respondents->random(10);
-            foreach ($enrolledRespondents as $respondent) {
-                SurveyRespondent::factory()->create([
-                    'survey_id' => $survey->id,
-                    'respondent_id' => $respondent->id,
-                ]);
-            }
+        // Create Questions for Section 1 (Informasi Umum)
+        $question1 = Question::create([
+            'section_id' => $section1->id,
+            'text' => 'Nama lengkap Anda',
+            'type' => 'short_text',
+            'required' => true,
+            'order' => 1,
+            'score_weight' => 0.00,
+        ]);
 
-            // Create responses and answers
-            $completedRespondents = $enrolledRespondents->random(6);
-            foreach ($completedRespondents as $respondent) {
-                $response = Response::factory()->create([
-                    'survey_id' => $survey->id,
-                    'respondent_id' => $respondent->id,
-                ]);
+        $question2 = Question::create([
+            'section_id' => $section1->id,
+            'text' => 'Usia Anda',
+            'type' => 'single_choice',
+            'required' => true,
+            'order' => 2,
+            'score_weight' => 0.00,
+        ]);
 
-                // Create answers for each question
-                foreach ($survey->sections as $section) {
-                    foreach ($section->questions as $question) {
-                        Answer::factory()->create([
-                            'response_id' => $response->id,
-                            'question_id' => $question->id,
-                            'choice_id' => $question->choices->isNotEmpty() ? $question->choices->random()->id : null,
-                        ]);
-                    }
-                }
+        // Create Choices for Question 2 (Usia)
+        Choice::create([
+            'question_id' => $question2->id,
+            'label' => '18-25 tahun',
+            'value' => '18-25',
+            'score' => 0.00,
+            'order' => 1,
+        ]);
 
-                // Create response score
-                ResponseScore::factory()->create([
-                    'response_id' => $response->id,
-                    'result_category_id' => $survey->resultCategories->random()->id,
-                ]);
-            }
-        }
+        Choice::create([
+            'question_id' => $question2->id,
+            'label' => '26-35 tahun',
+            'value' => '26-35',
+            'score' => 0.00,
+            'order' => 2,
+        ]);
+
+        Choice::create([
+            'question_id' => $question2->id,
+            'label' => '36-45 tahun',
+            'value' => '36-45',
+            'score' => 0.00,
+            'order' => 3,
+        ]);
+
+        Choice::create([
+            'question_id' => $question2->id,
+            'label' => '46+ tahun',
+            'value' => '46+',
+            'score' => 0.00,
+            'order' => 4,
+        ]);
+
+        // Create Questions for Section 2 (Kepuasan Layanan)
+        $question3 = Question::create([
+            'section_id' => $section2->id,
+            'text' => 'Seberapa puas Anda dengan layanan kami secara keseluruhan?',
+            'type' => 'single_choice',
+            'required' => true,
+            'order' => 1,
+            'score_weight' => 1.00,
+        ]);
+
+        // Create Choices for Question 3 (Kepuasan)
+        Choice::create([
+            'question_id' => $question3->id,
+            'label' => 'Sangat Tidak Puas',
+            'value' => '1',
+            'score' => 1.00,
+            'order' => 1,
+        ]);
+
+        Choice::create([
+            'question_id' => $question3->id,
+            'label' => 'Tidak Puas',
+            'value' => '2',
+            'score' => 2.00,
+            'order' => 2,
+        ]);
+
+        Choice::create([
+            'question_id' => $question3->id,
+            'label' => 'Netral',
+            'value' => '3',
+            'score' => 3.00,
+            'order' => 3,
+        ]);
+
+        Choice::create([
+            'question_id' => $question3->id,
+            'label' => 'Puas',
+            'value' => '4',
+            'score' => 4.00,
+            'order' => 4,
+        ]);
+
+        Choice::create([
+            'question_id' => $question3->id,
+            'label' => 'Sangat Puas',
+            'value' => '5',
+            'score' => 5.00,
+            'order' => 5,
+        ]);
+
+        $question4 = Question::create([
+            'section_id' => $section2->id,
+            'text' => 'Saran atau masukan untuk perbaikan layanan',
+            'type' => 'long_text',
+            'required' => false,
+            'order' => 2,
+            'score_weight' => 0.00,
+        ]);
+
+        // Create Questions for Section 3 (Profil Karyawan)
+        $question5 = Question::create([
+            'section_id' => $section3->id,
+            'text' => 'Departemen tempat Anda bekerja',
+            'type' => 'multiple_choice',
+            'required' => true,
+            'order' => 1,
+            'score_weight' => 0.00,
+        ]);
+
+        // Create Choices for Question 5 (Departemen)
+        Choice::create([
+            'question_id' => $question5->id,
+            'label' => 'Human Resources',
+            'value' => 'hr',
+            'score' => 0.00,
+            'order' => 1,
+        ]);
+
+        Choice::create([
+            'question_id' => $question5->id,
+            'label' => 'Information Technology',
+            'value' => 'it',
+            'score' => 0.00,
+            'order' => 2,
+        ]);
+
+        Choice::create([
+            'question_id' => $question5->id,
+            'label' => 'Marketing',
+            'value' => 'marketing',
+            'score' => 0.00,
+            'order' => 3,
+        ]);
+
+        Choice::create([
+            'question_id' => $question5->id,
+            'label' => 'Finance',
+            'value' => 'finance',
+            'score' => 0.00,
+            'order' => 4,
+        ]);
     }
 }

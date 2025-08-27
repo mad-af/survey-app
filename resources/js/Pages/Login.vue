@@ -11,18 +11,18 @@
        <!-- Email Input -->
        <div class="form-control">
          <label class="label">
-           <span class="label-text font-medium">Email</span>
+           <span class="font-medium label-text">Email</span>
          </label>
          <div class="relative">
            <input 
              v-model="form.email" 
              type="email" 
              placeholder="Masukkan email Anda" 
-             class="input input-bordered w-full pr-12"
+             class="pr-12 w-full input input-bordered"
              :class="{ 'input-error': form.errors.email }"
              required
            />
-           <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+           <div class="flex absolute inset-y-0 right-0 items-center pr-3">
              <Mail class="w-5 h-5 text-base-content/50" />
            </div>
          </div>
@@ -34,18 +34,18 @@
        <!-- Password Input -->
        <div class="form-control">
          <label class="label">
-           <span class="label-text font-medium">Password</span>
+           <span class="font-medium label-text">Password</span>
          </label>
          <div class="relative">
            <input 
              v-model="form.password" 
              type="password" 
              placeholder="Masukkan password Anda" 
-             class="input input-bordered w-full pr-12"
+             class="pr-12 w-full input input-bordered"
              :class="{ 'input-error': form.errors.password }"
              required
            />
-           <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+           <div class="flex absolute inset-y-0 right-0 items-center pr-3">
              <Lock class="w-5 h-5 text-base-content/50" />
            </div>
          </div>
@@ -57,30 +57,30 @@
        <!-- Submit Button -->
        <button 
          type="submit" 
-         class="btn btn-primary w-full"
+         class="w-full btn btn-primary"
          :class="{ 'loading': form.processing }"
          :disabled="form.processing || !form.email || !form.password"
        >
-         <LogIn v-if="!form.processing" class="w-5 h-5 mr-2" />
+         <LogIn v-if="!form.processing" class="mr-2 w-5 h-5" />
          {{ form.processing ? 'Masuk...' : 'Login' }}
        </button>
      </form>
 
      <!-- Info Card -->
-     <div class="alert alert-info mt-6">
+     <div class="mt-6 alert alert-info">
        <Info class="w-5 h-5" />
        <div>
          <h3 class="font-bold">Akun Demo</h3>
-         <div class="text-xs mt-1">
+         <div class="mt-1 text-xs">
            <strong>Email:</strong> admin@survey.com<br>
-           <strong>Password:</strong> password123<br>
-           <span class="text-info-content/70 mt-1 block">Gunakan akun demo di atas untuk mencoba website ini.</span>
+           <strong>Password:</strong> password<br>
+           <span class="block mt-1 text-info-content/70">Gunakan akun demo di atas untuk mencoba website ini.</span>
          </div>
        </div>
      </div>
 
      <!-- Help Section -->
-     <div class="text-center mt-6">
+     <div class="mt-6 text-center">
        <p class="text-sm text-base-content/70">
          Ingin mengikuti survey? 
          <Link :href="route('entry')" class="link link-primary">Masuk dengan token</Link>
