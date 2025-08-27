@@ -5,7 +5,7 @@
       <div class="card-body">
         <div class="flex justify-between">
           <div>
-            <h3 class="text-xs font-semibold tracking-wider uppercase text-primary/60">
+            <h3 class="text-xs font-semibold tracking-wider uppercase text-primary">
               <span>#</span>
               Section {{ section.order || 1 }}
             </h3>

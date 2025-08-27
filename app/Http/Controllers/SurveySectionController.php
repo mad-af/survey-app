@@ -53,15 +53,53 @@ class SurveySectionController extends Controller
                 ], 422);
             }
 
-            // Get the next order if not provided
-            $order = $request->order ?? ($survey->sections()->max('order') + 1);
-
-            $section = SurveySection::create([
-                'survey_id' => $survey->id,
-                'title' => $request->title,
-                'description' => $request->description,
-                'order' => $order,
-            ]);
+            // Handle order assignment with proper reordering
+            if (!$request->has('order') || $request->order === null) {
+                // Auto-assign to end if not provided
+                $maxOrder = SurveySection::where('survey_id', $survey->id)->max('order') ?? 0;
+                $order = $maxOrder + 1;
+                $section = SurveySection::create([
+                    'survey_id' => $survey->id,
+                    'title' => $request->title,
+                    'description' => $request->description,
+                    'order' => $order,
+                ]);
+            } else {
+                // If order is specified, reorder existing sections
+                $newOrder = $request->order;
+                
+                // Get all existing sections in this survey
+                $existingSections = SurveySection::where('survey_id', $survey->id)
+                    ->orderBy('order')
+                    ->get();
+                
+                // Shift existing sections to make room for new section
+                foreach ($existingSections as $existingSection) {
+                    if ($existingSection->order >= $newOrder) {
+                        $existingSection->update(['order' => $existingSection->order + 1]);
+                    }
+                }
+                
+                // Create new section with specified order
+                $section = SurveySection::create([
+                    'survey_id' => $survey->id,
+                    'title' => $request->title,
+                    'description' => $request->description,
+                    'order' => $newOrder,
+                ]);
+                
+                // Reorder all sections sequentially to avoid gaps
+                $allSections = SurveySection::where('survey_id', $survey->id)
+                    ->orderBy('order')
+                    ->get();
+                    
+                foreach ($allSections as $index => $sectionToReorder) {
+                    $sectionToReorder->update(['order' => $index + 1]);
+                }
+                
+                // Reload the created section to get updated order
+                $section = $section->fresh();
+            }
 
             // Load relationships
             $section->load('questions.choices');
@@ -143,8 +181,53 @@ class SurveySectionController extends Controller
                 'description' => $request->description,
             ];
 
-            if ($request->has('order')) {
-                $updateData['order'] = $request->order;
+            // Handle order update with proper reordering
+            if ($request->has('order') && $request->order !== null) {
+                $newOrder = $request->order;
+                $currentOrder = $section->order;
+                
+                // Get total sections count to validate order range
+                $totalSections = SurveySection::where('survey_id', $survey->id)->count();
+                
+                // Ensure order is within valid range
+                $newOrder = max(1, min($newOrder, $totalSections));
+                
+                // If order is changing, reorder other sections
+                if ($newOrder != $currentOrder) {
+                    // First, update the current section's order to avoid conflicts
+                    $section->update(['order' => $newOrder]);
+                    
+                    if ($newOrder > $currentOrder) {
+                        // Moving down: shift sections between current and new position up
+                        SurveySection::where('survey_id', $survey->id)
+                            ->where('id', '!=', $section->id) // Exclude current section
+                            ->where('order', '>', $currentOrder)
+                            ->where('order', '<=', $newOrder)
+                            ->decrement('order');
+                    } else {
+                        // Moving up: shift sections between new and current position down
+                        SurveySection::where('survey_id', $survey->id)
+                            ->where('id', '!=', $section->id) // Exclude current section
+                            ->where('order', '>=', $newOrder)
+                            ->where('order', '<', $currentOrder)
+                            ->increment('order');
+                    }
+                    
+                    // Normalize all orders to ensure sequential numbering (1, 2, 3, 4, ...)
+                    $allSections = SurveySection::where('survey_id', $survey->id)
+                        ->orderBy('order')
+                        ->get();
+                    
+                    foreach ($allSections as $index => $sectionToNormalize) {
+                        $normalizedOrder = $index + 1;
+                        if ($sectionToNormalize->order != $normalizedOrder) {
+                            $sectionToNormalize->update(['order' => $normalizedOrder]);
+                        }
+                    }
+                    
+                    // Remove order from updateData since we already updated it
+                    unset($updateData['order']);
+                }
             }
 
             $section->update($updateData);
@@ -178,7 +261,18 @@ class SurveySectionController extends Controller
                 ], 404);
             }
 
+            $deletedOrder = $section->order;
             $section->delete();
+
+            // Reorder remaining sections to fill the gap
+            $remainingSections = SurveySection::where('survey_id', $survey->id)
+                ->where('order', '>', $deletedOrder)
+                ->orderBy('order')
+                ->get();
+
+            foreach ($remainingSections as $remainingSection) {
+                $remainingSection->update(['order' => $remainingSection->order - 1]);
+            }
 
             return response()->json([
                 'success' => true,

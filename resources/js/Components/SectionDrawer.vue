@@ -63,7 +63,7 @@
             <input 
               type="number" 
               v-model.number="form.order"
-              placeholder="Section order" 
+              placeholder="Leave empty for auto-order" 
               class="w-full input input-bordered input-sm"
               :class="{ 'input-error': errors.order }"
               min="1"
@@ -142,7 +142,7 @@ const loading = ref(false)
 const form = reactive({
   title: '',
   description: '',
-  order: 1,
+  order: null,
   survey_id: null
 })
 
@@ -160,7 +160,7 @@ const closeDrawer = () => {
 const resetForm = () => {
   form.title = ''
   form.description = ''
-  form.order = 1
+  form.order = null
   form.survey_id = props.surveyId
   
   // Clear errors
@@ -183,8 +183,8 @@ const validateForm = () => {
     isValid = false
   }
   
-  // Order validation
-  if (!form.order || form.order < 1) {
+  // Order validation (only if provided)
+  if (form.order !== null && form.order !== undefined && form.order < 1) {
     errors.order = 'Order must be a positive number'
     isValid = false
   }
@@ -204,18 +204,22 @@ const handleSubmit = async () => {
     const submitData = {
       title: form.title,
       description: form.description,
-      order: form.order,
       survey_id: form.survey_id
+    }
+    
+    // Only include order if it's provided
+    if (form.order !== null && form.order !== undefined) {
+      submitData.order = form.order
     }
     
     let response
     
     if (props.isEditMode && props.sectionData) {
       // Update existing section
-      response = await axios.put(`/api/survey-sections/${props.sectionData.id}`, submitData)
+      response = await axios.put(`/api/surveys/${form.survey_id}/sections/${props.sectionData.id}`, submitData)
     } else {
       // Create new section
-      response = await axios.post('/api/survey-sections', submitData)
+      response = await axios.post(`/api/surveys/${form.survey_id}/sections`, submitData)
     }
     
     if (response.data.success) {
@@ -246,15 +250,13 @@ const handleSubmit = async () => {
   }
 }
 
-
-
 // Watch for drawer open/close and sectionData changes
 watch(() => props.isOpen, (newValue) => {
   if (newValue && props.isEditMode && props.sectionData) {
     // Fill form with section data for editing
     form.title = props.sectionData.title || ''
     form.description = props.sectionData.description || ''
-    form.order = props.sectionData.order || 1
+    form.order = props.sectionData.order || null
     form.survey_id = props.sectionData.survey_id || props.surveyId
   } else if (!newValue) {
     resetForm()
@@ -266,7 +268,7 @@ watch(() => props.sectionData, (newValue) => {
     // Fill form with section data when sectionData changes
     form.title = newValue.title || ''
     form.description = newValue.description || ''
-    form.order = newValue.order || 1
+    form.order = newValue.order || null
     form.survey_id = newValue.survey_id || props.surveyId
   }
 })

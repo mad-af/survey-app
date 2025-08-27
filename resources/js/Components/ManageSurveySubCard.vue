@@ -2,8 +2,8 @@
   <li class="list-row">
     <!-- Question Number -->
     <div>
-      <div class="flex justify-center items-center rounded size-8 bg-primary/10">
-        <span class="text-xs font-semibold tracking-normal text-primary/60">{{ String(index + 1).padStart(2, '0') }}</span>
+      <div class="flex justify-center items-center rounded size-8 bg-primary-content">
+        <span class="text-xs font-semibold tracking-normal text-primary">{{ String(index + 1).padStart(2, '0') }}</span>
       </div>
     </div>
     
