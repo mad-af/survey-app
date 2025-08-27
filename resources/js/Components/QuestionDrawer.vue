@@ -110,6 +110,63 @@
             </div>
           </div>
 
+          <!-- Choices Field (for single_choice and multiple_choice) -->
+          <div v-if="form.type === 'single_choice' || form.type === 'multiple_choice'" class="form-control">
+            <div class="space-y-3">
+              <div v-for="(choice, index) in form.choices" :key="index">
+                <fieldset class="fieldset bg-base-200 border-base-300 rounded-box border p-4">
+                  <legend class="fieldset-legend flex justify-between items-center w-full">
+                    <span>Choice {{ index + 1 }}</span>
+                    <button v-if="form.choices.length > 1" type="button" @click="removeChoice(index)" class="btn btn-xs btn-ghost btn-circle text-error ml-2">
+                      <X :size="12" />
+                    </button>
+                  </legend>
+                  
+                  <div class="space-y-3">
+                    <div>
+                      <label class="label">
+                        <span class="label-text">Label</span>
+                        <span class="label-text-alt text-error">*</span>
+                      </label>
+                      <input v-model="choice.label" type="text" placeholder="Choice label" class="input input-bordered input-sm w-full" required />
+                    </div>
+                    
+                    <div>
+                      <label class="label">
+                        <span class="label-text">Value</span>
+                      </label>
+                      <input v-model="choice.value" type="text" placeholder="Choice value (optional)" class="input input-bordered input-sm w-full" />
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="label">
+                          <span class="label-text">Score</span>
+                        </label>
+                        <input v-model.number="choice.score" type="number" placeholder="0" class="input input-bordered input-sm w-full" step="0.01" />
+                      </div>
+                      
+                      <div>
+                        <label class="label">
+                          <span class="label-text">Order</span>
+                        </label>
+                        <input v-model.number="choice.order" type="number" placeholder="1" class="input input-bordered input-sm w-full" min="1" />
+                      </div>
+                    </div>
+                  </div>
+                </fieldset>
+              </div>
+            </div>
+            
+            <button type="button" @click="addChoice" class="mt-3 btn btn-sm btn-outline w-full">
+              Add Choice
+            </button>
+            
+            <label v-if="errors.choices" class="label">
+              <span class="text-xs label-text-alt text-error">{{ errors.choices }}</span>
+            </label>
+          </div>
+
           <!-- Section ID (Hidden field for API) -->
           <input type="hidden" v-model="form.section_id" />
 
@@ -177,7 +234,8 @@ const form = reactive({
   required: false,
   order: null,
   score_weight: null,
-  section_id: ''
+  section_id: '',
+  choices: []
 })
 
 const errors = reactive({
@@ -186,7 +244,8 @@ const errors = reactive({
   required: '',
   order: '',
   score_weight: '',
-  section_id: ''
+  section_id: '',
+  choices: ''
 })
 
 // Computed properties
@@ -209,6 +268,7 @@ const resetForm = () => {
   form.order = null
   form.score_weight = null
   form.section_id = props.sectionId
+  form.choices = []
 
   // Clear errors
   Object.keys(errors).forEach(key => {
@@ -254,6 +314,21 @@ const validateForm = () => {
     isValid = false
   }
 
+  // Choices validation (required for single_choice and multiple_choice)
+  if ((form.type === 'single_choice' || form.type === 'multiple_choice')) {
+    if (!form.choices || form.choices.length === 0) {
+      errors.choices = 'At least one choice is required for this question type'
+      isValid = false
+    } else {
+      // Validate each choice has a label
+      const hasEmptyLabel = form.choices.some(choice => !choice.label || !choice.label.trim())
+      if (hasEmptyLabel) {
+        errors.choices = 'All choices must have a label'
+        isValid = false
+      }
+    }
+  }
+
   return isValid
 }
 
@@ -277,6 +352,16 @@ const handleSubmit = async () => {
     // Only include order if it has a value
     if (form.order !== null && form.order !== undefined) {
       submitData.order = form.order
+    }
+
+    // Include choices if question type requires them
+    if (form.type === 'single_choice' || form.type === 'multiple_choice') {
+      submitData.choices = form.choices.map((choice, index) => ({
+        label: choice.label,
+        value: choice.value || choice.label,
+        score: choice.score || 0,
+        order: choice.order || (index + 1)
+      }))
     }
 
     let response
@@ -329,6 +414,13 @@ watch(() => props.isOpen, (newValue) => {
     form.order = props.questionData.order || null
     form.score_weight = props.questionData.score_weight || null
     form.section_id = props.questionData.section_id || props.sectionId
+    form.choices = props.questionData.choices ? props.questionData.choices.map(choice => ({
+      id: choice.id,
+      label: choice.label,
+      value: choice.value,
+      score: choice.score,
+      order: choice.order
+    })) : []
   } else if (!newValue) {
     resetForm()
   }
@@ -343,6 +435,13 @@ watch(() => props.questionData, (newValue) => {
     form.order = newValue.order || null
     form.score_weight = newValue.score_weight || null
     form.section_id = newValue.section_id || props.sectionId
+    form.choices = newValue.choices ? newValue.choices.map(choice => ({
+      id: choice.id,
+      label: choice.label,
+      value: choice.value,
+      score: choice.score,
+      order: choice.order
+    })) : []
   }
 })
 
@@ -350,4 +449,33 @@ watch(() => props.questionData, (newValue) => {
 watch(() => props.sectionId, (newSectionId) => {
   form.section_id = newSectionId
 }, { immediate: true })
+
+// Watch for question type changes to manage choices
+watch(() => form.type, (newType) => {
+  if (newType === 'single_choice' || newType === 'multiple_choice') {
+    if (form.choices.length === 0) {
+      addChoice()
+    }
+  } else {
+    form.choices = []
+  }
+})
+
+// Choice management methods
+const addChoice = () => {
+  form.choices.push({
+    label: '',
+    value: '',
+    score: '',
+    order: ''
+  })
+}
+
+const removeChoice = (index) => {
+  form.choices.splice(index, 1)
+  // Reorder remaining choices
+  form.choices.forEach((choice, idx) => {
+    choice.order = idx + 1
+  })
+}
 </script>
