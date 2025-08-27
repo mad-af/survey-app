@@ -7,11 +7,12 @@
         :showBackButton="true" />
 
       <!-- Survey Information Cards -->
-      <div class="grid grid-cols-1 gap-3 lg:grid-cols-5">
+      <div class="grid grid-cols-1 gap-3 lg:grid-cols-4">
         <!-- Survey Detail Information Card -->
-        <div class="space-y-3 lg:col-span-4">
+        <div class="space-y-3 lg:col-span-3">
           <ManageSurveyCard v-for="section in surveySections" :key="section.id" :section="section"
-            @edit-section="handleEditSection" @delete-section="handleDeleteSection" />
+            @edit-section="handleEditSection" @delete-section="handleDeleteSection" @add-question="handleAddQuestion"
+            @edit-question="handleEditQuestion" @delete-question="handleDeleteQuestion" />
 
           <!-- Empty State -->
           <div v-if="surveySections.length === 0" class="w-full card bg-ghost card-sm">
@@ -55,13 +56,71 @@ const surveySections = ref([
     id: 1,
     title: 'Personal Information',
     description: 'Basic personal details and contact information',
-    order: 1
+    order: 1,
+    questions: [
+      {
+        id: 1,
+        title: 'Full Name',
+        description: 'Enter your complete full name',
+        type: 'text',
+        required: true,
+        order: 1
+      },
+      {
+        id: 2,
+        title: 'Email Address',
+        description: 'Your primary email address for communication',
+        type: 'email',
+        required: true,
+        order: 2
+      },
+      {
+        id: 3,
+        title: 'Gender',
+        description: 'Please select your gender',
+        type: 'select',
+        required: false,
+        order: 3,
+        choices: [
+          { id: 1, text: 'Male' },
+          { id: 2, text: 'Female' },
+          { id: 3, text: 'Other' },
+          { id: 4, text: 'Prefer not to say' }
+        ]
+      }
+    ]
   },
   {
     id: 2,
     title: 'Experience & Skills',
     description: 'Professional experience and technical skills assessment',
-    order: 2
+    order: 2,
+    questions: [
+      {
+        id: 4,
+        title: 'Years of Experience',
+        description: 'How many years of professional experience do you have?',
+        type: 'number',
+        required: true,
+        order: 1
+      },
+      {
+        id: 5,
+        title: 'Programming Languages',
+        description: 'Which programming languages are you proficient in? (Select all that apply)',
+        type: 'radio',
+        required: true,
+        order: 2,
+        choices: [
+          { id: 1, text: 'JavaScript' },
+          { id: 2, text: 'Python' },
+          { id: 3, text: 'Java' },
+          { id: 4, text: 'PHP' },
+          { id: 5, text: 'C#' },
+          { id: 6, text: 'Go' }
+        ]
+      }
+    ]
   }
 ])
 
@@ -78,6 +137,46 @@ const handleDeleteSection = (section) => {
     const index = surveySections.value.findIndex(s => s.id === section.id)
     if (index > -1) {
       surveySections.value.splice(index, 1)
+    }
+  }
+}
+
+const handleAddQuestion = (section) => {
+  console.log('Add question to section:', section)
+  // Implement add question logic here
+  const newQuestion = {
+    id: Date.now(), // Simple ID generation for demo
+    title: 'New Question',
+    description: 'Question description',
+    type: 'text',
+    required: false,
+    order: (section.questions?.length || 0) + 1
+  }
+
+  const sectionIndex = surveySections.value.findIndex(s => s.id === section.id)
+  if (sectionIndex > -1) {
+    if (!surveySections.value[sectionIndex].questions) {
+      surveySections.value[sectionIndex].questions = []
+    }
+    surveySections.value[sectionIndex].questions.push(newQuestion)
+  }
+}
+
+const handleEditQuestion = (question, section) => {
+  console.log('Edit question:', question, 'in section:', section)
+  // Implement edit question logic here
+}
+
+const handleDeleteQuestion = (question, section) => {
+  console.log('Delete question:', question, 'from section:', section)
+  // Implement delete question logic here
+  if (confirm(`Are you sure you want to delete "${question.title}"?`)) {
+    const sectionIndex = surveySections.value.findIndex(s => s.id === section.id)
+    if (sectionIndex > -1) {
+      const questionIndex = surveySections.value[sectionIndex].questions.findIndex(q => q.id === question.id)
+      if (questionIndex > -1) {
+        surveySections.value[sectionIndex].questions.splice(questionIndex, 1)
+      }
     }
   }
 }
