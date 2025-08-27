@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
+use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -12,11 +13,18 @@ Route::get('/entry', function () {
     return Inertia::render('Entry');
 });
 
-Route::get('/login', function () {
-    return Inertia::render('Login');
-})->name('login')->middleware('guest');
+// Authentication routes
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
+Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+Route::post('/api/token', [AuthController::class, 'generateToken'])->name('api.token');
 
-Route::prefix('dashboard')->middleware('auth:sanctum')->group(function () {
+// Sanctum CSRF cookie route
+Route::get('/sanctum/csrf-cookie', function () {
+    return response()->json(['message' => 'CSRF cookie set']);
+});
+
+Route::prefix('dashboard')->middleware('auth')->group(function () {
     Route::get('/', function () {
         return Inertia::render('Dashboard/Index');
     });

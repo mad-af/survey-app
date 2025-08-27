@@ -110,12 +110,13 @@ const form = useForm({
 
 // Submit login
 const submitLogin = () => {
-  form.post(route('login'), {
+  form.post('/login', {
     onSuccess: () => {
-      // Redirect akan ditangani oleh backend
+      // Redirect will be handled by the backend
     },
-    onError: () => {
-      // Error akan ditampilkan otomatis melalui form.errors
+    onError: (errors) => {
+      // Errors will be automatically handled by Inertia
+      console.log('Login failed:', errors)
     }
   })
 }

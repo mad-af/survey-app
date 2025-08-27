@@ -112,6 +112,10 @@ const otherMenuItems = computed(() => [
 
 // Methods
 const handleLogout = () => {
-  router.post('/logout')
+  router.post('/logout', {}, {
+    onSuccess: () => {
+      // Redirect will be handled by the backend
+    }
+  })
 }
 </script>
