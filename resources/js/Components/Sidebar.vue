@@ -1,23 +1,23 @@
 <template>
-  <aside class="min-h-full w-60 bg-base-100 text-base-content flex flex-col">
+  <aside class="flex flex-col w-60 min-h-full bg-base-100 text-base-content">
       <!-- Logo -->
       <div class="p-4">
-        <div class="flex items-center gap-3 justify-center ">
-          <div class="size-8 bg-primary rounded-xl flex items-center justify-center shadow-sm">
+        <div class="flex gap-3 justify-center items-center">
+          <div class="flex justify-center items-center rounded-xl shadow-sm size-8 bg-primary">
             <ClipboardList class="size-5 text-primary-content" />
           </div>
           <div class="text-start">
-            <span class="text-base font-bold text-base-content block tracking-wide">Survey App</span>
-            <span class="text-xs text-base-content/60 block">Dashboard</span>
+            <span class="block text-base font-bold tracking-wide text-base-content">Survey App</span>
+            <span class="block text-xs text-base-content/60">Dashboard</span>
           </div>
         </div>
       </div>
 
       <!-- Navigation Menu -->
-      <div class="flex-1 flex flex-col p-3">
+      <div class="flex flex-col flex-1 p-3">
         <div class="mb-4">
-          <p class="text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2 px-2">Main menu</p>
-          <ul class="menu menu-sm gap-1 w-full">
+          <p class="px-2 mb-2 text-xs font-semibold tracking-wider uppercase text-base-content/60">Main menu</p>
+          <ul class="gap-1 w-full menu menu-sm">
             <li v-for="item in menuItems" :key="item.name">
               <a :href="item.href" :class="[
                 'flex items-center gap-2 p-2 rounded-lg text-sm',
@@ -27,15 +27,15 @@
               ]">
                 <component :is="item.icon" class="w-4 h-4" />
                 <span>{{ item.name }}</span>
-                <div v-if="item.badge" class="badge badge-xs badge-primary ml-auto">{{ item.badge }}</div>
+                <div v-if="item.badge" class="ml-auto badge badge-xs badge-primary">{{ item.badge }}</div>
               </a>
             </li>
           </ul>
         </div>
 
         <div class="mb-4">
-          <p class="text-xs font-semibold text-base-content/60 uppercase tracking-wider mb-2 px-2">Other</p>
-          <ul class="menu menu-sm gap-1 w-full">
+          <p class="px-2 mb-2 text-xs font-semibold tracking-wider uppercase text-base-content/60">Other</p>
+          <ul class="gap-1 w-full menu menu-sm">
             <li v-for="item in otherMenuItems" :key="item.name">
               <a :href="item.href" :class="[
                 'flex items-center gap-2 p-2 rounded-lg text-sm',
@@ -55,8 +55,8 @@
         </div>
 
         <!-- Logout -->
-        <div class="mt-auto border-t border-base-300 pt-3 flex justify-center">
-          <a @click="handleLogout" class="flex items-center justify-center gap-2 p-2 rounded-lg hover:bg-base-200 transition-colors text-sm cursor-pointer w-2/3">
+        <div class="flex justify-center pt-3 mt-auto border-t border-base-300">
+          <a @click="handleLogout" class="flex gap-2 justify-center items-center p-2 w-2/3 text-sm rounded-lg transition-colors cursor-pointer hover:bg-base-200">
             <LogOut class="w-4 h-4" />
             <span>Logout</span>
           </a>
@@ -79,7 +79,7 @@ import {
   BarChart3, 
   Settings, 
   LogOut,
-  FileText
+  FileText,
 } from 'lucide-vue-next'
 
 // Get current page info

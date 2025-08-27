@@ -93,7 +93,6 @@
 import { Head, useForm, Link, router } from '@inertiajs/vue3'
 import CenteredLayout from '@/Layouts/CenteredLayout.vue'
 import { Mail, Lock, LogIn, Info } from 'lucide-vue-next'
-
 // Route helper
 const route = (name) => {
   const routes = {
