@@ -20,8 +20,11 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// User Management API Routes
-Route::apiResource('users', UserController::class);
-
-// Survey Management API Routes
-Route::apiResource('surveys', SurveyController::class);
+// Protected API Routes - Require Authentication
+Route::middleware('auth:sanctum')->group(function () {
+    // User Management API Routes
+    Route::apiResource('users', UserController::class);
+    
+    // Survey Management API Routes
+    Route::apiResource('surveys', SurveyController::class);
+});

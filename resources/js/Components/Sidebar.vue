@@ -67,7 +67,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { usePage } from '@inertiajs/vue3'
+import { usePage, router } from '@inertiajs/vue3'
 import { 
   ClipboardList,
   Home, 
@@ -112,7 +112,6 @@ const otherMenuItems = computed(() => [
 
 // Methods
 const handleLogout = () => {
-  // Handle logout logic here
-  console.log('Logout clicked')
+  router.post('/logout')
 }
 </script>

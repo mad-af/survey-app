@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 Route::get('/', function () {
@@ -13,9 +14,33 @@ Route::get('/entry', function () {
 
 Route::get('/login', function () {
     return Inertia::render('Login');
-});
+})->name('login');
 
-Route::prefix('dashboard')->group(function () {
+// Authentication Routes
+Route::post('/login', function (\Illuminate\Http\Request $request) {
+    $credentials = $request->validate([
+        'email' => 'required|email',
+        'password' => 'required',
+    ]);
+
+    if (Auth::attempt($credentials)) {
+        $request->session()->regenerate();
+        return redirect()->intended('/dashboard');
+    }
+
+    return back()->withErrors([
+        'email' => 'The provided credentials do not match our records.',
+    ]);
+})->name('login.store');
+
+Route::post('/logout', function (\Illuminate\Http\Request $request) {
+    Auth::logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+    return redirect('/');
+})->name('logout');
+
+Route::prefix('dashboard')->middleware('auth')->group(function () {
     Route::get('/', function () {
         return Inertia::render('Dashboard/Index');
     });
