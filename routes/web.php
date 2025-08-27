@@ -14,7 +14,7 @@ Route::get('/entry', function () {
 
 Route::get('/login', function () {
     return Inertia::render('Login');
-})->name('login');
+})->name('login')->middleware('guest');
 
 // Authentication Routes
 Route::post('/login', function (\Illuminate\Http\Request $request) {
@@ -31,7 +31,7 @@ Route::post('/login', function (\Illuminate\Http\Request $request) {
     return back()->withErrors([
         'email' => 'The provided credentials do not match our records.',
     ]);
-})->name('login.store');
+})->name('login.store')->middleware('guest');
 
 Route::post('/logout', function (\Illuminate\Http\Request $request) {
     Auth::logout();
