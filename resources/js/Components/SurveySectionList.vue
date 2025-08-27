@@ -8,7 +8,7 @@
         </h2>
         <div class="tooltip" data-tip="Manage survey sections">
           <button class="btn btn-sm btn-base text-xs gap-2">
-            <span class="font-medium">Manage Sections</span>
+            <span class="font-medium">Manage Survey</span>
             <ArrowRight class="h-4 w-4" />
           </button>
         </div>
@@ -36,9 +36,7 @@
       <!-- Empty State -->
       <div v-else class="text-center py-8">
         <div class="flex flex-col items-center gap-1">
-            <ListOrdered class="h-8 w-8 text-base-content" />
-            <h3 class="font-medium text-base-content">Belum Ada Section Question Survey</h3>
-            <span class="text-sm text-base-content/70">Klik "Manage Sections" untuk menambahkan section survey pertama Anda</span>
+            <span class="text-sm text-base-content/70">Klik "Manage Survey" untuk menambahkan section survey pertama Anda</span>
         </div>
       </div>
     </div>

@@ -19,11 +19,11 @@
            class="btn btn-sm h-8 w-full justify-start gap-2 hover:shadow-sm transition-all duration-200 text-xs" 
            @click="$emit('view-responses')"
          >
-           <FileText class="h-3 w-3" />
-           <span class="font-medium">View Responses</span>
+           <ListOrdered class="h-3 w-3" />
+           <span class="font-medium">Manage Survey</span>
          </button>
          
-         <button 
+         <!-- <button 
            class="btn btn-sm h-8 w-full justify-start gap-2 hover:shadow-sm transition-all duration-200 text-xs" 
            @click="$emit('share-survey')"
          >
@@ -38,7 +38,7 @@
            <Download class="h-3 w-3" />
            <span class="font-medium">Export Data</span>
          </button>
-         
+          -->
          <div class="divider m-0 opacity-50"></div>
          
          <button 
@@ -55,7 +55,7 @@
 
 <script setup>
 import { defineEmits } from 'vue'
-import { Zap, Edit3, FileText, Share2, Download, Trash2 } from 'lucide-vue-next'
+import { Zap, Edit3, FileText, Share2, Download, Trash2, ListOrdered } from 'lucide-vue-next'
 
 const emit = defineEmits([
   'edit-survey',

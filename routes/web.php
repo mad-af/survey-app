@@ -34,14 +34,8 @@ Route::prefix('dashboard')->group(function () {
         ]);
     });
     
-    Route::get('/survey/{survey}/edit', function ($survey) {
-        return Inertia::render('Dashboard/Survey/Edit', [
-            'surveyId' => $survey
-        ]);
-    });
-    
-    Route::get('/survey/{survey}/responses', function ($survey) {
-        return Inertia::render('Dashboard/Survey/Responses', [
+    Route::get('/survey/{survey}/manage', function ($survey) {
+        return Inertia::render('Dashboard/Survey/Manage', [
             'surveyId' => $survey
         ]);
     });
