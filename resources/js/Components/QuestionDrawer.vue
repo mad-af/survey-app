@@ -5,51 +5,60 @@
       <!-- This is where the main content would be, but we're using this as a component -->
     </div>
     <div class="drawer-side">
-      <label for="survey-drawer-toggle" aria-label="close sidebar" class="drawer-overlay z-40" @click="closeDrawer"></label>
-      <div class="bg-base-200 text-base-content min-h-full w-80 p-3 relative z-50 overflow-visible">
+      <label for="survey-drawer-toggle" aria-label="close sidebar" class="z-40 drawer-overlay"
+        @click="closeDrawer"></label>
+      <div class="overflow-visible relative z-50 p-3 w-80 min-h-full bg-base-200 text-base-content">
         <!-- Drawer Header -->
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex justify-between items-center mb-4">
           <h3 class="text-base font-semibold">{{ title }}</h3>
-          <button 
-            class="btn btn-xs btn-circle btn-ghost" 
-            @click="closeDrawer"
-          >
+          <button class="btn btn-xs btn-circle btn-ghost" @click="closeDrawer">
             <X :size="14" />
           </button>
         </div>
 
         <!-- Form -->
         <form @submit.prevent="handleSubmit" class="space-y-3">
+
+          <!-- Section Field -->
+          <div class="form-control">
+            <label class="text-sm label">
+              <span class="label-text">Section Survey</span>
+              <span class="label-text-alt text-error">*</span>
+            </label>
+            <select v-model="form.section_id" class="w-full select select-bordered select-sm"
+              :class="{ 'select-error': errors.section_id }" required>
+              <option value="">Select section survey</option>
+              <option v-for="section in availableSections" :key="section.id" :value="section.id">
+                {{ section.order }}. {{ section.title }}
+              </option>
+            </select>
+            <label v-if="errors.section_id" class="label">
+              <span class="text-xs label-text-alt text-error">{{ errors.section_id }}</span>
+            </label>
+          </div>
+
           <!-- Question Text Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Question Text</span>
               <span class="label-text-alt text-error">*</span>
             </label>
-            <textarea 
-              v-model="form.text"
-              placeholder="Enter question text" 
-              class="textarea textarea-bordered textarea-sm w-full h-20 resize-none"
-              :class="{ 'textarea-error': errors.text }"
-              required
-            ></textarea>
+            <textarea v-model="form.text" placeholder="Enter question text"
+              class="w-full h-20 resize-none textarea textarea-bordered textarea-sm"
+              :class="{ 'textarea-error': errors.text }" required></textarea>
             <label v-if="errors.text" class="label">
-              <span class="label-text-alt text-error">{{ errors.text }}</span>
+              <span class="text-xs label-text-alt text-error">{{ errors.text }}</span>
             </label>
           </div>
 
           <!-- Question Type Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Question Type</span>
               <span class="label-text-alt text-error">*</span>
             </label>
-            <select 
-              v-model="form.type"
-              class="select select-bordered select-sm w-full"
-              :class="{ 'select-error': errors.type }"
-              required
-            >
+            <select v-model="form.type" class="w-full select select-bordered select-sm"
+              :class="{ 'select-error': errors.type }" required>
               <option value="">Select question type</option>
               <option value="short_text">Short Text</option>
               <option value="long_text">Long Text</option>
@@ -59,59 +68,45 @@
               <option value="date">Date</option>
             </select>
             <label v-if="errors.type" class="label">
-              <span class="label-text-alt text-error">{{ errors.type }}</span>
+              <span class="text-xs label-text-alt text-error">{{ errors.type }}</span>
             </label>
           </div>
 
           <!-- Order Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Order</span>
             </label>
-            <input 
-              type="number" 
-              v-model.number="form.order"
-              placeholder="Question order" 
-              class="input input-bordered input-sm w-full"
-              :class="{ 'input-error': errors.order }"
-              min="1"
-            />
+            <input type="number" v-model.number="form.order" placeholder="Leave empty for auto-order"
+              class="w-full input input-bordered input-sm" :class="{ 'input-error': errors.order }" min="1" />
             <label v-if="errors.order" class="label">
-              <span class="label-text-alt text-error">{{ errors.order }}</span>
+              <span class="text-xs label-text-alt text-error">{{ errors.order }}</span>
             </label>
           </div>
 
           <!-- Score Weight Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Score Weight</span>
             </label>
-            <input 
-              type="number" 
-              v-model.number="form.score_weight"
-              placeholder="Score weight (optional)" 
-              class="input input-bordered input-sm w-full"
-              :class="{ 'input-error': errors.score_weight }"
-              step="0.01"
-              min="0"
-            />
+            <input type="number" v-model.number="form.score_weight" placeholder="Score weight (optional)"
+              class="w-full input input-bordered input-sm" :class="{ 'input-error': errors.score_weight }" step="0.01"
+              min="0" />
             <label v-if="errors.score_weight" class="label">
-              <span class="label-text-alt text-error">{{ errors.score_weight }}</span>
+              <span class="text-xs label-text-alt text-error">{{ errors.score_weight }}</span>
             </label>
           </div>
 
           <!-- Required Field -->
           <div class="form-control">
-            <label class="label cursor-pointer">
+            <label class="text-sm label">
               <span class="label-text">Required Question</span>
-              <input 
-                type="checkbox" 
-                v-model="form.required"
-                class="checkbox checkbox-primary checkbox-sm"
-              />
             </label>
-            <div class="text-xs text-gray-500 mt-1">
-              Mark this question as required for survey completion
+            <div class="mt-1 text-xs cursor-pointer">
+              <label class="cursor-pointer">
+                <input type="checkbox" v-model="form.required" class="checkbox checkbox-sm" />
+                <span class="ml-2 label-text">Mark this question as required for survey completion</span>
+              </label>
             </div>
           </div>
 
@@ -120,21 +115,12 @@
 
           <!-- Form Actions -->
           <div class="flex gap-2 pt-3">
-            <button 
-              type="button" 
-              class="btn btn-sm flex-1"
-              @click="closeDrawer"
-              :disabled="loading"
-            >
+            <button type="button" class="flex-1 btn btn-sm" @click="closeDrawer" :disabled="loading">
               Cancel
             </button>
-            <button 
-              type="submit" 
-              class="btn btn-primary btn-sm flex-1"
-              :disabled="loading"
-            >
+            <button type="submit" class="flex-1 btn btn-primary btn-sm" :disabled="loading">
               <span v-if="loading" class="loading loading-spinner loading-xs"></span>
-              {{ loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Question' : 'Create Question') }}
+              {{ buttonText }}
             </button>
           </div>
         </form>
@@ -144,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch, inject } from 'vue'
+import { ref, reactive, watch, inject, computed } from 'vue'
 import axios from 'axios'
 import { X } from 'lucide-vue-next'
 
@@ -169,6 +155,10 @@ const props = defineProps({
   sectionId: {
     type: [String, Number],
     required: true
+  },
+  availableSections: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -176,7 +166,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'submit', 'success'])
 
 // Toast notification
-const showToast = inject('showToast', () => {})
+const showToast = inject('showToast', () => { })
 
 // Reactive data
 const loading = ref(false)
@@ -185,9 +175,9 @@ const form = reactive({
   text: '',
   type: '',
   required: false,
-  order: 1,
+  order: null,
   score_weight: null,
-  section_id: null
+  section_id: ''
 })
 
 const errors = reactive({
@@ -199,6 +189,14 @@ const errors = reactive({
   section_id: ''
 })
 
+// Computed properties
+const buttonText = computed(() => {
+  if (loading.value) {
+    return props.isEditMode ? 'Updating...' : 'Creating...'
+  }
+  return props.isEditMode ? 'Update Question' : 'Create Question'
+})
+
 // Methods
 const closeDrawer = () => {
   emit('close')
@@ -208,10 +206,10 @@ const resetForm = () => {
   form.text = ''
   form.type = ''
   form.required = false
-  form.order = 1
+  form.order = null
   form.score_weight = null
   form.section_id = props.sectionId
-  
+
   // Clear errors
   Object.keys(errors).forEach(key => {
     errors[key] = ''
@@ -220,36 +218,42 @@ const resetForm = () => {
 
 const validateForm = () => {
   let isValid = true
-  
+
   // Clear previous errors
   Object.keys(errors).forEach(key => {
     errors[key] = ''
   })
-  
+
   // Text validation
   if (!form.text.trim()) {
     errors.text = 'Question text is required'
     isValid = false
   }
-  
+
   // Type validation
   if (!form.type) {
     errors.type = 'Question type is required'
     isValid = false
   }
-  
-  // Order validation
-  if (!form.order || form.order < 1) {
+
+  // Section validation
+  if (!form.section_id) {
+    errors.section_id = 'Section is required'
+    isValid = false
+  }
+
+  // Order validation (optional, but must be positive if provided)
+  if (form.order !== null && form.order < 1) {
     errors.order = 'Order must be a positive number'
     isValid = false
   }
-  
+
   // Score weight validation (optional but must be positive if provided)
   if (form.score_weight !== null && form.score_weight < 0) {
     errors.score_weight = 'Score weight must be a positive number'
     isValid = false
   }
-  
+
   return isValid
 }
 
@@ -257,30 +261,34 @@ const handleSubmit = async () => {
   if (!validateForm()) {
     return
   }
-  
+
   loading.value = true
-  
+
   try {
     // Prepare data for API submission
     const submitData = {
       text: form.text,
       type: form.type,
       required: form.required,
-      order: form.order,
       score_weight: form.score_weight,
       section_id: form.section_id
     }
-    
+
+    // Only include order if it has a value
+    if (form.order !== null && form.order !== undefined) {
+      submitData.order = form.order
+    }
+
     let response
-    
+
     if (props.isEditMode && props.questionData) {
       // Update existing question
-      response = await axios.put(`/api/questions/${props.questionData.id}`, submitData)
+      response = await axios.put(`/api/sections/${form.section_id}/questions/${props.questionData.id}`, submitData)
     } else {
       // Create new question
-      response = await axios.post('/api/questions', submitData)
+      response = await axios.post(`/api/sections/${form.section_id}/questions`, submitData)
     }
-    
+
     if (response.data.success) {
       showToast(response.data.message, 'success')
       emit('success', response.data.data)
@@ -291,7 +299,7 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     console.error('Error submitting question:', error)
-    
+
     // Handle validation errors
     if (error.response?.status === 422 && error.response?.data?.errors) {
       const validationErrors = error.response.data.errors
@@ -318,7 +326,7 @@ watch(() => props.isOpen, (newValue) => {
     form.text = props.questionData.text || ''
     form.type = props.questionData.type || ''
     form.required = props.questionData.required || false
-    form.order = props.questionData.order || 1
+    form.order = props.questionData.order || null
     form.score_weight = props.questionData.score_weight || null
     form.section_id = props.questionData.section_id || props.sectionId
   } else if (!newValue) {
@@ -332,7 +340,7 @@ watch(() => props.questionData, (newValue) => {
     form.text = newValue.text || ''
     form.type = newValue.type || ''
     form.required = newValue.required || false
-    form.order = newValue.order || 1
+    form.order = newValue.order || null
     form.score_weight = newValue.score_weight || null
     form.section_id = newValue.section_id || props.sectionId
   }

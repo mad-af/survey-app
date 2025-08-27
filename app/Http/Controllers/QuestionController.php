@@ -43,7 +43,7 @@ class QuestionController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'text' => 'required|string',
-                'type' => 'required|string|in:text,textarea,number,email,select,radio,checkbox',
+                'type' => 'required|string|in:short_text,long_text,single_choice,multiple_choice,number,date',
                 'required' => 'boolean',
                 'order' => 'nullable|integer|min:1',
                 'score_weight' => 'nullable|numeric|min:0',
@@ -64,8 +64,26 @@ class QuestionController extends Controller
 
             DB::beginTransaction();
 
-            // Get the next order if not provided
-            $order = $request->order ?? ($section->questions()->max('order') + 1);
+            // Handle order logic
+            if ($request->has('order') && $request->order !== null) {
+                $requestedOrder = $request->order;
+                $maxOrder = $section->questions()->max('order') ?? 0;
+                
+                // Validate order range
+                if ($requestedOrder > $maxOrder + 1) {
+                    $requestedOrder = $maxOrder + 1;
+                }
+                
+                // Shift existing questions to make room
+                $section->questions()
+                    ->where('order', '>=', $requestedOrder)
+                    ->increment('order');
+                
+                $order = $requestedOrder;
+            } else {
+                // Auto-assign to the end
+                $order = ($section->questions()->max('order') ?? 0) + 1;
+            }
 
             $question = Question::create([
                 'section_id' => $section->id,
@@ -75,6 +93,12 @@ class QuestionController extends Controller
                 'order' => $order,
                 'score_weight' => $request->score_weight ?? 0,
             ]);
+            
+            // Normalize order sequence to ensure no gaps
+            $questions = $section->questions()->orderBy('order')->get();
+            foreach ($questions as $index => $q) {
+                $q->update(['order' => $index + 1]);
+            }
 
             // Create choices if provided
             if ($request->has('choices') && is_array($request->choices)) {
@@ -155,7 +179,7 @@ class QuestionController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'text' => 'required|string',
-                'type' => 'required|string|in:text,textarea,number,email,select,radio,checkbox',
+                'type' => 'required|string|in:short_text,long_text,single_choice,multiple_choice,number,date',
                 'required' => 'boolean',
                 'order' => 'nullable|integer|min:1',
                 'score_weight' => 'nullable|numeric|min:0',
@@ -184,11 +208,44 @@ class QuestionController extends Controller
                 'score_weight' => $request->score_weight ?? 0,
             ];
 
-            if ($request->has('order')) {
-                $updateData['order'] = $request->order;
+            // Handle order update logic
+            if ($request->has('order') && $request->order !== null && $request->order != $question->order) {
+                $newOrder = $request->order;
+                $oldOrder = $question->order;
+                $maxOrder = $section->questions()->max('order');
+                
+                // Validate order range
+                if ($newOrder > $maxOrder) {
+                    $newOrder = $maxOrder;
+                }
+                
+                // Update current question's order first to avoid conflicts
+                $question->update(['order' => $newOrder]);
+                
+                if ($newOrder < $oldOrder) {
+                    // Moving up: increment orders of questions between new and old position
+                    $section->questions()
+                        ->where('id', '!=', $question->id)
+                        ->where('order', '>=', $newOrder)
+                        ->where('order', '<', $oldOrder)
+                        ->increment('order');
+                } else {
+                    // Moving down: decrement orders of questions between old and new position
+                    $section->questions()
+                        ->where('id', '!=', $question->id)
+                        ->where('order', '>', $oldOrder)
+                        ->where('order', '<=', $newOrder)
+                        ->decrement('order');
+                }
+                
+                // Normalize order sequence to ensure no gaps or duplicates
+                $questions = $section->questions()->orderBy('order')->get();
+                foreach ($questions as $index => $q) {
+                    $q->update(['order' => $index + 1]);
+                }
+            } else {
+                $question->update($updateData);
             }
-
-            $question->update($updateData);
 
             // Update choices if provided
             if ($request->has('choices') && is_array($request->choices)) {
@@ -260,7 +317,17 @@ class QuestionController extends Controller
                 ], 404);
             }
 
+            DB::beginTransaction();
+            
+            $deletedOrder = $question->order;
             $question->delete();
+            
+            // Reorder remaining questions to fill the gap
+            $section->questions()
+                ->where('order', '>', $deletedOrder)
+                ->decrement('order');
+            
+            DB::commit();
 
             return response()->json([
                 'success' => true,

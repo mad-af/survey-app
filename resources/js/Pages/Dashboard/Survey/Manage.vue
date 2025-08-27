@@ -47,11 +47,11 @@
     <!-- Question Drawers -->
     <!-- Add Question Drawer -->
     <QuestionDrawer :is-open="questionDrawer.isAddOpen" :is-edit-mode="false" :section-id="questionDrawer.sectionId"
-      title="Add New Question" @close="closeQuestionDrawer" @success="handleQuestionSuccess" />
+      :available-sections="surveySections" title="Add New Question" @close="closeQuestionDrawer" @success="handleQuestionSuccess" />
 
     <!-- Edit Question Drawer -->
     <QuestionDrawer :is-open="questionDrawer.isEditOpen" :is-edit-mode="true" :question-data="questionDrawer.editData"
-      :section-id="questionDrawer.sectionId" title="Edit Question" @close="closeQuestionDrawer"
+      :section-id="questionDrawer.sectionId" :available-sections="surveySections" title="Edit Question" @close="closeQuestionDrawer"
       @success="handleQuestionSuccess" />
   </DashboardLayout>
 </template>
