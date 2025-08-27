@@ -15,7 +15,7 @@
             @edit-question="handleEditQuestion" @delete-question="handleDeleteQuestion" />
 
           <!-- Empty State -->
-          <div v-if="surveySections.length > 0" class="w-full card bg-ghost card-sm">
+          <div v-if="surveySections.length === 0" class="w-full card bg-ghost card-sm">
             <div class="py-8 text-center card-body">
               <div class="flex flex-col gap-2 items-center">
                 <div class="text-base-content/80">
@@ -57,7 +57,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import { router } from '@inertiajs/vue3'
+import axios from 'axios'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
 import ManageSurveyActionCard from '@/Components/ManageSurveyActionCard.vue'
@@ -67,81 +69,17 @@ import QuestionDrawer from '@/Components/QuestionDrawer.vue'
 import { ListOrdered } from 'lucide-vue-next'
 
 // ===== PROPS & CONSTANTS =====
-const currentSurveyId = ref(1) // This should come from route params or props
-
-// Sample data - replace with actual data from props or API
-const surveySections = ref([
-  {
-    id: 1,
-    title: 'Personal Information',
-    description: 'Basic personal details and contact information',
-    order: 1,
-    questions: [
-      {
-        id: 1,
-        title: 'Full Name',
-        description: 'Enter your complete full name',
-        type: 'text',
-        required: true,
-        order: 1
-      },
-      {
-        id: 2,
-        title: 'Email Address',
-        description: 'Your primary email address for communication',
-        type: 'email',
-        required: true,
-        order: 2
-      },
-      {
-        id: 3,
-        title: 'Gender',
-        description: 'Please select your gender',
-        type: 'select',
-        required: false,
-        order: 3,
-        choices: [
-          { id: 1, text: 'Male' },
-          { id: 2, text: 'Female' },
-          { id: 3, text: 'Other' },
-          { id: 4, text: 'Prefer not to say' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 2,
-    title: 'Experience & Skills',
-    description: 'Professional experience and technical skills assessment',
-    order: 2,
-    questions: [
-      {
-        id: 4,
-        title: 'Years of Experience',
-        description: 'How many years of professional experience do you have?',
-        type: 'number',
-        required: true,
-        order: 1
-      },
-      {
-        id: 5,
-        title: 'Programming Languages',
-        description: 'Which programming languages are you proficient in? (Select all that apply)',
-        type: 'radio',
-        required: true,
-        order: 2,
-        choices: [
-          { id: 1, text: 'JavaScript' },
-          { id: 2, text: 'Python' },
-          { id: 3, text: 'Java' },
-          { id: 4, text: 'PHP' },
-          { id: 5, text: 'C#' },
-          { id: 6, text: 'Go' }
-        ]
-      }
-    ]
+const props = defineProps({
+  surveyId: {
+    type: [String, Number],
+    required: true
   }
-])
+})
+
+const currentSurveyId = ref(props.surveyId)
+
+// Data from API
+const surveySections = ref([])
 
 // ===== DRAWER STATE MANAGEMENT =====
 // Section Drawer State
@@ -204,8 +142,8 @@ const closeQuestionDrawer = () => {
 }
 
 const handleQuestionSuccess = async (questionData) => {
-  // Refresh the questions list
-  await fetchQuestions()
+  // Refresh the sections list to get updated questions
+  await fetchSections()
 
   // Close drawer
   closeQuestionDrawer()
@@ -220,20 +158,15 @@ const handleEditSection = (section) => {
 const handleDeleteSection = async (section) => {
   if (confirm(`Are you sure you want to delete "${section.title}"?`)) {
     try {
-      // TODO: Replace with actual API call
-      // await axios.delete(`/api/sections/${section.id}`)
-
-      // For now, remove from local state
-      const index = surveySections.value.findIndex(s => s.id === section.id)
-      if (index > -1) {
-        surveySections.value.splice(index, 1)
-      }
-
-      // TODO: Show success toast
+      await axios.delete(`/api/surveys/${currentSurveyId.value}/sections/${section.id}`)
+      
+      // Refresh sections list
+      await fetchSections()
+      
       console.log('Section deleted successfully')
     } catch (error) {
       console.error('Error deleting section:', error)
-      // TODO: Show error toast
+      alert('Error deleting section. Please try again.')
     }
   }
 }
@@ -248,38 +181,34 @@ const handleEditQuestion = (question, section) => {
 }
 
 const handleDeleteQuestion = async (question, section) => {
-  if (confirm(`Are you sure you want to delete "${question.title}"?`)) {
+  if (confirm(`Are you sure you want to delete "${question.text}"?`)) {
     try {
-      // TODO: Replace with actual API call
-      // await axios.delete(`/api/questions/${question.id}`)
-
-      // For now, remove from local state
-      const sectionIndex = surveySections.value.findIndex(s => s.id === section.id)
-      if (sectionIndex > -1) {
-        const questionIndex = surveySections.value[sectionIndex].questions.findIndex(q => q.id === question.id)
-        if (questionIndex > -1) {
-          surveySections.value[sectionIndex].questions.splice(questionIndex, 1)
-        }
-      }
-
-      // TODO: Show success toast
+      await axios.delete(`/api/sections/${section.id}/questions/${question.id}`)
+      
+      // Refresh sections list to get updated questions
+      await fetchSections()
+      
       console.log('Question deleted successfully')
     } catch (error) {
       console.error('Error deleting question:', error)
-      // TODO: Show error toast
+      alert('Error deleting question. Please try again.')
     }
   }
 }
 
 // ===== API METHODS =====
-// TODO: Implement actual API calls
 const fetchSections = async () => {
-  // Placeholder for API call to refresh sections
-  console.log('Fetching sections...')
+  try {
+    const response = await axios.get(`/api/surveys/${currentSurveyId.value}/sections`)
+    surveySections.value = response.data.data || response.data
+  } catch (error) {
+    console.error('Error fetching sections:', error)
+    surveySections.value = []
+  }
 }
 
-const fetchQuestions = async () => {
-  // Placeholder for API call to refresh questions
-  console.log('Fetching questions...')
-}
+// ===== LIFECYCLE HOOKS =====
+onMounted(() => {
+  fetchSections()
+})
 </script>

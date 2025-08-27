@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SurveyController;
+use App\Http\Controllers\SurveySectionController;
+use App\Http\Controllers\QuestionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,4 +32,16 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Survey Statistics Route
     Route::get('surveys/{survey}/statistics', [SurveyController::class, 'statistics']);
+    
+    // Survey Sections API Routes
+    Route::apiResource('surveys.sections', SurveySectionController::class)->parameters([
+        'surveys' => 'survey',
+        'sections' => 'section'
+    ]);
+    
+    // Questions API Routes (nested under sections)
+    Route::apiResource('sections.questions', QuestionController::class)->parameters([
+        'sections' => 'section',
+        'questions' => 'question'
+    ]);
 });
