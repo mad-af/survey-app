@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-base-200">
 
     <!-- Main Content Area -->
-    <main class="flex-1 flex items-center justify-center p-4 lg:p-8">
+    <main class="flex flex-1 justify-center items-center p-4 lg:p-8">
       <ContentCard 
         :title="title" 
         :subtitle="subtitle" 
