@@ -4,6 +4,29 @@
 
   <CenteredLayout title="📝 Pendaftaran Respondent" subtitle="Silakan lengkapi data diri Anda untuk mengikuti survey"
     max-width="max-w-2xl">
+
+    <!-- Geolocation Status -->
+    <div v-if="geolocation.loading" class="mb-4 alert alert-info">
+      <Info class="w-5 h-5" />
+      <span>Sedang mengambil lokasi Anda...</span>
+    </div>
+
+    <div v-else-if="geolocation.error" class="mb-4 alert alert-warning">
+      <Info class="w-5 h-5" />
+      <div>
+        <div class="font-bold">Informasi Lokasi</div>
+        <div class="text-sm">{{ geolocation.error }}</div>
+      </div>
+    </div>
+
+    <div v-else-if="geolocation.latitude && geolocation.longitude" class="mb-4 alert alert-success">
+      <Info class="w-5 h-5" />
+      <div>
+        <div class="font-bold">Lokasi Berhasil Diambil</div>
+        <div class="text-sm">Koordinat: {{ geolocation.latitude.toFixed(6) }}, {{ geolocation.longitude.toFixed(6) }}
+        </div>
+      </div>
+    </div>
     <!-- Registration Form -->
     <form @submit.prevent="submitForm" class="space-y-6">
       <!-- Personal Information Section -->
@@ -11,7 +34,12 @@
         <legend class="fieldset-legend">Informasi Pribadi</legend>
 
         <!-- External ID -->
-        <label class="label">ID Eksternal</label>
+        <label class="label">
+          ID Eksternal
+          <div class="tooltip tooltip-right" data-tip="ID dari sistem lain (NIM/NIP/nomor karyawan) untuk menghubungkan data survei dengan sistem eksternal">
+            <HelpCircle class="w-4 h-4 opacity-70" />
+          </div>
+        </label>
         <input v-model="form.external_id" type="text" placeholder="ID atau kode unik (opsional)" class="input"
           :class="{ 'input-error': form.errors.external_id }" />
         <div v-if="form.errors.external_id" class="mt-1 text-sm text-error">{{ form.errors.external_id }}</div>
@@ -87,7 +115,7 @@
             <span>
               Saya menyetujui penggunaan data pribadi untuk keperluan survey ini
             </span>
-            <span class="ml-1 text-error">*</span>
+            <span class="text-error">*</span>
           </span>
         </label>
         <label v-if="form.errors.consent" class="label">
@@ -97,7 +125,7 @@
 
       <!-- Submit Button -->
       <button type="submit" class="w-full btn btn-primary" :class="{ 'loading': form.processing }"
-        :disabled="form.processing || !form.name || !form.consent">
+        :disabled="form.processing || !form.name || !form.consent || !form.gender">
         <LogIn v-if="!form.processing" class="mr-2 w-5 h-5" />
         {{ form.processing ? 'Mengirim...' : 'Submit Formulir' }}
       </button>
@@ -120,8 +148,18 @@
 
 <script setup>
 import { Head, useForm, router } from '@inertiajs/vue3'
+import { onMounted, ref } from 'vue'
 import CenteredLayout from '@/Layouts/CenteredLayout.vue'
-import { LogIn, Info } from 'lucide-vue-next'
+import { LogIn, Info, HelpCircle } from 'lucide-vue-next'
+
+// Geolocation state
+const geolocation = ref({
+  latitude: null,
+  longitude: null,
+  accuracy: null,
+  error: null,
+  loading: false
+})
 
 // Form setup with all Respondent model fields
 const form = useForm({
@@ -137,6 +175,72 @@ const form = useForm({
   location: '',
   demographics: {},
   consent: false
+})
+
+// Get user geolocation
+const getUserLocation = () => {
+  if (!navigator.geolocation) {
+    geolocation.value.error = 'Geolocation tidak didukung oleh browser ini'
+    return
+  }
+
+  geolocation.value.loading = true
+  geolocation.value.error = null
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      geolocation.value.latitude = position.coords.latitude
+      geolocation.value.longitude = position.coords.longitude
+      geolocation.value.accuracy = position.coords.accuracy
+      geolocation.value.loading = false
+
+      // Update demographics with geolocation data
+      form.demographics = {
+        ...form.demographics,
+        geolocation: {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          timestamp: new Date().toISOString()
+        }
+      }
+
+      console.log('Geolocation obtained:', {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy
+      })
+    },
+    (error) => {
+      geolocation.value.loading = false
+      let errorMessage = 'Gagal mendapatkan lokasi'
+
+      switch (error.code) {
+        case error.PERMISSION_DENIED:
+          errorMessage = 'Akses lokasi ditolak oleh user'
+          break
+        case error.POSITION_UNAVAILABLE:
+          errorMessage = 'Informasi lokasi tidak tersedia'
+          break
+        case error.TIMEOUT:
+          errorMessage = 'Permintaan lokasi timeout'
+          break
+      }
+
+      geolocation.value.error = errorMessage
+      console.error('Geolocation error:', errorMessage)
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 300000 // 5 minutes
+    }
+  )
+}
+
+// Get location when component mounts
+onMounted(() => {
+  getUserLocation()
 })
 
 // Submit form function
