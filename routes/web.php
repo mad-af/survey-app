@@ -50,3 +50,6 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
     });
 });
 
+Route::get('/formulir', function () {
+    return Inertia::render('Survey/Formulir');
+});
