@@ -6,21 +6,18 @@
     <!-- Loading State -->
     <div v-if="loading" class="flex justify-center items-center min-h-64">
       <div class="text-center">
-        <div class="mx-auto mb-4 w-12 h-12 rounded-full border-b-2 border-blue-600 animate-spin"></div>
-        <p class="text-gray-600">Memuat data survey...</p>
+        <div class="mx-auto mb-4 w-12 h-12 rounded-full border-b-2 animate-spin border-primary"></div>
+        <p class="text-base-content/70">Memuat data survey...</p>
       </div>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="flex justify-center items-center min-h-64">
       <div class="text-center">
-        <div class="mb-4 text-6xl text-red-500">⚠️</div>
-        <h3 class="mb-2 text-lg font-semibold text-gray-900">Gagal Memuat Survey</h3>
-        <p class="mb-4 text-gray-600">{{ error }}</p>
-        <button @click="loadSurveyData"
-          class="px-4 py-2 text-white bg-blue-600 rounded-lg transition-colors hover:bg-blue-700">
-          Coba Lagi
-        </button>
+        <div class="mb-4 text-6xl">⚠️</div>
+        <h3 class="mb-2 text-lg font-semibold text-base-content/70">Gagal Memuat Survey</h3>
+        <p class="mb-4 text-base-content/70">{{ error }}</p>
+        <Link :href="route('entry')" class="link link-primary">Kembali ke Halaman Entry Token</Link>
       </div>
     </div>
 
@@ -49,14 +46,21 @@
 </template>
 
 <script setup>
-import { Head } from '@inertiajs/vue3'
+import { Head, Link, router } from '@inertiajs/vue3'
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 import ProsesSurveyLayout from '@/Layouts/ProsesSurveyLayout.vue'
 import SurveyNavbar from '@/Components/SurveyNavbar.vue'
 import SurveyQuestionCard from '@/Components/SurveyQuestionCard.vue'
-import SurveyEmptyState from '@/Components/SurveyEmptyState.vue'
 import SurveyNavigation from '@/Components/SurveyNavigation.vue'
+
+// Route helper
+const route = (name) => {
+  const routes = {
+    'entry': '/entry',
+  }
+  return routes[name] || '/'
+}
 
 // Props
 const props = defineProps({
@@ -205,9 +209,9 @@ const submitSurveyResponse = async () => {
     // Transform answers to match API format
     const formattedAnswers = Object.entries(answers.value).map(([questionId, answer]) => {
       const question = displayQuestions.value.find(q => q.id == questionId)
-      
+
       let formattedAnswer = answer
-      
+
       if (question?.type === 'single_choice' && typeof answer === 'string') {
         // For single choice, send the choice ID
         formattedAnswer = parseInt(answer)
@@ -218,7 +222,7 @@ const submitSurveyResponse = async () => {
         // For number type, convert to number
         formattedAnswer = parseFloat(answer)
       }
-      
+
       return {
         question_id: parseInt(questionId),
         answer: formattedAnswer
