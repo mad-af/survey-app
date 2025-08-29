@@ -391,6 +391,7 @@ class SurveyController extends Controller
      */
     public function showResult(Request $request, $survey)
     {
+        
         // Get survey data from middleware
         $surveyModel = $request->survey;
         $surveyResponse = $request->survey_response;
@@ -407,7 +408,7 @@ class SurveyController extends Controller
         
         // Get response score
         $responseScore = $surveyResponse->score;
-        
+
         if (!$responseScore) {
             abort(404, 'Survey result not found');
         }

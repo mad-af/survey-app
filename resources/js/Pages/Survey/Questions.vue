@@ -96,12 +96,12 @@ const loadSurveyData = async () => {
 
       // Get respondent token from session/localStorage or generate new one
       respondentToken.value = sessionStorage.getItem('survey_token') || generateRespondentToken()
-      
+
       // Store token in session for persistence
       if (!sessionStorage.getItem('survey_token')) {
         sessionStorage.setItem('survey_token', respondentToken.value)
       }
-      
+
       // Set initial section
       if (response.data.data.sections.length > 0) {
         currentSectionId.value = response.data.data.sections[0].id
@@ -201,7 +201,7 @@ const handlePreviousSection = () => {
 const handleNextSection = async () => {
   // Save current section answers before proceeding
   await saveSectionAnswers()
-  
+
   if (hasNextSection.value) {
     const currentIndex = displaySections.value.findIndex(s => s.id === currentSectionId.value)
     const nextSectionData = displaySections.value[currentIndex + 1]
@@ -296,7 +296,7 @@ const submitFinalSurveyResponse = async () => {
       // Clear session data
       sessionStorage.removeItem('survey_token')
       // Redirect to thank you page
-      router.visit(`/survey/${props.surveyCode}/thank-you`)
+      router.visit(`/survey/${props.surveyCode}/result`)
     }
   } catch (err) {
     console.error('Error submitting final survey:', err)

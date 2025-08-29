@@ -258,10 +258,9 @@ class SurveyTakeController extends Controller
                 }
             }
 
-            // Calculate and save score if this is a complete submission (not partial)
-            if (!$isPartial) {
-                $this->calculateAndSaveScore($response, $survey);
-            }
+            // Calculate and save score for both complete and partial submissions
+            // This ensures that every response has a score record, even if incomplete
+            $this->calculateAndSaveScore($response, $survey);
 
             DB::commit();
 
