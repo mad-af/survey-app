@@ -17,7 +17,7 @@
         <div class="mb-4 text-6xl">⚠️</div>
         <h3 class="mb-2 text-lg font-semibold text-base-content/70">Gagal Memuat Survey</h3>
         <p class="mb-4 text-base-content/70">{{ error }}</p>
-        <Link :href="route('entry')" class="link link-primary">Kembali ke Halaman Entry Token</Link>
+        <Link :href="route('entry')" class="link link-primary">Kembali ke-halaman entry token</Link>
       </div>
     </div>
 
