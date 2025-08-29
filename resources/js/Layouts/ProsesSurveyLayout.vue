@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-base-200">
 
     <!-- Main Content Area -->
-    <main class="p-4 pt-8 mx-auto space-y-3 max-w-4xl md:pt-32 lg:p-8">
+    <main class="p-4 pt-8 mx-auto space-y-3 max-w-4xl lg:p-8">
 
       <!-- Custom Slot Content -->
       <slot />

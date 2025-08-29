@@ -66,14 +66,14 @@ const dummySections = ref([
     id: 1,
     survey_id: 1,
     title: 'Informasi Umum',
-    description: 'Bagian untuk mengumpulkan informasi dasar responden',
+    description: 'Bagian untuk mengumpulkan informasi dasar responden Bagian untuk mengumpulkan informasi dasar responden Bagian untuk mengumpulkan informasi dasar responden',
     order: 1
   },
   {
     id: 2,
     survey_id: 1,
     title: 'Kepuasan Layanan',
-    description: 'Evaluasi tingkat kepuasan terhadap layanan yang diberikan',
+    description: 'Evaluasi tingkat kepuasan terhadap layanan yang diberikan Evaluasi tingkat kepuasan terhadap layanan yang diberikan',
     order: 2
   },
   {
