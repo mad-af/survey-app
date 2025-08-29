@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\SurveySectionController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\SurveyTakeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,4 +45,16 @@ Route::middleware('auth:sanctum')->group(function () {
         'sections' => 'section',
         'questions' => 'question'
     ]);
+    
+    // Survey Take API Routes
+    Route::get('surveys/{survey}/data', [SurveyTakeController::class, 'getSurveyData']);
+    Route::post('surveys/{survey}/responses', [SurveyTakeController::class, 'submitResponse']);
+});
+
+// Public API Routes - No Authentication Required
+Route::prefix('public')->group(function () {
+    // Get survey by code for public access
+    Route::get('surveys/{code}', [SurveyTakeController::class, 'getSurveyByCode']);
+    Route::post('surveys/{code}/responses', [SurveyTakeController::class, 'submitResponseByCode']);
+    Route::post('surveys/{survey}/responses', [SurveyTakeController::class, 'submitResponse']);
 });

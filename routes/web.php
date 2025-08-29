@@ -57,7 +57,9 @@ Route::prefix('survey')->group(function () {
     });
     
     Route::get('/{survey}/questions', function ($survey) {
-        return Inertia::render('Survey/Questions');
+        return Inertia::render('Survey/Questions', [
+            'surveyCode' => $survey
+        ]);
     });
     
 });
