@@ -107,7 +107,7 @@ const initializeData = () => {
 
   // Load existing response data if available
   if (props.existingResponse) {
-    answers.value = props.existingResponse.answers || {}
+    answers.value = props.existingResponse.answers
     responseId.value = props.existingResponse.id
     hasExistingData.value = true
     console.log('Loaded existing response from SSR:', props.existingResponse)
@@ -116,11 +116,28 @@ const initializeData = () => {
 }
 
 const getValueAnswer = (answer, type) => {
+  if (!answer) {
+    switch (type) {
+      case 'short_text':
+      case 'long_text':
+        return ''
+      case 'number':
+        return null
+      case 'single_choice':
+        return null
+      case 'multiple_choice':
+        return []
+      default:
+        return ''
+    }
+  }
+
   switch (type) {
     case 'short_text':
     case 'long_text':
+      return answer.value_text
     case 'number':
-      return answer.answer_value
+      return answer.value_number
     case 'single_choice':
       return answer.choice_id
     case 'multiple_choice':
@@ -233,6 +250,9 @@ const handleAnswerChange = (questionId, answer) => {
 const saveSectionAnswers = async () => {
   try {
     // Get answers for current section only
+    for (const key in answers.value) {
+      delete answers.value[key].answer_value
+    }
     const currentSectionAnswers = {}
     currentQuestions.value.forEach(question => {
       if (answers.value[question.id] !== undefined) {
@@ -248,7 +268,6 @@ const saveSectionAnswers = async () => {
     const formattedAnswers = Object.entries(currentSectionAnswers).map(([questionId, answer]) => {
       const question = displayQuestions.value.find(q => q.id == questionId)
       const formatted = formatAnswer(question, questionId, answer)
-      console.log('Formatting answer:', { questionId, answer, questionType: question?.type, formatted })
       return formatted
     })
 
@@ -312,8 +331,6 @@ const submitFinalSurveyResponse = async () => {
     finalForm.post(`/survey/${props.surveyCode}/submit`, {
       onSuccess: () => {
         console.log('Survey completed successfully')
-        // Clear session data
-        sessionStorage.removeItem('survey_token')
         // Redirect to thank you page will be handled by controller
       },
       onError: (errors) => {
@@ -333,23 +350,12 @@ const submitFinalSurveyResponse = async () => {
 const formatAnswer = (question, questionId, answer) => {
   let formattedAnswer = answer
 
-  if (question?.type === 'single_choice' && typeof answer === 'string') {
-    // For single choice, send the choice ID
-    formattedAnswer = parseInt(answer)
-  } else if (question?.type === 'multiple_choice' && Array.isArray(answer)) {
-    // For multiple choice, send array of choice IDs
-    formattedAnswer = answer.map(id => parseInt(id))
-  } else if (question?.type === 'number' && typeof answer === 'string') {
-    // For number type, convert to number
-    formattedAnswer = parseFloat(answer)
-  }
-
   return {
     question_id: parseInt(questionId),
-    choice_id: question?.type === 'single_choice' ? formattedAnswer : null,
-    value_text: ['text', 'textarea', 'short_text', 'long_text'].includes(question?.type) ? answer : null,
-    value_number: question?.type === 'number' ? formattedAnswer : null,
-    value_json: question?.type === 'multiple_choice' ? formattedAnswer : null
+    choice_id: question?.type === 'single_choice' ? formattedAnswer.choice_id : null,
+    value_text: ['text', 'textarea', 'short_text', 'long_text'].includes(question?.type) ? answer.value_text : null,
+    value_number: question?.type === 'number' ? formattedAnswer.value_number : null,
+    value_json: question?.type === 'multiple_choice' ? formattedAnswer.value_json : null
   }
 }
 

@@ -67,6 +67,6 @@ Route::prefix('survey')->middleware('survey.token')->group(function () {
     
     Route::post('/{survey}/submit', [SurveyController::class, 'submitSurveyResponse']);
     
-    Route::get('/{survey}/result', [SurveyController::class, 'showResult']);
+    Route::get('/{survey}/result', [SurveyController::class, 'showResult'])->name("survey.result");
 });
 

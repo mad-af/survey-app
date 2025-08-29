@@ -460,7 +460,7 @@ class SurveyController extends Controller
                 $query->orderBy('order');
             }
         ]);
-        
+
         // Load response with score and result category
         $surveyResponse->load(['score.resultCategory']);
         
@@ -494,8 +494,9 @@ class SurveyController extends Controller
         // Process section scores
         if ($responseScore->section_scores && is_array($responseScore->section_scores)) {
             foreach ($surveyModel->sections as $section) {
-                $sectionScore = collect($responseScore->section_scores)
-                    ->firstWhere('section_id', $section->id);
+
+                $sectionScore = collect($responseScore->section_scores)[$section->id];
+                    // ->firstWhere('section_id', $section->id);
                 
                 if ($sectionScore) {
                     $surveyResult['sections'][] = [
