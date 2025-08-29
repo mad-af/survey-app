@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Survey;
+use App\Models\Response;
 use App\Enums\SurveyStatus;
 use App\Enums\SurveyVisibility;
 use Illuminate\Http\Request;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Inertia\Inertia;
 
 class SurveyController extends Controller
 {
@@ -244,5 +246,105 @@ class SurveyController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Handle survey entry with survey code
+     */
+    public function enter(Request $request)
+    {
+        $request->validate([
+            'survey_code' => 'required|string'
+        ]);
+
+        // Find survey by code
+        $survey = Survey::where('code', $request->survey_code)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$survey) {
+            return back()->withErrors([
+                'survey_code' => 'Kode survey tidak valid atau survey tidak aktif.'
+            ]);
+        }
+
+        // Check if survey is within date range
+        $now = now();
+        if ($survey->starts_at && $now->lt($survey->starts_at)) {
+            return back()->withErrors([
+                'survey_code' => 'Survey belum dimulai.'
+            ]);
+        }
+
+        if ($survey->ends_at && $now->gt($survey->ends_at)) {
+            return back()->withErrors([
+                'survey_code' => 'Survey sudah berakhir.'
+            ]);
+        }
+
+        // Generate unique respondent token
+        $respondentToken = $this->generateRespondentToken($survey->id);
+
+        // Create Response entry
+        $response = Response::create([
+            'survey_id' => $survey->id,
+            'respondent_id' => null, // Will be filled after respondent registration
+            'respondent_token' => $respondentToken,
+            'started_at' => now(),
+            'meta' => [
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'survey_code' => $request->survey_code
+            ]
+        ]);
+
+        // Store token in session for middleware access
+        session([
+            'survey_token' => $respondentToken,
+            'survey_id' => $survey->id,
+            'response_id' => $response->id
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'token' => $respondentToken,
+            'survey_id' => $survey->id,
+            'redirect_url' => '/survey/' . $survey->code . '/respondent-data'
+        ]);
+    }
+
+    /**
+     * Show respondent data form
+     */
+    public function showRespondentData($survey)
+    {
+        return Inertia::render('Survey/RespondentData');
+    }
+
+    /**
+     * Show survey questions
+     */
+    public function showQuestions($survey)
+    {
+        return Inertia::render('Survey/Questions', [
+            'surveyCode' => $survey
+        ]);
+    }
+
+    /**
+     * Handle respondent registration
+     */
+    public function registerRespondent(Request $request, $survey)
+    {
+        // This will be implemented later
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Generate unique respondent token
+     */
+    private function generateRespondentToken($surveyId)
+    {
+        return Str::random(32) . '_' . time() . '_' . $surveyId;
     }
 }

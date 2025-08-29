@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\SurveyTakeController;
+use App\Http\Controllers\SurveyController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -13,6 +13,8 @@ Route::get('/', function () {
 Route::get('/entry', function () {
     return Inertia::render('Entry');
 });
+
+Route::post('/survey/enter', [SurveyController::class, 'enter']);
 
 // Authentication routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
@@ -52,15 +54,11 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
 });
 
 Route::prefix('survey')->group(function () {
-    Route::get('/{survey}/respondent-data', function ($survey) {
-        return Inertia::render('Survey/RespondentData');
-    });
+    Route::get('/{survey}/respondent-data', [SurveyController::class, 'showRespondentData'])->middleware('survey.token');
     
-    Route::get('/{survey}/questions', function ($survey) {
-        return Inertia::render('Survey/Questions', [
-            'surveyCode' => $survey
-        ]);
-    });
+    Route::get('/{survey}/questions', [SurveyController::class, 'showQuestions'])->middleware('survey.token');
+    
+    Route::post('/{survey}/register', [SurveyController::class, 'registerRespondent'])->middleware('survey.token');
     
 });
 
