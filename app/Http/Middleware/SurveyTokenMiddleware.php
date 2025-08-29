@@ -42,7 +42,7 @@ class SurveyTokenMiddleware
 
         // Verify survey is still active
         $survey = Survey::find($surveyId);
-        if (!$survey || $survey->status !== 'active') {
+        if (!$survey || $survey->status->value !== 'active') {
             return redirect('/entry')->withErrors([
                 'survey_code' => 'Survey tidak aktif atau tidak ditemukan.'
             ]);

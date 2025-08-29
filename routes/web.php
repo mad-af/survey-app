@@ -54,11 +54,11 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
 });
 
 Route::prefix('survey')->group(function () {
-    Route::get('/{survey}/respondent-data', [SurveyController::class, 'showRespondentData'])->middleware('survey.token');
+    Route::get('/{survey}/respondent-data', [SurveyController::class, 'showRespondentData']);
     
-    Route::get('/{survey}/questions', [SurveyController::class, 'showQuestions'])->middleware('survey.token');
+    Route::get('/{survey}/questions', [SurveyController::class, 'showQuestions']);
     
-    Route::post('/{survey}/register', [SurveyController::class, 'registerRespondent'])->middleware('survey.token');
+    Route::post('/{survey}/register', [SurveyController::class, 'registerRespondent']);
     
 });
 

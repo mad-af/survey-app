@@ -305,12 +305,8 @@ class SurveyController extends Controller
             'response_id' => $response->id
         ]);
 
-        return response()->json([
-            'success' => true,
-            'token' => $respondentToken,
-            'survey_id' => $survey->id,
-            'redirect_url' => '/survey/' . $survey->code . '/respondent-data'
-        ]);
+        // Use Inertia redirect instead of JSON response
+        return redirect()->intended('/survey/' . $survey->code . '/respondent-data');
     }
 
     /**
@@ -318,7 +314,17 @@ class SurveyController extends Controller
      */
     public function showRespondentData($survey)
     {
-        return Inertia::render('Survey/RespondentData');
+        // Find survey by code
+        $surveyModel = Survey::where('code', $survey)->first();
+        
+        if (!$surveyModel) {
+            abort(404, 'Survey not found');
+        }
+        
+        return Inertia::render('Survey/RespondentData', [
+            'survey' => $surveyModel,
+            'surveyCode' => $survey
+        ]);
     }
 
     /**
@@ -336,8 +342,75 @@ class SurveyController extends Controller
      */
     public function registerRespondent(Request $request, $survey)
     {
-        // This will be implemented later
-        return response()->json(['success' => true]);
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'gender' => 'required|in:male,female',
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:20',
+            'birth_year' => 'nullable|integer|min:1900|max:' . date('Y'),
+            'organization' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
+            'role_title' => 'nullable|string|max:255',
+            'location' => 'nullable|string|max:255',
+            'external_id' => 'nullable|string|max:100',
+            'consent' => 'required|boolean',
+            'consent_at' => 'nullable|date',
+            'demographics' => 'nullable|array'
+        ]);
+
+        try {
+            // Get survey token and response from middleware
+            $surveyToken = $request->survey_token;
+            $surveyId = $request->survey_id;
+            $responseId = $request->response_id;
+            $surveyModel = $request->survey;
+            $surveyResponse = $request->survey_response;
+
+            // Create respondent
+            $respondent = \App\Models\Respondent::create([
+                'external_id' => $request->external_id,
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'gender' => $request->gender,
+                'birth_year' => $request->birth_year,
+                'organization' => $request->organization,
+                'department' => $request->department,
+                'role_title' => $request->role_title,
+                'location' => $request->location,
+                'demographics' => $request->demographics ?? [],
+                'consent' => $request->consent,
+                'consent_at' => $request->consent_at ? \Carbon\Carbon::parse($request->consent_at) : now(),
+                'meta' => [
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'registration_timestamp' => now()->toISOString()
+                ]
+            ]);
+
+            // Update response with respondent_id
+            $surveyResponse->update([
+                'respondent_id' => $respondent->id
+            ]);
+
+            // Create survey_respondent relationship
+            \App\Models\SurveyRespondent::create([
+                'survey_id' => $surveyId,
+                'respondent_id' => $respondent->id,
+                'invited_at' => now(),
+                'started_at' => now(),
+                'status' => 'in_progress'
+            ]);
+
+            return Inertia::location('/survey/' . $surveyModel->code . '/questions');
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to register respondent',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

@@ -152,6 +152,14 @@ import { onMounted, ref } from 'vue'
 import CenteredLayout from '@/Layouts/CenteredLayout.vue'
 import { LogIn, Info, HelpCircle } from 'lucide-vue-next'
 
+// Route helper
+const route = (name, params = {}) => {
+  const routes = {
+    'survey.register': `/survey/${params.survey}/register`,
+  }
+  return routes[name] || '/'
+}
+
 // Geolocation state
 const geolocation = ref({
   latitude: null,
@@ -245,17 +253,17 @@ onMounted(() => {
 
 // Submit form function
 const submitForm = () => {
+  // Get survey code from current URL path
+  const pathParts = window.location.pathname.split('/')
+  const surveyCode = pathParts[2] // /survey/{code}/respondent-data
+  
   // Set consent timestamp when form is submitted
   const formData = {
     ...form.data(),
     consent_at: form.consent ? new Date().toISOString() : null
   }
 
-  form.post(route('survey.register'), {
-    onSuccess: () => {
-      // Handle successful registration
-      console.log('Registration successful')
-    },
+  form.post(route('survey.register', { survey: surveyCode }), {
     onError: (errors) => {
       // Handle validation errors
       console.error('Registration failed:', errors)
