@@ -33,19 +33,17 @@
         :sections="displaySections" :current-section-id="currentSectionId" @section-change="handleSectionChange" />
 
       <!-- Survey Questions Cards -->
-      <div v-if="currentQuestions.length > 0" class="space-y-4">
+      <div class="space-y-4">
         <SurveyQuestionCard v-for="(question, index) in currentQuestions" :key="question.id" :question="question"
           :question-number="index + 1" :model-value="answers[question.id]"
           @update:model-value="handleAnswerChange(question.id, $event)" />
       </div>
 
-      <!-- Empty State -->
-      <SurveyEmptyState v-else />
 
       <!-- Navigation Buttons -->
       <SurveyNavigation :answered-questions="answeredQuestions" :total-questions="totalQuestions"
         :has-previous-section="hasPreviousSection" :has-next-section="hasNextSection" :can-proceed="canProceed"
-        @previous-section="handlePreviousSection" @next-section="handleNextSection" @submit="submitSurveyResponse" />
+        @previous-section="handlePreviousSection" @next-section="handleNextSection" />
     </template>
   </ProsesSurveyLayout>
 </template>
@@ -189,6 +187,9 @@ const handleNextSection = () => {
     const currentIndex = displaySections.value.findIndex(s => s.id === currentSectionId.value)
     const nextSectionData = displaySections.value[currentIndex + 1]
     handleSectionChange(nextSectionData.id)
+  } else {
+    // This is the last section, submit the survey
+    submitSurveyResponse()
   }
 }
 
@@ -201,8 +202,31 @@ const submitSurveyResponse = async () => {
   try {
     loading.value = true
 
+    // Transform answers to match API format
+    const formattedAnswers = Object.entries(answers.value).map(([questionId, answer]) => {
+      const question = displayQuestions.value.find(q => q.id == questionId)
+      
+      let formattedAnswer = answer
+      
+      if (question?.type === 'single_choice' && typeof answer === 'string') {
+        // For single choice, send the choice ID
+        formattedAnswer = parseInt(answer)
+      } else if (question?.type === 'multiple_choice' && Array.isArray(answer)) {
+        // For multiple choice, send array of choice IDs
+        formattedAnswer = answer.map(id => parseInt(id))
+      } else if (question?.type === 'number' && typeof answer === 'string') {
+        // For number type, convert to number
+        formattedAnswer = parseFloat(answer)
+      }
+      
+      return {
+        question_id: parseInt(questionId),
+        answer: formattedAnswer
+      }
+    })
+
     const response = await axios.post(`/api/public/surveys/${props.surveyCode}/responses`, {
-      answers: answers.value,
+      answers: formattedAnswers,
       respondent_token: generateRespondentToken(),
       meta: {
         user_agent: navigator.userAgent,

@@ -24,28 +24,30 @@
       </div>
 
       <!-- Question Input Area -->
-      <div class="mt-4">
+      <div>
         <!-- Short Text -->
         <div v-if="question.type === 'short_text'">
           <input type="text" class="w-full input input-bordered" :placeholder="'Masukkan jawaban Anda...'" 
-            :required="question.required" />
+            :required="question.required" :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" />
         </div>
 
         <!-- Long Text -->
         <div v-else-if="question.type === 'long_text'">
           <textarea class="w-full h-24 resize-none textarea textarea-bordered" 
-            :placeholder="'Masukkan jawaban Anda...'" :required="question.required"></textarea>
+            :placeholder="'Masukkan jawaban Anda...'" :required="question.required" 
+            :value="modelValue" @input="$emit('update:modelValue', $event.target.value)"></textarea>
         </div>
 
         <!-- Number -->
         <div v-else-if="question.type === 'number'">
           <input type="number" class="w-full input input-bordered" :placeholder="'Masukkan angka...'" 
-            :required="question.required" />
+            :required="question.required" :value="modelValue" @input="$emit('update:modelValue', parseFloat($event.target.value))" />
         </div>
 
         <!-- Date -->
         <div v-else-if="question.type === 'date'">
-          <input type="date" class="w-full input input-bordered" :required="question.required" />
+          <input type="date" class="w-full input input-bordered" :required="question.required" 
+            :value="modelValue" @input="$emit('update:modelValue', $event.target.value)" />
         </div>
 
         <!-- Single Choice -->
@@ -53,8 +55,9 @@
           <div v-for="choice in question.choices" :key="choice.id" class="form-control">
             <label class="justify-start space-x-3 cursor-pointer label">
               <input type="radio" :name="`question_${question.id}`" :value="choice.id" class="radio radio-primary" 
-                :required="question.required" />
-              <span class="label-text">{{ choice.text }}</span>
+                :required="question.required" :checked="modelValue === choice.id" 
+                @change="$emit('update:modelValue', choice.id)" />
+              <span class="label-text">{{ choice.label }}</span>
             </label>
           </div>
         </div>
@@ -63,8 +66,10 @@
         <div v-else-if="question.type === 'multiple_choice' && question.choices" class="space-y-2">
           <div v-for="choice in question.choices" :key="choice.id" class="form-control">
             <label class="justify-start space-x-3 cursor-pointer label">
-              <input type="checkbox" :value="choice.id" class="checkbox checkbox-primary" />
-              <span class="label-text">{{ choice.text }}</span>
+              <input type="checkbox" :value="choice.id" class="checkbox checkbox-primary" 
+                :checked="Array.isArray(modelValue) && modelValue.includes(choice.id)" 
+                @change="handleMultipleChoice(choice.id, $event.target.checked)" />
+              <span class="label-text">{{ choice.label }}</span>
             </label>
           </div>
         </div>
@@ -83,8 +88,30 @@ const props = defineProps({
   questionNumber: {
     type: Number,
     required: true
+  },
+  modelValue: {
+    type: [String, Number, Array],
+    default: null
   }
 })
+
+// Define emits
+const emit = defineEmits(['update:modelValue'])
+
+// Handle multiple choice selection
+const handleMultipleChoice = (choiceId, isChecked) => {
+  let currentValue = Array.isArray(props.modelValue) ? [...props.modelValue] : []
+  
+  if (isChecked) {
+    if (!currentValue.includes(choiceId)) {
+      currentValue.push(choiceId)
+    }
+  } else {
+    currentValue = currentValue.filter(id => id !== choiceId)
+  }
+  
+  emit('update:modelValue', currentValue)
+}
 
 // Question type labels
 const getQuestionTypeLabel = (type) => {

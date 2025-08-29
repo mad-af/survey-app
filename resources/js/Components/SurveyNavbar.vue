@@ -150,13 +150,10 @@ const handleSectionChange = (sectionId) => {
   emit('section-change', sectionId)
 }
 
-// Watch for currentSectionId changes and scroll to active card (mobile only)
+// Watch for currentSectionId changes and scroll to active card
 watch(() => props.currentSectionId, async () => {
   await nextTick()
-
-  // Only apply auto-scroll on mobile devices (screen width < 1024px)
-  const isMobile = window.innerWidth < 1024
-
+  
   if (activeCardRef.value && scrollContainer.value) {
     const container = scrollContainer.value
     const activeCard = activeCardRef.value
@@ -165,10 +162,11 @@ watch(() => props.currentSectionId, async () => {
     const containerWidth = container.clientWidth
     const cardLeft = activeCard.offsetLeft
     const cardWidth = activeCard.offsetWidth
-    const scrollLeft = isMobile ?
-      cardLeft - (containerWidth / .08) + (cardWidth / .08) :
+    
+    const isMobile = window.innerWidth < 1024
+    const scrollLeft = isMobile ? 
+      cardLeft - (containerWidth / 2) + (cardWidth / 2):
       cardLeft - (containerWidth) + (cardWidth)
-
     // Smooth scroll to the calculated position
     container.scrollTo({
       left: scrollLeft,
