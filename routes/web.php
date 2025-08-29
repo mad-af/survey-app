@@ -63,6 +63,10 @@ Route::prefix('survey')->middleware('survey.token')->group(function () {
     
     Route::post('/{survey}/register', [SurveyController::class, 'registerRespondent']);
     
+    Route::post('/{survey}/save-section', [SurveyController::class, 'saveSectionAnswers']);
+    
+    Route::post('/{survey}/submit', [SurveyController::class, 'submitSurveyResponse']);
+    
     Route::get('/{survey}/result', [SurveyController::class, 'showResult']);
 });
 

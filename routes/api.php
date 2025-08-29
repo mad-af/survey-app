@@ -55,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::prefix('public')->group(function () {
     // Get survey by code for public access
     Route::get('surveys/{code}', [SurveyTakeController::class, 'getSurveyByCode']);
+    Route::get('surveys/{code}/existing-response', [SurveyTakeController::class, 'getExistingResponseByCode']);
     Route::post('surveys/{code}/responses', [SurveyTakeController::class, 'submitResponseByCode']);
     Route::post('surveys/{survey}/responses', [SurveyTakeController::class, 'submitResponse']);
 });

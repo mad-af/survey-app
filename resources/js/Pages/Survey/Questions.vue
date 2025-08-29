@@ -23,6 +23,7 @@
 
     <!-- Survey Content -->
     <template v-else-if="surveyData">
+
       <!-- Survey Navbar with Integrated Tabs -->
       <SurveyNavbar :survey-title="surveyTitle"
         :section-description="displaySections.find(s => s.id === currentSectionId)?.description"
@@ -32,7 +33,7 @@
       <!-- Survey Questions Cards -->
       <div class="space-y-4">
         <SurveyQuestionCard v-for="(question, index) in currentQuestions" :key="question.id" :question="question"
-          :question-number="index + 1" :model-value="answers[question.id]"
+          :question-number="index + 1" :model-value="getValueAnswer(answers[question.id], question.type)"
           @update:model-value="handleAnswerChange(question.id, $event)" />
       </div>
 
@@ -47,8 +48,8 @@
 
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
-import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useForm } from '@inertiajs/vue3'
 import ProsesSurveyLayout from '@/Layouts/ProsesSurveyLayout.vue'
 import SurveyNavbar from '@/Components/SurveyNavbar.vue'
 import SurveyQuestionCard from '@/Components/SurveyQuestionCard.vue'
@@ -67,13 +68,21 @@ const props = defineProps({
   surveyCode: {
     type: String,
     required: true
+  },
+  surveyData: {
+    type: Object,
+    default: null
+  },
+  existingResponse: {
+    type: Object,
+    default: null
   }
 })
 
-// Survey data
-const surveyData = ref(null)
+// Survey data from SSR
+const surveyData = ref(props.surveyData)
 const currentSectionId = ref(null)
-const loading = ref(true)
+const loading = ref(false)
 const error = ref(null)
 
 // Survey answers
@@ -82,45 +91,48 @@ const answers = ref({})
 // Response tracking
 const responseId = ref(null)
 const respondentToken = ref(null)
+const hasExistingData = ref(false)
 
-// Load survey data from API
-const loadSurveyData = async () => {
-  try {
-    loading.value = true
-    error.value = null
+// Initialize data from SSR props
+const initializeData = () => {
+  // Set survey data from props
+  if (props.surveyData) {
+    surveyData.value = props.surveyData
 
-    const response = await axios.get(`/api/public/surveys/${props.surveyCode}`)
-
-    if (response.data.success) {
-      surveyData.value = response.data.data
-
-      // Get respondent token from session/localStorage or generate new one
-      respondentToken.value = sessionStorage.getItem('survey_token') || generateRespondentToken()
-
-      // Store token in session for persistence
-      if (!sessionStorage.getItem('survey_token')) {
-        sessionStorage.setItem('survey_token', respondentToken.value)
-      }
-
-      // Set initial section
-      if (response.data.data.sections.length > 0) {
-        currentSectionId.value = response.data.data.sections[0].id
-        handleSectionChange(currentSectionId.value)
-      }
-    } else {
-      error.value = response.data.message || 'Failed to load survey data'
+    // Set initial section
+    if (props.surveyData.sections && props.surveyData.sections.length > 0) {
+      currentSectionId.value = props.surveyData.sections[0].id
     }
-  } catch (err) {
-    console.error('Error loading survey data:', err)
-    error.value = err.response?.data?.message || 'Failed to load survey data'
-  } finally {
-    loading.value = false
+  }
+
+  // Load existing response data if available
+  if (props.existingResponse) {
+    answers.value = props.existingResponse.answers || {}
+    responseId.value = props.existingResponse.id
+    hasExistingData.value = true
+    console.log('Loaded existing response from SSR:', props.existingResponse)
+  }
+
+}
+
+const getValueAnswer = (answer, type) => {
+  switch (type) {
+    case 'short_text':
+    case 'long_text':
+    case 'number':
+      return answer.answer_value
+    case 'single_choice':
+      return answer.choice_id
+    case 'multiple_choice':
+      return JSON.parse(answer.value_json)
+    default:
+      return answer
   }
 }
 
-// Load survey data on component mount
+// Initialize data on component mount
 onMounted(() => {
-  loadSurveyData()
+  initializeData()
 })
 
 // Computed properties
@@ -232,7 +244,7 @@ const saveSectionAnswers = async () => {
       return // No answers to save
     }
 
-    // Transform answers to match API format
+    // Transform answers to match expected format
     const formattedAnswers = Object.entries(currentSectionAnswers).map(([questionId, answer]) => {
       const question = displayQuestions.value.find(q => q.id == questionId)
       const formatted = formatAnswer(question, questionId, answer)
@@ -240,9 +252,9 @@ const saveSectionAnswers = async () => {
       return formatted
     })
 
-    const payload = {
+    // Create form for SSR submission
+    const sectionForm = useForm({
       answers: formattedAnswers,
-      respondent_token: respondentToken.value,
       section_id: currentSectionId.value,
       is_partial: true,
       meta: {
@@ -251,15 +263,22 @@ const saveSectionAnswers = async () => {
         current_section: currentSection.value,
         total_sections: totalSections.value
       }
-    }
+    })
 
-    console.log('Sending payload to API:', payload)
-    const response = await axios.post(`/api/public/surveys/${props.surveyCode}/responses`, payload)
-
-    if (response.data.success) {
-      responseId.value = response.data.data.id
-      console.log('Section answers saved successfully')
-    }
+    console.log('Sending section data via SSR')
+    sectionForm.post(`/survey/${props.surveyCode}/save-section`, {
+      onSuccess: (page) => {
+        if (page.props.responseId) {
+          responseId.value = page.props.responseId
+        }
+        console.log('Section answers saved successfully')
+      },
+      onError: (errors) => {
+        console.error('Error saving section answers:', errors)
+      },
+      preserveState: true,
+      preserveScroll: true
+    })
   } catch (err) {
     console.error('Error saving section answers:', err)
     // Don't block navigation on save error, just log it
@@ -271,15 +290,15 @@ const submitFinalSurveyResponse = async () => {
   try {
     loading.value = true
 
-    // Transform all answers to match API format
+    // Transform all answers to match expected format
     const formattedAnswers = Object.entries(answers.value).map(([questionId, answer]) => {
       const question = displayQuestions.value.find(q => q.id == questionId)
       return formatAnswer(question, questionId, answer)
     })
 
-    const payload = {
+    // Create form for SSR submission
+    const finalForm = useForm({
       answers: formattedAnswers,
-      respondent_token: respondentToken.value,
       is_partial: false,
       meta: {
         user_agent: navigator.userAgent,
@@ -287,21 +306,25 @@ const submitFinalSurveyResponse = async () => {
         total_questions_answered: Object.keys(answers.value).length,
         total_questions: totalQuestions.value
       }
-    }
+    })
 
-    const response = await axios.post(`/api/public/surveys/${props.surveyCode}/responses`, payload)
-
-    if (response.data.success) {
-      console.log('Survey completed successfully:', response.data)
-      // Clear session data
-      sessionStorage.removeItem('survey_token')
-      // Redirect to thank you page
-      router.visit(`/survey/${props.surveyCode}/result`)
-    }
+    console.log('Submitting final survey via SSR')
+    finalForm.post(`/survey/${props.surveyCode}/submit`, {
+      onSuccess: () => {
+        console.log('Survey completed successfully')
+        // Clear session data
+        sessionStorage.removeItem('survey_token')
+        // Redirect to thank you page will be handled by controller
+      },
+      onError: (errors) => {
+        console.error('Error submitting final survey:', errors)
+        error.value = errors.message || 'Gagal mengirim jawaban survey'
+        loading.value = false
+      }
+    })
   } catch (err) {
     console.error('Error submitting final survey:', err)
-    error.value = err.response?.data?.message || 'Gagal mengirim jawaban survey'
-  } finally {
+    error.value = 'Gagal mengirim jawaban survey'
     loading.value = false
   }
 }

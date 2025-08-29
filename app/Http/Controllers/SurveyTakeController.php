@@ -105,6 +105,73 @@ class SurveyTakeController extends Controller
     }
 
     /**
+     * Get existing response data by token
+     */
+    public function getExistingResponse(Request $request, Survey $survey): JsonResponse
+    {
+        try {
+            $respondentToken = $request->query('token');
+            
+            if (!$respondentToken) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token is required'
+                ], 400);
+            }
+
+            // Find existing response
+            $response = Response::where('survey_id', $survey->id)
+                ->where('respondent_token', $respondentToken)
+                ->with(['answers.question', 'answers.choice'])
+                ->first();
+
+            if (!$response) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No existing response found for this token'
+                ], 404);
+            }
+
+            // Transform answers to frontend format
+            $answersData = [];
+            foreach ($response->answers as $answer) {
+                $questionId = $answer->question_id;
+                
+                if ($answer->choice_id) {
+                    // Single choice answer
+                    $answersData[$questionId] = (string)$answer->choice_id;
+                } elseif ($answer->value_json) {
+                    // Multiple choice answer
+                    $answersData[$questionId] = $answer->value_json;
+                } elseif ($answer->value_text) {
+                    // Text answer
+                    $answersData[$questionId] = $answer->value_text;
+                } elseif ($answer->value_number !== null) {
+                    // Number answer
+                    $answersData[$questionId] = (string)$answer->value_number;
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'response_id' => $response->id,
+                    'answers' => $answersData,
+                    'started_at' => $response->started_at,
+                    'submitted_at' => $response->submitted_at
+                ],
+                'message' => 'Existing response data retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve existing response data',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Get survey data with sections and questions for API.
      */
     public function getSurveyData(Survey $survey): JsonResponse
@@ -181,6 +248,7 @@ class SurveyTakeController extends Controller
      */
     public function submitResponse(Request $request, Survey $survey): JsonResponse
     {
+        dd($request);
         try {
             $validator = Validator::make($request->all(), [
                 'respondent_token' => 'nullable|string|max:255',
@@ -303,6 +371,33 @@ class SurveyTakeController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to retrieve survey',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get existing response by code via API.
+     */
+    public function getExistingResponseByCode(Request $request, string $code): JsonResponse
+    {
+        try {
+            $survey = Survey::where('code', $code)
+                ->where('status', 'active')
+                ->first();
+
+            if (!$survey) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Survey not found or not active'
+                ], 404);
+            }
+
+            return $this->getExistingResponse($request, $survey);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve existing response',
                 'error' => $e->getMessage()
             ], 500);
         }

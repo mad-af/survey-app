@@ -339,7 +339,7 @@ class SurveyController extends Controller
     /**
      * Show respondent data form
      */
-    public function showRespondentData($survey)
+    public function showRespondentData(Request $request, $survey)
     {
         // Find survey by code
         $surveyModel = Survey::where('code', $survey)->first();
@@ -348,9 +348,18 @@ class SurveyController extends Controller
             abort(404, 'Survey not found');
         }
         
+        // Get existing respondent data if available
+        $existingRespondent = null;
+        $surveyResponse = $request->survey_response;
+
+        if ($surveyResponse && $surveyResponse->respondent_id) {
+            $existingRespondent = \App\Models\Respondent::find($surveyResponse->respondent_id);
+        }
+        
         return Inertia::render('Survey/RespondentData', [
             'survey' => $surveyModel,
-            'surveyCode' => $survey
+            'surveyCode' => $survey,
+            'existingRespondent' => $existingRespondent
         ]);
     }
 
@@ -379,10 +388,59 @@ class SurveyController extends Controller
     /**
      * Show survey questions
      */
-    public function showQuestions($survey)
+    public function showQuestions(Request $request, $survey)
     {
+        // Find survey by code
+        $surveyModel = Survey::where('code', $survey)->first();
+        
+        if (!$surveyModel) {
+            abort(404, 'Survey not found');
+        }
+        
+        // Load survey with sections, questions, and choices
+        $surveyModel->load([
+            'sections' => function ($query) {
+                $query->orderBy('order');
+            },
+            'sections.questions' => function ($query) {
+                $query->orderBy('order');
+            },
+            'sections.questions.choices' => function ($query) {
+                $query->orderBy('order');
+            }
+        ]);
+        
+        // Get existing response data if available
+        $existingResponse = null;
+        $surveyResponse = $request->survey_response;
+
+        if ($surveyResponse) {
+            // Load answers for the existing response
+            $surveyResponse->load('answers');
+            // Format answers as object with question_id as key
+            $formattedAnswers = [];
+            foreach ($surveyResponse->answers as $answer) {
+                $formattedAnswers[$answer->question_id] = [
+                    'question_id' => $answer->question_id,
+                    'choice_id' => $answer->choice_id,
+                    'answer_value' => $answer->answer_value ?? $answer->value_text ?? $answer->value_number,
+                    'value_text' => $answer->value_text,
+                    'value_number' => $answer->value_number,
+                    'value_json' => $answer->value_json,
+                ];
+            }
+            
+            $existingResponse = [
+                'id' => $surveyResponse->id,
+                'answers' => $formattedAnswers,
+                'status' => $surveyResponse->status
+            ];
+        }
+        
         return Inertia::render('Survey/Questions', [
-            'surveyCode' => $survey
+            'surveyCode' => $survey,
+            'surveyData' => $surveyModel,
+            'existingResponse' => $existingResponse
         ]);
     }
 
@@ -487,8 +545,13 @@ class SurveyController extends Controller
             $surveyModel = $request->survey;
             $surveyResponse = $request->survey_response;
 
-            // Create respondent
-            $respondent = \App\Models\Respondent::create([
+            // Check if respondent already exists for this response
+            $respondent = null;
+            if ($surveyResponse->respondent_id) {
+                $respondent = \App\Models\Respondent::find($surveyResponse->respondent_id);
+            }
+            
+            $respondentData = [
                 'external_id' => $request->external_id,
                 'name' => $request->name,
                 'email' => $request->email,
@@ -502,26 +565,40 @@ class SurveyController extends Controller
                 'demographics' => $request->demographics ?? [],
                 'consent' => $request->consent,
                 'consent_at' => $request->consent_at ? \Carbon\Carbon::parse($request->consent_at) : now(),
-                'meta' => [
+            ];
+            
+            if ($respondent) {
+                // Update existing respondent
+                $respondent->update($respondentData);
+            } else {
+                // Create new respondent
+                $respondentData['meta'] = [
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
                     'registration_timestamp' => now()->toISOString()
-                ]
-            ]);
+                ];
+                $respondent = \App\Models\Respondent::create($respondentData);
+            }
 
             // Update response with respondent_id
             $surveyResponse->update([
                 'respondent_id' => $respondent->id
             ]);
 
-            // Create survey_respondent relationship
-            \App\Models\SurveyRespondent::create([
-                'survey_id' => $surveyId,
-                'respondent_id' => $respondent->id,
-                'invited_at' => now(),
-                'started_at' => now(),
-                'status' => 'in_progress'
-            ]);
+            // Create or update survey_respondent relationship
+            $surveyRespondent = \App\Models\SurveyRespondent::where('survey_id', $surveyId)
+                ->where('respondent_id', $respondent->id)
+                ->first();
+                
+            if (!$surveyRespondent) {
+                \App\Models\SurveyRespondent::create([
+                    'survey_id' => $surveyId,
+                    'respondent_id' => $respondent->id,
+                    'invited_at' => now(),
+                    'started_at' => now(),
+                    'status' => 'in_progress'
+                ]);
+            }
 
             return Inertia::location('/survey/' . $surveyModel->code . '/questions');
 
@@ -617,5 +694,218 @@ class SurveyController extends Controller
     private function generateRespondentToken($surveyId)
     {
         return Str::random(32) . '_' . time() . '_' . $surveyId;
+    }
+
+    /**
+     * Save section answers (partial submission)
+     */
+    public function saveSectionAnswers(Request $request, $survey)
+    {
+        $request->validate([
+            'answers' => 'required|array',
+            'section_id' => 'required|integer',
+            'is_partial' => 'required|boolean',
+            'meta' => 'nullable|array'
+        ]);
+
+        try {
+            // Get survey and response from middleware
+            $surveyResponse = $request->survey_response;
+
+            // If no existing response, create one
+            if (!$surveyResponse) {
+                dd("Kesalahan");
+            }
+
+            // Save answers
+            foreach ($request->answers as $answerData) {
+                $existingAnswer = \App\Models\Answer::where('response_id', $surveyResponse->id)
+                    ->where('question_id', $answerData['question_id'])
+                    ->first();
+
+                $answerPayload = [
+                    'response_id' => $surveyResponse->id,
+                    'question_id' => $answerData['question_id'],
+                    'choice_id' => $answerData['choice_id'] ?? null,
+                    'answer_value' => $answerData['answer_value'] ?? null,
+                    'value_text' => $answerData['value_text'] ?? null,
+                    'value_number' => $answerData['value_number'] ?? null,
+                    'value_json' => $answerData['value_json'] ?? null,
+                ];
+
+                if ($existingAnswer) {
+                    $existingAnswer->update($answerPayload);
+                } else {
+                    \App\Models\Answer::create($answerPayload);
+                }
+            }
+
+            return redirect()->back()->with([
+                'success' => 'Section answers saved successfully',
+                'responseId' => $surveyResponse->id
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors([
+                'message' => 'Failed to save section answers: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Submit final survey response
+     */
+    public function submitSurveyResponse(Request $request, $survey)
+    {
+        $request->validate([
+            'answers' => 'required|array',
+            'is_partial' => 'required|boolean',
+            'meta' => 'nullable|array'
+        ]);
+
+        try {
+            // Get survey and response from middleware
+            $surveyModel = $request->survey;
+            $surveyResponse = $request->survey_response;
+
+            // If no existing response, create one
+            if (!$surveyResponse) {
+                $surveyResponse = \App\Models\Response::create([
+                    'survey_id' => $surveyModel->id,
+                    'respondent_id' => $request->respondent_id,
+                    'respondent_token' => $request->respondent_token,
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                    'meta' => $request->meta
+                ]);
+            } else {
+                // Update existing response to completed
+                $surveyResponse->update([
+                    'status' => 'completed',
+                    'completed_at' => now(),
+                    'meta' => array_merge($surveyResponse->meta ?? [], $request->meta ?? [])
+                ]);
+            }
+
+            // Save all answers
+            foreach ($request->answers as $answerData) {
+                $existingAnswer = \App\Models\Answer::where('response_id', $surveyResponse->id)
+                    ->where('question_id', $answerData['question_id'])
+                    ->first();
+
+                $answerPayload = [
+                    'response_id' => $surveyResponse->id,
+                    'question_id' => $answerData['question_id'],
+                    'choice_id' => $answerData['choice_id'] ?? null,
+                    'answer_value' => $answerData['answer_value'] ?? null,
+                    'value_text' => $answerData['value_text'] ?? null,
+                    'value_number' => $answerData['value_number'] ?? null,
+                    'value_json' => $answerData['value_json'] ?? null,
+                ];
+
+                if ($existingAnswer) {
+                    $existingAnswer->update($answerPayload);
+                } else {
+                    \App\Models\Answer::create($answerPayload);
+                }
+            }
+
+            // Calculate score (reuse logic from SurveyTakeController)
+            $this->calculateAndSaveScore($surveyResponse, $surveyModel);
+
+            // Redirect to result page
+            return redirect()->route('survey.result', ['survey' => $surveyModel->code]);
+        } catch (\Exception $e) {
+            return redirect()->back()->withErrors([
+                'message' => 'Failed to submit survey: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Calculate and save response score (copied from SurveyTakeController)
+     */
+    private function calculateAndSaveScore($response, $survey): void
+    {
+        // Load survey with all necessary relationships for scoring
+        $survey->load([
+            'sections.questions.choices',
+            'resultCategories' => function ($query) {
+                $query->orderBy('min_score');
+            }
+        ]);
+
+        // Load response answers with relationships
+        $response->load('answers.choice', 'answers.question.section');
+
+        $totalScore = 0;
+        $maxPossibleScore = 0;
+        $sectionScores = [];
+
+        // Calculate score for each section
+        foreach ($survey->sections as $section) {
+            $sectionScore = 0;
+            $sectionMaxScore = 0;
+
+            foreach ($section->questions as $question) {
+                $questionWeight = $question->score_weight ?? 1;
+                $questionMaxScore = 0;
+                $questionScore = 0;
+
+                // Find the answer for this question
+                $answer = $response->answers->where('question_id', $question->id)->first();
+
+                if ($answer && $answer->choice_id) {
+                    // For choice-based questions, use choice score
+                    $choice = $question->choices->where('id', $answer->choice_id)->first();
+                    if ($choice) {
+                        $questionScore = $choice->score * $questionWeight;
+                    }
+                }
+
+                // Calculate max possible score for this question
+                $maxChoiceScore = $question->choices->max('score') ?? 0;
+                $questionMaxScore = $maxChoiceScore * $questionWeight;
+
+                $sectionScore += $questionScore;
+                $sectionMaxScore += $questionMaxScore;
+            }
+
+            $sectionScores[$section->id] = [
+                'score' => $sectionScore,
+                'max_score' => $sectionMaxScore,
+                'percentage' => $sectionMaxScore > 0 ? ($sectionScore / $sectionMaxScore) * 100 : 0
+            ];
+
+            $totalScore += $sectionScore;
+            $maxPossibleScore += $sectionMaxScore;
+        }
+
+        // Calculate percentage
+        $percentage = $maxPossibleScore > 0 ? ($totalScore / $maxPossibleScore) * 100 : 0;
+
+        // Determine result category
+        $resultCategory = null;
+        if ($survey->resultCategories->isNotEmpty()) {
+            foreach ($survey->resultCategories as $category) {
+                if ($percentage >= $category->min_score && 
+                    ($category->max_score === null || $percentage <= $category->max_score)) {
+                    $resultCategory = $category;
+                    break;
+                }
+            }
+        }
+
+        // Save or update response score
+        \App\Models\ResponseScore::updateOrCreate(
+            ['response_id' => $response->id],
+            [
+                'total_score' => $totalScore,
+                'max_possible_score' => $maxPossibleScore,
+                'percentage' => round($percentage, 2),
+                'section_scores' => $sectionScores,
+                'result_category_id' => $resultCategory?->id,
+                'calculated_at' => now()
+            ]
+        );
     }
 }

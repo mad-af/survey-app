@@ -126,7 +126,7 @@
       <button type="submit" class="w-full btn btn-primary" :class="{ 'loading': form.processing }"
         :disabled="form.processing || !form.name || !form.gender || !form.birth_year || !form.consent">
         <LogIn v-if="!form.processing" class="mr-2 w-5 h-5" />
-        {{ form.processing ? 'Mengirim...' : 'Submit Formulir' }}
+        {{ form.processing ? 'Mengirim...' : (props.existingRespondent ? 'Update Data' : 'Submit Formulir') }}
       </button>
     </form>
 
@@ -160,6 +160,10 @@ const props = defineProps({
   surveyCode: {
     type: String,
     required: true
+  },
+  existingRespondent: {
+    type: Object,
+    default: null
   }
 })
 
@@ -174,19 +178,19 @@ const geolocation = ref({
 
 // Form setup with all Respondent model fields
 const form = useForm({
-  external_id: '',
-  name: '',
-  email: '',
-  phone: '',
-  gender: '',
-  birth_year: null,
-  organization: '',
-  department: '',
-  role_title: '',
-  location: '',
-  demographics: {},
-  consent: false,
-  consent_at: null
+  external_id: props.existingRespondent?.external_id || '',
+  name: props.existingRespondent?.name || '',
+  email: props.existingRespondent?.email || '',
+  phone: props.existingRespondent?.phone || '',
+  gender: props.existingRespondent?.gender || '',
+  birth_year: props.existingRespondent?.birth_year || null,
+  organization: props.existingRespondent?.organization || '',
+  department: props.existingRespondent?.department || '',
+  role_title: props.existingRespondent?.role_title || '',
+  location: props.existingRespondent?.location || '',
+  demographics: props.existingRespondent?.demographics || {},
+  consent: props.existingRespondent?.consent || false,
+  consent_at: props.existingRespondent?.consent_at || null
 })
 
 // Get user geolocation
