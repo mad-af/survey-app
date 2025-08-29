@@ -33,8 +33,7 @@
       <!-- Survey Questions Cards -->
       <div class="space-y-4">
         <SurveyQuestionCard v-for="(question, index) in currentQuestions" :key="question.id" :question="question"
-          :question-number="index + 1" :model-value="getValueAnswer(answers[question.id], question.type)"
-          @update:model-value="handleAnswerChange(question.id, $event)" />
+          :question-number="index + 1" />
       </div>
 
 
@@ -48,7 +47,7 @@
 
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3'
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useForm } from '@inertiajs/vue3'
 import ProsesSurveyLayout from '@/Layouts/ProsesSurveyLayout.vue'
 import SurveyNavbar from '@/Components/SurveyNavbar.vue'
@@ -115,41 +114,78 @@ const initializeData = () => {
 
 }
 
-const getValueAnswer = (answer, type) => {
-  if (!answer) {
-    switch (type) {
-      case 'short_text':
-      case 'long_text':
-        return ''
-      case 'number':
-        return null
-      case 'single_choice':
-        return null
-      case 'multiple_choice':
-        return []
-      default:
-        return ''
-    }
+// Populate form elements with existing data
+const populateFormElements = () => {
+  if (!props.existingResponse || !props.existingResponse.answers) {
+    return
   }
 
-  switch (type) {
-    case 'short_text':
-    case 'long_text':
-      return answer.value_text
-    case 'number':
-      return answer.value_number
-    case 'single_choice':
-      return answer.choice_id
-    case 'multiple_choice':
-      return JSON.parse(answer.value_json)
-    default:
-      return answer
-  }
+  // Wait for next tick to ensure DOM elements are rendered
+  nextTick(() => {
+    Object.entries(props.existingResponse.answers).forEach(([questionId, answerData]) => {
+      const question = displayQuestions.value.find(q => q.id == questionId)
+      if (!question) return
+
+      if (question.type === 'single_choice' && answerData.choice_id) {
+        const radioInput = document.querySelector(`input[name="question_${questionId}"][value="${answerData.choice_id}"]`)
+        if (radioInput) {
+          radioInput.checked = true
+        }
+      } else if (question.type === 'multiple_choice' && answerData.value_json) {
+        const selectedIds = JSON.parse(answerData.value_json)
+        selectedIds.forEach(choiceId => {
+          const checkboxInput = document.querySelector(`input[name="question_${questionId}[]"][value="${choiceId}"]`)
+          if (checkboxInput) {
+            checkboxInput.checked = true
+          }
+        })
+      } else {
+        const input = document.querySelector(`input[name="question_${questionId}"], textarea[name="question_${questionId}"]`)
+        if (input) {
+          if (question.type === 'short_text' || question.type === 'long_text') {
+            input.value = answerData.value_text || ''
+          } else if (question.type === 'number') {
+            input.value = answerData.value_number || ''
+          } else if (question.type === 'date') {
+            input.value = answerData.value_text || ''
+          }
+        }
+      }
+    })
+  })
 }
+
+// Force reactivity for navigation state
+const navigationKey = ref(0)
+const forceNavigationUpdate = () => {
+  navigationKey.value++
+}
+
+// Add event listeners to form inputs for reactivity
+const addFormEventListeners = () => {
+  nextTick(() => {
+    // Add event listeners to all form inputs
+    const inputs = document.querySelectorAll('input, textarea')
+    inputs.forEach(input => {
+      input.addEventListener('input', forceNavigationUpdate)
+      input.addEventListener('change', forceNavigationUpdate)
+    })
+  })
+}
+
+// Watch for section changes to re-add event listeners
+watch(currentSectionId, () => {
+  nextTick(() => {
+    addFormEventListeners()
+    populateFormElements()
+  })
+})
 
 // Initialize data on component mount
 onMounted(() => {
   initializeData()
+  populateFormElements()
+  addFormEventListeners()
 })
 
 // Computed properties
@@ -177,7 +213,15 @@ const currentQuestions = computed(() => {
 })
 
 const answeredQuestions = computed(() => {
-  return Object.keys(answers.value).length
+  // Use navigationKey to force reactivity
+  navigationKey.value
+  let count = 0
+  displayQuestions.value.forEach(question => {
+    if (isQuestionAnswered(question)) {
+      count++
+    }
+  })
+  return count
 })
 
 const totalQuestions = computed(() => {
@@ -185,11 +229,27 @@ const totalQuestions = computed(() => {
 })
 
 const canProceed = computed(() => {
+  // Use navigationKey to force reactivity
+  navigationKey.value
   // Check if all questions in current section are answered
   return currentQuestions.value.every(question => {
-    return answers.value[question.id] !== undefined && answers.value[question.id] !== null
+    return isQuestionAnswered(question)
   })
 })
+
+// Helper function to check if a question is answered
+const isQuestionAnswered = (question) => {
+  if (question.type === 'single_choice') {
+    const radioInput = document.querySelector(`input[name="question_${question.id}"]:checked`)
+    return radioInput !== null
+  } else if (question.type === 'multiple_choice') {
+    const checkboxInputs = document.querySelectorAll(`input[name="question_${question.id}[]"]:checked`)
+    return checkboxInputs.length > 0
+  } else {
+    const input = document.querySelector(`input[name="question_${question.id}"], textarea[name="question_${question.id}"]`)
+    return input && input.value.trim() !== ''
+  }
+}
 
 const hasPreviousSection = computed(() => {
   const currentIndex = displaySections.value.findIndex(s => s.id === currentSectionId.value)
@@ -241,22 +301,38 @@ const handleNextSection = async () => {
   }
 }
 
-// Handle answer changes
-const handleAnswerChange = (questionId, answer) => {
-  answers.value[questionId] = answer
-}
+
 
 // Save answers for current section
 const saveSectionAnswers = async () => {
   try {
-    // Get answers for current section only
-    for (const key in answers.value) {
-      delete answers.value[key].answer_value
-    }
+    // Get answers from form elements by name
     const currentSectionAnswers = {}
+    
     currentQuestions.value.forEach(question => {
-      if (answers.value[question.id] !== undefined) {
-        currentSectionAnswers[question.id] = answers.value[question.id]
+      let answer = null
+      
+      if (question.type === 'single_choice') {
+        const radioInput = document.querySelector(`input[name="question_${question.id}"]:checked`)
+        if (radioInput) {
+          answer = parseInt(radioInput.value)
+        }
+      } else if (question.type === 'multiple_choice') {
+        const checkboxInputs = document.querySelectorAll(`input[name="question_${question.id}[]"]:checked`)
+        answer = Array.from(checkboxInputs).map(input => parseInt(input.value))
+      } else {
+        const input = document.querySelector(`input[name="question_${question.id}"], textarea[name="question_${question.id}"]`)
+        if (input && input.value) {
+          if (question.type === 'number') {
+            answer = parseFloat(input.value)
+          } else {
+            answer = input.value
+          }
+        }
+      }
+      
+      if (answer !== null && answer !== '' && !(Array.isArray(answer) && answer.length === 0)) {
+        currentSectionAnswers[question.id] = answer
       }
     })
 
@@ -309,8 +385,38 @@ const submitFinalSurveyResponse = async () => {
   try {
     loading.value = true
 
+    // Get all answers from form elements
+    const allAnswers = {}
+    
+    displayQuestions.value.forEach(question => {
+      let answer = null
+      
+      if (question.type === 'single_choice') {
+        const radioInput = document.querySelector(`input[name="question_${question.id}"]:checked`)
+        if (radioInput) {
+          answer = parseInt(radioInput.value)
+        }
+      } else if (question.type === 'multiple_choice') {
+        const checkboxInputs = document.querySelectorAll(`input[name="question_${question.id}[]"]:checked`)
+        answer = Array.from(checkboxInputs).map(input => parseInt(input.value))
+      } else {
+        const input = document.querySelector(`input[name="question_${question.id}"], textarea[name="question_${question.id}"]`)
+        if (input && input.value) {
+          if (question.type === 'number') {
+            answer = parseFloat(input.value)
+          } else {
+            answer = input.value
+          }
+        }
+      }
+      
+      if (answer !== null && answer !== '' && !(Array.isArray(answer) && answer.length === 0)) {
+        allAnswers[question.id] = answer
+      }
+    })
+
     // Transform all answers to match expected format
-    const formattedAnswers = Object.entries(answers.value).map(([questionId, answer]) => {
+    const formattedAnswers = Object.entries(allAnswers).map(([questionId, answer]) => {
       const question = displayQuestions.value.find(q => q.id == questionId)
       return formatAnswer(question, questionId, answer)
     })
