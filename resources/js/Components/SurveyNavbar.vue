@@ -69,8 +69,7 @@
                   <!-- Description -->
                   <p v-if="section.description"
                     class="text-xs leading-relaxed transition-all duration-300 text-base-content/70" :class="{
-                      'line-clamp-3': currentSectionId === section.id,
-                      'line-clamp-2': currentSectionId !== section.id
+                      'line-clamp-1': currentSectionId !== section.id
                     }">
                     {{ section.description }}
                   </p>
@@ -151,9 +150,13 @@ const handleSectionChange = (sectionId) => {
   emit('section-change', sectionId)
 }
 
-// Watch for currentSectionId changes and scroll to active card
+// Watch for currentSectionId changes and scroll to active card (mobile only)
 watch(() => props.currentSectionId, async () => {
   await nextTick()
+
+  // Only apply auto-scroll on mobile devices (screen width < 1024px)
+  const isMobile = window.innerWidth < 1024
+
   if (activeCardRef.value && scrollContainer.value) {
     const container = scrollContainer.value
     const activeCard = activeCardRef.value
@@ -162,7 +165,9 @@ watch(() => props.currentSectionId, async () => {
     const containerWidth = container.clientWidth
     const cardLeft = activeCard.offsetLeft
     const cardWidth = activeCard.offsetWidth
-    const scrollLeft = cardLeft - (containerWidth) + (cardWidth)
+    const scrollLeft = isMobile ?
+      cardLeft - (containerWidth / .08) + (cardWidth / .08) :
+      cardLeft - (containerWidth) + (cardWidth)
 
     // Smooth scroll to the calculated position
     container.scrollTo({
