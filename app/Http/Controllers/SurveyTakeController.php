@@ -188,6 +188,8 @@ class SurveyTakeController extends Controller
                 'answers.*.value_text' => 'nullable|string',
                 'answers.*.value_number' => 'nullable|numeric',
                 'answers.*.value_json' => 'nullable|array',
+                'is_partial' => 'nullable|boolean',
+                'section_id' => 'nullable|integer|exists:survey_sections,id',
             ]);
 
             if ($validator->fails()) {
@@ -200,33 +202,67 @@ class SurveyTakeController extends Controller
 
             DB::beginTransaction();
 
-            // Create response record
-            $response = Response::create([
-                'survey_id' => $survey->id,
-                'respondent_token' => $request->respondent_token,
-                'started_at' => now(),
-                'submitted_at' => now(),
-                'meta' => $request->meta ?? [],
-            ]);
+            $isPartial = $request->boolean('is_partial', false);
+            $respondentToken = $request->respondent_token;
 
-            // Create answer records
+            // Find existing response or create new one
+            $response = null;
+            if ($respondentToken) {
+                $response = Response::where('survey_id', $survey->id)
+                    ->where('respondent_token', $respondentToken)
+                    ->first();
+            }
+
+            if (!$response) {
+                // Create new response record
+                $response = Response::create([
+                    'survey_id' => $survey->id,
+                    'respondent_token' => $respondentToken,
+                    'started_at' => now(),
+                    'submitted_at' => $isPartial ? null : now(),
+                    'meta' => $request->meta ?? [],
+                ]);
+            } else {
+                // Update existing response
+                $response->update([
+                    'submitted_at' => $isPartial ? $response->submitted_at : now(),
+                    'meta' => array_merge($response->meta ?? [], $request->meta ?? []),
+                ]);
+            }
+
+            // Process answers - update or create
             foreach ($request->answers as $answerData) {
-                Answer::create([
+                
+                $existingAnswer = Answer::where('response_id', $response->id)
+                    ->where('question_id', $answerData['question_id'])
+                    ->first();
+
+                $answerPayload = [
                     'response_id' => $response->id,
                     'question_id' => $answerData['question_id'],
                     'choice_id' => $answerData['choice_id'] ?? null,
                     'value_text' => $answerData['value_text'] ?? null,
                     'value_number' => $answerData['value_number'] ?? null,
                     'value_json' => $answerData['value_json'] ?? null,
-                ]);
+                ];
+
+                if ($existingAnswer) {
+                    // Update existing answer
+                    $existingAnswer->update($answerPayload);
+                } else {
+                    // Create new answer
+                    Answer::create($answerPayload);
+                }
             }
 
             DB::commit();
 
+            $message = $isPartial ? 'Section answers saved successfully' : 'Survey response submitted successfully';
+            
             return response()->json([
                 'success' => true,
                 'data' => $response,
-                'message' => 'Survey response submitted successfully'
+                'message' => $message
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();

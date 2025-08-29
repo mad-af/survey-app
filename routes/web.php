@@ -15,6 +15,7 @@ Route::get('/entry', function () {
 })->middleware('guest.survey');
 
 Route::post('/survey/enter', [SurveyController::class, 'enter']);
+Route::post('/survey/logout', [SurveyController::class, 'logout']);
 
 // Authentication routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
@@ -60,5 +61,10 @@ Route::prefix('survey')->middleware('survey.token')->group(function () {
     
     Route::post('/{survey}/register', [SurveyController::class, 'registerRespondent']);
     
+    Route::get('/{survey}/result', function ($survey) {
+        return Inertia::render('Survey/Result', [
+            'surveyCode' => $survey
+        ]);
+    });
 });
 

@@ -329,6 +329,28 @@ class SurveyController extends Controller
     }
 
     /**
+     * Logout from survey and clear session
+     */
+    public function logout(Request $request)
+    {
+        // Clear all survey-related session data
+        session()->forget([
+            'survey_token',
+            'survey_id', 
+            'survey_code',
+            'response_id'
+        ]);
+
+        // Clear the entire session to be safe
+        session()->flush();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Survey session cleared successfully'
+        ]);
+    }
+
+    /**
      * Show survey questions
      */
     public function showQuestions($survey)
@@ -413,6 +435,7 @@ class SurveyController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Generate unique respondent token
