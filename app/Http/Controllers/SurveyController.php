@@ -302,6 +302,7 @@ class SurveyController extends Controller
         session([
             'survey_token' => $respondentToken,
             'survey_id' => $survey->id,
+            'survey_code' => $survey->code,
             'response_id' => $response->id
         ]);
 

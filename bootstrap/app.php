@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         
         $middleware->alias([
             'survey.token' => \App\Http\Middleware\SurveyTokenMiddleware::class,
+            'guest.survey' => \App\Http\Middleware\GuestSurveyMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -12,7 +12,7 @@ Route::get('/', function () {
 
 Route::get('/entry', function () {
     return Inertia::render('Entry');
-});
+})->middleware('guest.survey');
 
 Route::post('/survey/enter', [SurveyController::class, 'enter']);
 
@@ -53,7 +53,7 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
     });
 });
 
-Route::prefix('survey')->group(function () {
+Route::prefix('survey')->middleware('survey.token')->group(function () {
     Route::get('/{survey}/respondent-data', [SurveyController::class, 'showRespondentData']);
     
     Route::get('/{survey}/questions', [SurveyController::class, 'showQuestions']);

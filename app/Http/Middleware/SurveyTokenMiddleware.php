@@ -20,9 +20,10 @@ class SurveyTokenMiddleware
         // Check if survey token exists in session
         $surveyToken = session('survey_token');
         $surveyId = session('survey_id');
+        $surveyCode = session('survey_code');
         $responseId = session('response_id');
 
-        if (!$surveyToken || !$surveyId || !$responseId) {
+        if (!$surveyToken || !$surveyId || !$responseId || !$surveyCode) {
             return redirect('/entry')->withErrors([
                 'survey_code' => 'Sesi survey tidak valid. Silakan masukkan kode survey kembali.'
             ]);
