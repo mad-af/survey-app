@@ -24,9 +24,9 @@
       <!-- Dynamic Data Table with Pagination -->
       <DataTable v-else :data="filteredSurveys" :columns="tableColumns" :actions="tableActions"
         :items-per-page="itemsPerPage" :selected-items="selectedSurveys" @manage-survey="manageSurvey"
-        @view-survey="viewSurvey" @edit-survey="editSurvey" @delete-survey="deleteSurvey"
-        @update:selected-items="selectedSurveys = $event" @update:current-page="currentPage = $event"
-        @copy-success="handleCopySuccess" @copy-error="handleCopyError" />
+        @view-responses="viewResponses" @view-survey="viewSurvey" @edit-survey="editSurvey"
+        @delete-survey="deleteSurvey" @update:selected-items="selectedSurveys = $event"
+        @update:current-page="currentPage = $event" @copy-success="handleCopySuccess" @copy-error="handleCopyError" />
     </div>
 
     <!-- Add Survey Drawer -->
@@ -54,6 +54,7 @@ import {
   Edit,
   Trash2,
   ListOrdered,
+  FileText,
 } from 'lucide-vue-next'
 
 // Breadcrumb will auto-generate from URL
@@ -156,6 +157,15 @@ const tableActions = ref([
     icon: ListOrdered,
     label: 'Manage',
     tooltip: 'Manage Survey',
+    class: '',
+    visible: true
+  },
+  {
+    name: 'response',
+    event: 'view-responses',
+    icon: FileText,
+    label: 'Response',
+    tooltip: 'View Responses',
     class: '',
     visible: true
   },
@@ -286,6 +296,12 @@ const manageSurvey = (survey) => {
   console.log('Manage survey:', survey)
   // Navigate to survey manage page
   router.visit(`/dashboard/survey/${survey.id}/manage`)
+}
+
+const viewResponses = (survey) => {
+  console.log('View responses:', survey)
+  // Navigate to survey responses page
+  router.visit(`/dashboard/survey/${survey.id}/response`)
 }
 
 const viewSurvey = (survey) => {

@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-4">
     <!-- Dynamic Data Table -->
-    <div class="card bg-base-100 shadow-sm mb-2">
-      <div class="card-body p-0">
+    <div class="mb-2 shadow-sm card bg-base-100">
+      <div class="p-0 card-body">
         <div class="overflow-x-auto">
           <table class="table table-zebra table-compact">
             <thead>
@@ -15,10 +15,10 @@
               <tr v-for="item in paginatedData" :key="getItemId(item)">
                 <td v-for="column in columns" :key="column.key">
                   <!-- User type with avatar -->
-                  <div v-if="column.type === 'user'" class="flex items-center gap-2">
+                  <div v-if="column.type === 'user'" class="flex gap-2 items-center">
                     <Avatar :name="item.name" />
                     <div>
-                      <div class="font-medium text-sm">{{ item.name }}</div>
+                      <div class="text-sm font-medium">{{ item.name }}</div>
                       <div class="text-xs opacity-50">{{ item.email }}</div>
                     </div>
                   </div>
@@ -33,13 +33,13 @@
                   <!-- Copy type with copy button -->
                   <div v-else-if="column.type === 'copy'" class="flex items-center bg-base-200">
                     <button 
-                      class="btn btn-ghost btn-xs p-1 min-h-6 h-6" 
+                      class="p-1 h-6 btn btn-ghost btn-xs min-h-6" 
                       @click="copyToClipboard(formatCellValue(item, column))"
                       :title="'Copy ' + formatCellValue(item, column)"
                     >
                       <Copy :size="12" />
                     </button>
-                    <span class="font-mono text-xs  px-2 py-1 rounded">
+                    <span class="px-2 py-1 font-mono text-xs rounded">
                       {{ formatCellValue(item, column) }}
                     </span>
                   </div>
@@ -54,26 +54,40 @@
                   </component>
                 </td>
                 <td v-if="actions.length > 0">
+                  <!-- Single action - display directly -->
                   <button 
-                    class="btn btn-ghost btn-xs p-1 min-h-6 h-6" 
-                    :popovertarget="`popover-${getItemId(item)}`" 
-                    :style="`anchor-name: --anchor-${getItemId(item)}`"
+                    v-if="actions.length === 1"
+                    class="p-1 h-6 btn btn-ghost btn-xs min-h-6" 
+                    @click="$emit(actions[0].event, item)"
+                    :class="actions[0].class || ''"
+                    :title="actions[0].label"
                   >
-                    <EllipsisVertical :size="14" />
+                    <component :is="actions[0].icon" :size="14" v-if="actions[0].icon" />
                   </button>
-                  <ul 
-                    class="dropdown dropdown-left dropdown-center menu w-32 rounded-box bg-base-100 shadow-sm p-2 z-[1]" 
-                    popover 
-                    :id="`popover-${getItemId(item)}`" 
-                    :style="`position-anchor: --anchor-${getItemId(item)}`"
-                  >
-                    <li v-for="action in actions" :key="action.name" v-show="action.visible !== false">
-                      <a @click="$emit(action.event, item); $event.target.closest('[popover]').hidePopover()" :class="`text-xs flex items-center gap-2 ${action.class || ''}`">
-                        <component :is="action.icon" :size="12" v-if="action.icon" />
-                        {{ action.label }}
-                      </a>
-                    </li>
-                  </ul>
+                  
+                  <!-- Multiple actions - use dropdown -->
+                  <template v-else>
+                    <button 
+                      class="p-1 h-6 btn btn-ghost btn-xs min-h-6" 
+                      :popovertarget="`popover-${getItemId(item)}`" 
+                      :style="`anchor-name: --anchor-${getItemId(item)}`"
+                    >
+                      <EllipsisVertical :size="14" />
+                    </button>
+                    <ul 
+                      class="dropdown dropdown-left dropdown-center menu w-32 rounded-box bg-base-100 shadow-sm p-2 z-[1]" 
+                      popover 
+                      :id="`popover-${getItemId(item)}`" 
+                      :style="`position-anchor: --anchor-${getItemId(item)}`"
+                    >
+                      <li v-for="action in actions" :key="action.name" v-show="action.visible !== false">
+                        <a @click="$emit(action.event, item); $event.target.closest('[popover]').hidePopover()" :class="`text-xs flex items-center gap-2 ${action.class || ''}`">
+                          <component :is="action.icon" :size="12" v-if="action.icon" />
+                          {{ action.label }}
+                        </a>
+                      </li>
+                    </ul>
+                  </template>
                 </td>
               </tr>
             </tbody>

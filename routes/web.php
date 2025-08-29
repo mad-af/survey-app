@@ -52,6 +52,10 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
             'surveyId' => $survey
         ]);
     });
+    
+    Route::get('/survey/{survey}/response', [SurveyController::class, 'showResponses']);
+    
+    Route::get('/survey/{survey}/responses', [SurveyController::class, 'showResponses']);
 });
 
 Route::prefix('survey')->middleware('survey.token')->group(function () {

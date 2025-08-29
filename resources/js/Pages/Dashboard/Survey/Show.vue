@@ -1,14 +1,10 @@
 <template>
-  <DashboardLayout 
-    :pageTitle="'Survey Management'"
-  >
+  <DashboardLayout :pageTitle="'Survey Management'">
     <div class="space-y-6">
       <!-- Header Section -->
-      <PageHeader 
-        title="Survey Details" 
+      <PageHeader title="Survey Details"
         description="View detailed information about surveys including sections, responses, and configurations"
-        :showBackButton="true"
-      />
+        :showBackButton="true" />
 
       <!-- Loading State -->
       <div v-if="isLoading" class="flex justify-center items-center py-12">
@@ -22,23 +18,15 @@
         <div class="space-y-6 lg:col-span-2">
           <SurveyDetailCard :survey="selectedSurvey" />
 
-          <SurveySectionList 
-            :sections="surveySections"
-            :survey-id="props.surveyId"
-            :is-loading="isSectionsLoading"
-          />
+          <SurveySectionList :sections="surveySections" :survey-id="props.surveyId" :is-loading="isSectionsLoading" />
         </div>
-        
+
         <!-- Quick Actions and Statistics Cards -->
         <div class="space-y-6">
-          <SurveyQuickActions 
-            @edit-survey="handleEditSurvey"
-            @view-responses="handleViewResponses"
-            @share-survey="handleShareSurvey"
-            @export-data="handleExportData"
-            @delete-survey="handleDeleteSurvey"
-          />
-          
+          <SurveyQuickActions @edit-survey="handleEditSurvey" @manage-survey="handleManageSurvey"
+            @view-responses="handleViewResponses" @share-survey="handleShareSurvey" @export-data="handleExportData"
+            @delete-survey="handleDeleteSurvey" />
+
           <SurveyStatistics :statistics="surveyStatistics" />
         </div>
       </div>
@@ -48,7 +36,9 @@
         <div class="flex flex-col gap-4 items-center">
           <div class="text-base-content/60">
             <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+              </path>
             </svg>
           </div>
           <h3 class="text-lg font-medium text-base-content">Survey Not Found</h3>
@@ -60,14 +50,8 @@
     </div>
 
     <!-- Survey Drawer -->
-    <SurveyDrawer 
-      :is-open="isDrawerOpen"
-      :title="drawerTitle"
-      :survey-data="selectedSurvey"
-      :is-edit-mode="isEditMode"
-      @close="closeDrawer"
-      @success="handleDrawerSuccess"
-    />
+    <SurveyDrawer :is-open="isDrawerOpen" :title="drawerTitle" :survey-data="selectedSurvey" :is-edit-mode="isEditMode"
+      @close="closeDrawer" @success="handleDrawerSuccess" />
 
   </DashboardLayout>
 </template>
@@ -112,7 +96,7 @@ const fetchSurvey = async () => {
   try {
     isLoading.value = true
     const response = await axios.get(`/api/surveys/${props.surveyId}`)
-    
+
     if (response.data.success) {
       selectedSurvey.value = response.data.data
     } else {
@@ -131,7 +115,7 @@ const fetchSurveySections = async () => {
   try {
     isSectionsLoading.value = true
     const response = await axios.get(`/api/surveys/${props.surveyId}/sections`)
-    
+
     if (response.data.success) {
       surveySections.value = response.data.data
     } else {
@@ -149,7 +133,7 @@ const fetchSurveySections = async () => {
 const fetchSurveyStatistics = async () => {
   try {
     const response = await axios.get(`/api/surveys/${props.surveyId}/statistics`)
-    
+
     if (response.data.success) {
       Object.assign(surveyStatistics, response.data.data)
     } else {
@@ -179,9 +163,14 @@ const handleEditSurvey = () => {
   }
 }
 
-const handleViewResponses = () => {
+const handleManageSurvey = () => {
   // Navigate to manage survey page
   router.visit(`/dashboard/survey/${props.surveyId}/manage`)
+}
+
+const handleViewResponses = () => {
+  // Navigate to responses page
+  router.visit(`/dashboard/survey/${props.surveyId}/response`)
 }
 
 const handleShareSurvey = () => {
@@ -196,14 +185,14 @@ const handleExportData = () => {
 
 const handleDeleteSurvey = async () => {
   if (!selectedSurvey.value) return
-  
+
   // Show confirmation dialog
   const confirmed = confirm(`Are you sure you want to delete the survey "${selectedSurvey.value.title}"? This action cannot be undone.`)
-  
+
   if (confirmed) {
     try {
       const response = await axios.delete(`/api/surveys/${selectedSurvey.value.id}`)
-      
+
       if (response.data.success) {
         showToast('Survey deleted successfully', 'success')
         // Navigate back to survey index

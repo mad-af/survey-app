@@ -377,10 +377,10 @@ class SurveyController extends Controller
         ]);
         
         // Load response with score and result category
-        $surveyResponse->load(['responseScore.resultCategory']);
+        $surveyResponse->load(['score.resultCategory']);
         
         // Get response score
-        $responseScore = $surveyResponse->responseScore;
+        $responseScore = $surveyResponse->score;
         
         if (!$responseScore) {
             abort(404, 'Survey result not found');
@@ -507,6 +507,82 @@ class SurveyController extends Controller
         }
     }
 
+
+    /**
+     * Show survey responses and respondents
+     */
+    public function showResponses($surveyId)
+    {
+        try {
+            $survey = Survey::with([
+                'responses' => function($query) {
+                    $query->with([
+                        'respondent:id,name,email,phone,gender,birth_year,organization,department,role_title,location,created_at',
+                        'score:id,response_id,total_score,max_possible_score,percentage,section_scores',
+                        'score.resultCategory:id,name,description,color'
+                    ])->orderBy('created_at', 'desc');
+                },
+                'sections:id,survey_id,title,description'
+            ])->findOrFail($surveyId);
+
+            // Format responses data
+            $formattedResponses = $survey->responses->map(function($response) {
+                return [
+                    'id' => $response->id,
+                    'status' => $response->status,
+                    'submitted_at' => $response->submitted_at,
+                    'created_at' => $response->created_at,
+                    'respondent' => $response->respondent ? [
+                        'id' => $response->respondent->id,
+                        'name' => $response->respondent->name,
+                        'email' => $response->respondent->email,
+                        'phone' => $response->respondent->phone,
+                        'gender' => $response->respondent->gender,
+                        'birth_year' => $response->respondent->birth_year,
+                        'organization' => $response->respondent->organization,
+                        'department' => $response->respondent->department,
+                        'role_title' => $response->respondent->role_title,
+                        'location' => $response->respondent->location,
+                        'registered_at' => $response->respondent->created_at
+                    ] : null,
+                    'score' => $response->score ? [
+                        'total_score' => $response->score->total_score,
+                        'max_possible_score' => $response->score->max_possible_score,
+                        'percentage' => $response->score->percentage,
+                        'category' => $response->score->resultCategory ? [
+                            'name' => $response->score->resultCategory->name,
+                            'description' => $response->score->resultCategory->description,
+                            'color' => $response->score->resultCategory->color
+                        ] : null,
+                        'section_scores' => $response->score->section_scores
+                    ] : null
+                ];
+            });
+
+            return Inertia::render('Dashboard/Survey/Response', [
+                'survey' => [
+                    'id' => $survey->id,
+                    'code' => $survey->code,
+                    'title' => $survey->title,
+                    'description' => $survey->description,
+                    'status' => $survey->status,
+                    'created_at' => $survey->created_at,
+                    'sections' => $survey->sections
+                ],
+                'responses' => $formattedResponses,
+                'totalResponses' => $survey->responses->count(),
+                'completedResponses' => $survey->responses->where('status', 'completed')->count(),
+                'inProgressResponses' => $survey->responses->where('status', 'in_progress')->count()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve survey responses',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * Generate unique respondent token
