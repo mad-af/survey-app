@@ -346,15 +346,15 @@ class SurveyController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'gender' => 'required|in:male,female',
+            'birth_year' => 'required|integer|min:1900|max:' . date('Y'),
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            'birth_year' => 'nullable|integer|min:1900|max:' . date('Y'),
             'organization' => 'nullable|string|max:255',
             'department' => 'nullable|string|max:255',
             'role_title' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
             'external_id' => 'nullable|string|max:100',
-            'consent' => 'required|boolean',
+            'consent' => 'nullable|boolean',
             'consent_at' => 'nullable|date',
             'demographics' => 'nullable|array'
         ]);

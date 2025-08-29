@@ -72,9 +72,9 @@
         <div v-if="form.errors.gender" class="mt-1 text-sm text-error">{{ form.errors.gender }}</div>
 
         <!-- Birth Year -->
-        <label class="label">Tahun Lahir</label>
+        <label class="label">Tahun Lahir <span class="text-error">*</span></label>
         <input v-model.number="form.birth_year" type="number" placeholder="1990" min="1900"
-          :max="new Date().getFullYear()" class="input" :class="{ 'input-error': form.errors.birth_year }" />
+          :max="new Date().getFullYear()" class="input" :class="{ 'input-error': form.errors.birth_year }" required />
         <div v-if="form.errors.birth_year" class="mt-1 text-sm text-error">{{ form.errors.birth_year }}</div>
       </fieldset>
 
@@ -111,11 +111,10 @@
       <div class="form-control">
         <label class="cursor-pointer label whitespace-break-spaces">
           <span class="label-text">
-            <input v-model="form.consent" type="checkbox" class="mr-3 checkbox checkbox-primary" required />
+            <input v-model="form.consent" type="checkbox" class="mr-3 checkbox checkbox-primary" />
             <span>
-              Saya menyetujui penggunaan data pribadi untuk keperluan survey ini
+              Saya menyetujui penggunaan data pribadi untuk keperluan survey ini<span class="text-error">*</span>
             </span>
-            <span class="text-error">*</span>
           </span>
         </label>
         <label v-if="form.errors.consent" class="label">
@@ -125,7 +124,7 @@
 
       <!-- Submit Button -->
       <button type="submit" class="w-full btn btn-primary" :class="{ 'loading': form.processing }"
-        :disabled="form.processing || !form.name || !form.consent || !form.gender">
+        :disabled="form.processing || !form.name || !form.gender || !form.birth_year || !form.consent">
         <LogIn v-if="!form.processing" class="mr-2 w-5 h-5" />
         {{ form.processing ? 'Mengirim...' : 'Submit Formulir' }}
       </button>
@@ -152,13 +151,17 @@ import { onMounted, ref } from 'vue'
 import CenteredLayout from '@/Layouts/CenteredLayout.vue'
 import { LogIn, Info, HelpCircle } from 'lucide-vue-next'
 
-// Route helper
-const route = (name, params = {}) => {
-  const routes = {
-    'survey.register': `/survey/${params.survey}/register`,
+// Define props
+const props = defineProps({
+  survey: {
+    type: Object,
+    required: true
+  },
+  surveyCode: {
+    type: String,
+    required: true
   }
-  return routes[name] || '/'
-}
+})
 
 // Geolocation state
 const geolocation = ref({
@@ -182,7 +185,8 @@ const form = useForm({
   role_title: '',
   location: '',
   demographics: {},
-  consent: false
+  consent: false,
+  consent_at: null
 })
 
 // Get user geolocation
@@ -253,17 +257,17 @@ onMounted(() => {
 
 // Submit form function
 const submitForm = () => {
-  // Get survey code from current URL path
-  const pathParts = window.location.pathname.split('/')
-  const surveyCode = pathParts[2] // /survey/{code}/respondent-data
-  
   // Set consent timestamp when form is submitted
-  const formData = {
-    ...form.data(),
-    consent_at: form.consent ? new Date().toISOString() : null
+  if (form.consent) {
+    form.consent_at = new Date().toISOString()
   }
 
-  form.post(route('survey.register', { survey: surveyCode }), {
+  // Submit to the registerRespondent route
+  form.post(`/survey/${props.surveyCode}/register`, {
+    onSuccess: () => {
+      // Success will be handled by Inertia.location() in controller
+      console.log('Registration successful')
+    },
     onError: (errors) => {
       // Handle validation errors
       console.error('Registration failed:', errors)
