@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SurveyTakeController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -50,6 +51,14 @@ Route::prefix('dashboard')->middleware('auth')->group(function () {
     });
 });
 
-Route::get('/formulir', function () {
-    return Inertia::render('Survey/Formulir');
+Route::prefix('survey')->group(function () {
+    Route::get('/{survey}/respondent-data', function ($survey) {
+        return Inertia::render('Survey/RespondentData');
+    });
+    
+    Route::get('/{survey}/questions', function ($survey) {
+        return Inertia::render('Survey/Questions');
+    });
+    
 });
+
