@@ -10,9 +10,7 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 });
 
-Route::get('/entry', function () {
-    return Inertia::render('Entry');
-})->middleware('guest.survey');
+Route::get('/entry', [SurveyController::class, 'showEntry'])->middleware('guest.survey');
 
 Route::post('/survey/enter', [SurveyController::class, 'enter']);
 Route::post('/survey/logout', [SurveyController::class, 'logout']);

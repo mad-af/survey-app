@@ -249,6 +249,32 @@ class SurveyController extends Controller
     }
 
     /**
+     * Show entry page with public surveys
+     */
+    public function showEntry()
+    {
+        // Get public surveys that are active
+        $publicSurveys = Survey::where('visibility', SurveyVisibility::PUBLIC)
+            ->where('status', SurveyStatus::ACTIVE)
+            ->where(function ($query) {
+                $query->whereNull('starts_at')
+                    ->orWhere('starts_at', '<=', now());
+            })
+            ->where(function ($query) {
+                $query->whereNull('ends_at')
+                    ->orWhere('ends_at', '>=', now());
+            })
+            ->select('id', 'code', 'title', 'description', 'starts_at', 'ends_at')
+            ->orderBy('created_at', 'desc')
+            ->limit(6)
+            ->get();
+
+        return Inertia::render('Entry', [
+            'publicSurveys' => $publicSurveys
+        ]);
+    }
+
+    /**
      * Handle survey entry with survey code
      */
     public function enter(Request $request)
