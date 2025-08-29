@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Survey;
 use App\Models\Response;
 use App\Models\Answer;
+use App\Models\ResponseScore;
+use App\Models\ResultCategory;
+use App\Models\Choice;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -255,6 +258,11 @@ class SurveyTakeController extends Controller
                 }
             }
 
+            // Calculate and save score if this is a complete submission (not partial)
+            if (!$isPartial) {
+                $this->calculateAndSaveScore($response, $survey);
+            }
+
             DB::commit();
 
             $message = $isPartial ? 'Section answers saved successfully' : 'Survey response submitted successfully';
@@ -326,5 +334,98 @@ class SurveyTakeController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Calculate and save response score
+     */
+    private function calculateAndSaveScore(Response $response, Survey $survey): void
+    {
+        // Load survey with all necessary relationships for scoring
+        $survey->load([
+            'sections.questions.choices',
+            'resultCategories' => function ($query) {
+                $query->orderBy('min_score');
+            }
+        ]);
+
+        // Load response answers with relationships
+        $response->load('answers.choice', 'answers.question.section');
+
+        $totalScore = 0;
+        $maxPossibleScore = 0;
+        $sectionScores = [];
+
+        // Calculate score for each section
+        foreach ($survey->sections as $section) {
+            $sectionScore = 0;
+            $sectionMaxScore = 0;
+
+            foreach ($section->questions as $question) {
+                $questionWeight = $question->score_weight ?? 1;
+                $questionMaxScore = 0;
+                $questionScore = 0;
+
+                // Find the answer for this question
+                $answer = $response->answers->where('question_id', $question->id)->first();
+
+                if ($answer && $answer->choice_id) {
+                    // For choice-based questions, use choice score
+                    $choice = $question->choices->where('id', $answer->choice_id)->first();
+                    if ($choice) {
+                        $questionScore = $choice->score * $questionWeight;
+                    }
+                } elseif ($answer && $answer->value_number !== null) {
+                    // For numeric questions, use the numeric value
+                    $questionScore = $answer->value_number * $questionWeight;
+                }
+
+                // Calculate max possible score for this question
+                if ($question->choices->isNotEmpty()) {
+                    $questionMaxScore = $question->choices->max('score') * $questionWeight;
+                } else {
+                    // For non-choice questions, assume max score is the weight itself
+                    $questionMaxScore = $questionWeight;
+                }
+
+                $sectionScore += $questionScore;
+                $sectionMaxScore += $questionMaxScore;
+            }
+
+            $sectionScores[] = [
+                'section_id' => $section->id,
+                'title' => $section->title,
+                'score' => round($sectionScore, 2),
+                'max_score' => round($sectionMaxScore, 2),
+                'percentage' => $sectionMaxScore > 0 ? round(($sectionScore / $sectionMaxScore) * 100, 2) : 0
+            ];
+
+            $totalScore += $sectionScore;
+            $maxPossibleScore += $sectionMaxScore;
+        }
+
+        // Calculate percentage
+        $percentage = $maxPossibleScore > 0 ? ($totalScore / $maxPossibleScore) * 100 : 0;
+
+        // Determine result category based on percentage
+        $resultCategory = null;
+        foreach ($survey->resultCategories as $category) {
+            if ($percentage >= $category->min_score && $percentage <= $category->max_score) {
+                $resultCategory = $category;
+                break;
+            }
+        }
+
+        // Create or update response score
+        ResponseScore::updateOrCreate(
+            ['response_id' => $response->id],
+            [
+                'result_category_id' => $resultCategory?->id,
+                'total_score' => round($totalScore, 2),
+                'max_possible_score' => round($maxPossibleScore, 2),
+                'percentage' => round($percentage, 2),
+                'section_scores' => $sectionScores,
+            ]
+        );
     }
 }

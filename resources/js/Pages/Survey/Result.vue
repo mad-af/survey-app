@@ -31,7 +31,9 @@
               <div class="badge badge-accent badge-lg">
                 {{ surveyResult.score.percentage }}%
               </div>
-              <span class="text-sm opacity-90">{{ surveyResult.score.category.name }}</span>
+              <span v-if="surveyResult.score.category" class="text-sm opacity-90">
+                {{ surveyResult.score.category.name }}
+              </span>
             </div>
           </div>
           <div class="text-right">
@@ -42,7 +44,7 @@
     </div>
 
     <!-- Category Description -->
-    <div class="mb-6 alert" :class="getCategoryAlertClass(surveyResult.score.category.color)">
+    <div v-if="surveyResult.score.category" class="mb-6 alert" :class="getCategoryAlertClass(surveyResult.score.category.color)">
       <Info class="w-5 h-5" />
       <div>
         <h3 class="font-semibold">{{ surveyResult.score.category.name }}</h3>
@@ -58,7 +60,7 @@
           <h2 class="text-xl font-semibold">Skor Per Bagian</h2>
         </div>
         
-        <div class="space-y-4">
+        <div v-if="surveyResult.sections && surveyResult.sections.length > 0" class="space-y-4">
           <div 
             v-for="(section, index) in surveyResult.sections" 
             :key="section.id"
@@ -94,6 +96,14 @@
             </div>
           </div>
         </div>
+        
+        <!-- Empty state for sections -->
+        <div v-else class="text-center py-8">
+          <div class="text-base-content/60">
+            <FileText class="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <p>Tidak ada data skor per bagian yang tersedia.</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -122,59 +132,23 @@ import {
   ArrowLeft 
 } from 'lucide-vue-next'
 
-// Sample data - in real app this would come from props or API
-const surveyResult = {
-  survey: {
-    title: "Evaluasi Kepuasan Pelayanan",
-    description: "Survey untuk mengukur tingkat kepuasan terhadap pelayanan yang diberikan"
+// Define props to receive data from backend
+const props = defineProps({
+  surveyCode: {
+    type: String,
+    required: true
   },
-  score: {
-    total_score: 78.5,
-    max_possible_score: 100,
-    percentage: 78.5,
-    category: {
-      name: "Baik",
-      description: "Hasil menunjukkan tingkat kepuasan yang baik. Masih ada ruang untuk perbaikan di beberapa area.",
-      color: "success"
-    }
-  },
-  sections: [
-    {
-      id: 1,
-      title: "Kualitas Pelayanan",
-      description: "Penilaian terhadap kualitas pelayanan yang diberikan",
-      score: 82,
-      max_score: 100,
-      percentage: 82
-    },
-    {
-      id: 2,
-      title: "Kecepatan Respon",
-      description: "Penilaian terhadap kecepatan dalam merespon permintaan",
-      score: 75,
-      max_score: 100,
-      percentage: 75
-    },
-    {
-      id: 3,
-      title: "Keramahan Staff",
-      description: "Penilaian terhadap sikap dan keramahan staff",
-      score: 88,
-      max_score: 100,
-      percentage: 88
-    },
-    {
-      id: 4,
-      title: "Fasilitas",
-      description: "Penilaian terhadap fasilitas yang tersedia",
-      score: 69,
-      max_score: 100,
-      percentage: 69
-    }
-  ]
-}
+  surveyResult: {
+    type: Object,
+    required: true
+  }
+})
+
+// Use the surveyResult from props
+const { surveyResult } = props
 
 const getCategoryAlertClass = (color) => {
+  if (!color) return 'alert-info'
   const colorMap = {
     'success': 'alert-success',
     'warning': 'alert-warning',

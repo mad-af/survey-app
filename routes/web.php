@@ -61,10 +61,6 @@ Route::prefix('survey')->middleware('survey.token')->group(function () {
     
     Route::post('/{survey}/register', [SurveyController::class, 'registerRespondent']);
     
-    Route::get('/{survey}/result', function ($survey) {
-        return Inertia::render('Survey/Result', [
-            'surveyCode' => $survey
-        ]);
-    });
+    Route::get('/{survey}/result', [SurveyController::class, 'showResult']);
 });
 

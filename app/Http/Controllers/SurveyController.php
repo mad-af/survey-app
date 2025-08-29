@@ -361,6 +361,77 @@ class SurveyController extends Controller
     }
 
     /**
+     * Show survey result page
+     */
+    public function showResult(Request $request, $survey)
+    {
+        // Get survey data from middleware
+        $surveyModel = $request->survey;
+        $surveyResponse = $request->survey_response;
+        
+        // Load survey with sections
+        $surveyModel->load([
+            'sections' => function ($query) {
+                $query->orderBy('order');
+            }
+        ]);
+        
+        // Load response with score and result category
+        $surveyResponse->load(['responseScore.resultCategory']);
+        
+        // Get response score
+        $responseScore = $surveyResponse->responseScore;
+        
+        if (!$responseScore) {
+            abort(404, 'Survey result not found');
+        }
+        
+        // Prepare survey result data
+        $surveyResult = [
+            'survey' => [
+                'title' => $surveyModel->title,
+                'description' => $surveyModel->description,
+                'code' => $surveyModel->code
+            ],
+            'score' => [
+                'total_score' => $responseScore->total_score,
+                'max_possible_score' => $responseScore->max_possible_score,
+                'percentage' => $responseScore->percentage,
+                'category' => $responseScore->resultCategory ? [
+                    'name' => $responseScore->resultCategory->name,
+                    'description' => $responseScore->resultCategory->description,
+                    'color' => $responseScore->resultCategory->color
+                ] : null
+            ],
+            'sections' => []
+        ];
+        
+        // Process section scores
+        if ($responseScore->section_scores && is_array($responseScore->section_scores)) {
+            foreach ($surveyModel->sections as $section) {
+                $sectionScore = collect($responseScore->section_scores)
+                    ->firstWhere('section_id', $section->id);
+                
+                if ($sectionScore) {
+                    $surveyResult['sections'][] = [
+                        'id' => $section->id,
+                        'title' => $section->title,
+                        'description' => $section->description,
+                        'score' => $sectionScore['score'] ?? 0,
+                        'max_score' => $sectionScore['max_score'] ?? 0,
+                        'percentage' => $sectionScore['percentage'] ?? 0
+                    ];
+                }
+            }
+        }
+        
+        return Inertia::render('Survey/Result', [
+            'surveyCode' => $survey,
+            'surveyResult' => $surveyResult
+        ]);
+    }
+
+    /**
      * Handle respondent registration
      */
     public function registerRespondent(Request $request, $survey)
