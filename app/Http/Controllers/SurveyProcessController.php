@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\QuestionType;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,7 @@ use App\Models\Answer;
 use App\Models\Respondent;
 use App\Models\Choice;
 use App\Models\ResponseScore;
+use App\Models\ResultCategory;
 use App\Enums\ResponseStatus;
 use Exception;
 use Inertia\Inertia;
@@ -660,77 +662,114 @@ class SurveyProcessController extends Controller
     {
         try {
             $totalScore = 0;
+            $maxPossibleScore = 0;
+            $sectionScores = [];
             
-            // Get all answers for this response with related question and choice data
+            // Get all answers for this response with related question, choice, and section data
             $answers = Answer::where('response_id', $response->id)
-                ->with(['question', 'choice'])
+                ->with(['question.section', 'question.choices', 'choice'])
                 ->get();
 
-            foreach ($answers as $answer) {
-                $questionType = $answer->question->type;
-                $score = 0;
+            // Group answers by section for section-wise scoring
+            $answersBySection = $answers->groupBy('question.section_id');
 
-                // Calculate score based on question type using switch case
-                switch ($questionType) {
-                    case 'single_choice':
-                        // For single choice, get score from the selected choice
-                        if ($answer->choice) {
-                            $score = $answer->choice->score ?? 0;
-                        }
-                        break;
+            foreach ($answersBySection as $sectionId => $sectionAnswers) {
+                $sectionScore = 0;
+                $sectionMaxScore = 0;
 
-                    case 'multiple_choice':
-                        // For multiple choice, sum scores from all selected choices
-                        if ($answer->value_json && is_array($answer->value_json)) {
-                            foreach ($answer->value_json as $choiceId) {
-                                $choice = Choice::find($choiceId);
-                                if ($choice) {
-                                    $score += $choice->score ?? 0;
+                foreach ($sectionAnswers as $answer) {
+                    $question = $answer->question;
+                    $questionType = $question->type;
+                    $scoreWeight = $question->score_weight ?? 1;
+                    $questionScore = 0;
+                    $questionMaxScore = 0;
+
+                    // Calculate score based on question type
+                    switch ($questionType) {
+                        case QuestionType::SINGLE_CHOICE:
+                            if ($answer->choice) {
+                                $questionScore = ($answer->choice->score ?? 0) * $scoreWeight;
+                            }
+                            // Max score is the highest choice score for this question
+                            $questionMaxScore = ($question->choices->max('score') ?? 0) * $scoreWeight;
+                            break;
+
+                        case QuestionType::MULTIPLE_CHOICE:
+                            if ($answer->value_json && is_array($answer->value_json)) {
+                                foreach ($answer->value_json as $choiceId) {
+                                    $choice = Choice::find($choiceId);
+                                    if ($choice) {
+                                        $questionScore += ($choice->score ?? 0) * $scoreWeight;
+                                    }
                                 }
                             }
-                        }
-                        break;
+                            // Max score is sum of all choice scores for this question
+                            $questionMaxScore = ($question->choices->sum('score') ?? 0) * $scoreWeight;
+                            break;
 
-                    case 'number':
-                        // For number type, use the numeric value as score
-                        // You can customize this logic based on your scoring requirements
-                        $score = $answer->value_number ?? 0;
-                        break;
+                        case QuestionType::NUMBER:
+                            $questionScore = ($answer->value_number ?? 0) * $scoreWeight;
+                            // For number type, assume max score is 100 or define based on your requirements
+                            $questionMaxScore = 100 * $scoreWeight;
+                            break;
 
-                    case 'short_text':
-                    case 'long_text':
-                        // For text types, you might want to implement custom scoring logic
-                        // For now, we'll assign a default score of 0
-                        // You can customize this based on text analysis or predefined rules
-                        $score = 0;
-                        break;
+                        case QuestionType::SHORT_TEXT:
+                        case QuestionType::LONG_TEXT:
+                            // For text types, implement custom scoring logic if needed
+                            $questionScore = 0;
+                            $questionMaxScore = 0; // No scoring for text questions by default
+                            break;
 
-                    case 'date':
-                        // For date type, you might want to implement age-based scoring
-                        // or other date-related scoring logic
-                        // For now, we'll assign a default score of 0
-                        $score = 0;
-                        break;
+                        case QuestionType::DATE:
+                            // For date type, implement age-based or date-related scoring if needed
+                            $questionScore = 0;
+                            $questionMaxScore = 0; // No scoring for date questions by default
+                            break;
 
-                    default:
-                        // For unknown question types, assign score of 0
-                        $score = 0;
-                        break;
+                        default:
+                            $questionScore = 0;
+                            $questionMaxScore = 0;
+                            break;
+                    }
+
+                    $sectionScore += $questionScore;
+                    $sectionMaxScore += $questionMaxScore;
                 }
 
-                $totalScore += $score;
+                $sectionScores[] = [
+                    'section_id' => $sectionId,
+                    'score' => $sectionScore,
+                    'max_score' => $sectionMaxScore,
+                    'percentage' => $sectionMaxScore > 0 ? ($sectionScore / $sectionMaxScore) * 100 : 0
+                ];
+
+                $totalScore += $sectionScore;
+                $maxPossibleScore += $sectionMaxScore;
             }
 
-            // Save or update the response score
+            // Calculate overall percentage
+            $percentage = $maxPossibleScore > 0 ? ($totalScore / $maxPossibleScore) * 100 : 0;
+
+            // Determine result category based on total score
+            $resultCategory = ResultCategory::where('survey_id', $response->survey_id)
+                ->where('min_score', '<=', $totalScore)
+                ->where('max_score', '>=', $totalScore)
+                ->first();
+
+            // Save or update the response score with complete data
             ResponseScore::updateOrCreate(
                 ['response_id' => $response->id],
                 [
-                    'total_score' => $totalScore,
-                    'calculated_at' => now()
+                    'result_category_id' => $resultCategory?->id,
+                    'total_score' => round($totalScore, 2),
+                    'max_possible_score' => round($maxPossibleScore, 2),
+                    'percentage' => round($percentage, 2),
+                    'section_scores' => $sectionScores,
+                    'updated_at' => now()
                 ]
             );
 
-            Log::info("Score calculated for response {$response->id}: {$totalScore}");
+            Log::info("Score calculated for response {$response->id}: {$totalScore}/{$maxPossibleScore} ({$percentage}%)");
 
         } catch (Exception $e) {
             Log::error('Error calculating score: ' . $e->getMessage());
@@ -799,10 +838,23 @@ class SurveyProcessController extends Controller
             $survey = $response->survey;
             $responseScore = $response->score;
 
-            // Calculate section scores if not already calculated
+            // Prepare section scores for display
             $sectionScores = [];
             if ($responseScore && $responseScore->section_scores) {
-                $sectionScores = $responseScore->section_scores;
+                // Convert stored section scores to display format with section details
+                foreach ($survey->sections as $section) {
+                    $storedScore = collect($responseScore->section_scores)->firstWhere('section_id', $section->id);
+                    if ($storedScore) {
+                        $sectionScores[] = [
+                            'id' => $section->id,
+                            'title' => $section->title,
+                            'description' => $section->description,
+                            'score' => $storedScore['score'],
+                            'max_score' => $storedScore['max_score'],
+                            'percentage' => $storedScore['percentage']
+                        ];
+                    }
+                }
             } else {
                 // Calculate section scores manually if not stored
                 foreach ($survey->sections as $section) {
