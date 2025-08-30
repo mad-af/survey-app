@@ -7,6 +7,7 @@ use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\SurveySectionController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\SurveyTakeController;
+use App\Http\Controllers\SurveyProcessController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,4 +50,9 @@ Route::middleware(['auth:sanctum', 'no.cache'])->group(function () {
     // Survey Take API Routes
     Route::get('surveys/{survey}/data', [SurveyTakeController::class, 'getSurveyData']);
     Route::post('surveys/{survey}/responses', [SurveyTakeController::class, 'submitResponse']);
+});
+
+// Survey Process API Routes - Require survey.token middleware
+Route::middleware(['survey.token', 'no.cache'])->group(function () {
+    Route::post('/survey/question-partials', [SurveyProcessController::class, 'submitQuestionPartials']);
 });

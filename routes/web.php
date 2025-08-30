@@ -64,19 +64,24 @@ Route::get('/entry', [SurveyProcessController::class, 'entry'])->middleware(['gu
 Route::post('/survey/enter', [SurveyProcessController::class, 'enter'])->middleware(['guest.survey','no.cache']);
 // Route::post('/survey/logout', [SurveyController::class, 'logout']);
 
+
 Route::prefix('survey')->middleware(['survey.token', 'no.cache'])->group(function () {
     
     Route::get('/respondent-data', [SurveyProcessController::class, 'showRespondentData']);
 
-    Route::post('/respondent-data', [SurveyProcessController::class, 'respondentData']);
+    Route::post('/respondent-data', [SurveyProcessController::class, 'submitRespondentData']);
     
     Route::get('/questions', [SurveyProcessController::class, 'showQuestions']);
     
+    Route::post('/question-partials', [SurveyProcessController::class, 'submitQuestionPartials']);
+
+    Route::post('/questions', [SurveyProcessController::class, 'submitQuestions']);
     
+    Route::get('/result', [SurveyProcessController::class, 'showResult']);
+
     // Route::post('/{survey}/save-section', [SurveyController::class, 'saveSectionAnswers']);
     
     // Route::post('/{survey}/submit', [SurveyController::class, 'submitSurveyResponse']);
     
-    // Route::get('/{survey}/result', [SurveyController::class, 'showResult'])->name("survey.result");
 });
 

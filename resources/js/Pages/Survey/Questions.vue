@@ -33,9 +33,8 @@
       <!-- Survey Questions Cards -->
       <div class="space-y-4">
         <SurveyQuestionCard v-for="(question, index) in currentQuestions" :key="question.id" :question="question"
-          :question-number="index + 1" />
+          :question-number="index + 1" v-model="formAnswers[question.id]" />
       </div>
-
 
       <!-- Navigation Buttons -->
       <SurveyNavigation :answered-questions="answeredQuestions" :total-questions="totalQuestions"
@@ -46,13 +45,13 @@
 </template>
 
 <script setup>
-import { Head, Link, router } from '@inertiajs/vue3'
+import { Head, Link } from '@inertiajs/vue3'
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { useForm } from '@inertiajs/vue3'
 import ProsesSurveyLayout from '@/Layouts/ProsesSurveyLayout.vue'
 import SurveyNavbar from '@/Components/SurveyNavbar.vue'
 import SurveyQuestionCard from '@/Components/SurveyQuestionCard.vue'
 import SurveyNavigation from '@/Components/SurveyNavigation.vue'
+import { useForm } from '@inertiajs/vue3'
 
 // Route helper
 const route = (name) => {
@@ -84,13 +83,26 @@ const currentSectionId = ref(null)
 const loading = ref(false)
 const error = ref(null)
 
-// Survey answers
-const answers = ref({})
-
 // Response tracking
 const responseId = ref(null)
-const respondentToken = ref(null)
-const hasExistingData = ref(false)
+
+// Form answers using reactive refs
+const formAnswers = ref({})
+
+// Initialize form answers for all questions
+const initializeFormAnswers = () => {
+  const answers = {}
+  displayQuestions.value.forEach(question => {
+    if (question.type === 'single_choice') {
+      answers[question.id] = null
+    } else if (question.type === 'multiple_choice') {
+      answers[question.id] = []
+    } else {
+      answers[question.id] = ''
+    }
+  })
+  formAnswers.value = answers
+}
 
 // Initialize data from SSR props
 const initializeData = () => {
@@ -106,86 +118,48 @@ const initializeData = () => {
 
   // Load existing response data if available
   if (props.existingResponse) {
-    answers.value = props.existingResponse.answers
     responseId.value = props.existingResponse.id
-    hasExistingData.value = true
-    console.log('Loaded existing response from SSR:', props.existingResponse)
   }
 
+  // Initialize form answers
+  initializeFormAnswers()
+
+  // Populate with existing data
+  populateFormAnswers()
 }
 
-// Populate form elements with existing data
-const populateFormElements = () => {
+// Populate form answers with existing data
+const populateFormAnswers = () => {
   if (!props.existingResponse || !props.existingResponse.answers) {
     return
   }
 
-  // Wait for next tick to ensure DOM elements are rendered
-  nextTick(() => {
-    Object.entries(props.existingResponse.answers).forEach(([questionId, answerData]) => {
-      const question = displayQuestions.value.find(q => q.id == questionId)
-      if (!question) return
+  Object.entries(props.existingResponse.answers).forEach(([questionId, answerData]) => {
+    const question = displayQuestions.value.find(q => q.id == questionId)
+    if (!question) return
 
-      if (question.type === 'single_choice' && answerData.choice_id) {
-        const radioInput = document.querySelector(`input[name="question_${questionId}"][value="${answerData.choice_id}"]`)
-        if (radioInput) {
-          radioInput.checked = true
-        }
-      } else if (question.type === 'multiple_choice' && answerData.value_json) {
-        const selectedIds = JSON.parse(answerData.value_json)
-        selectedIds.forEach(choiceId => {
-          const checkboxInput = document.querySelector(`input[name="question_${questionId}[]"][value="${choiceId}"]`)
-          if (checkboxInput) {
-            checkboxInput.checked = true
-          }
-        })
-      } else {
-        const input = document.querySelector(`input[name="question_${questionId}"], textarea[name="question_${questionId}"]`)
-        if (input) {
-          if (question.type === 'short_text' || question.type === 'long_text') {
-            input.value = answerData.value_text || ''
-          } else if (question.type === 'number') {
-            input.value = answerData.value_number || ''
-          } else if (question.type === 'date') {
-            input.value = answerData.value_text || ''
-          }
-        }
-      }
-    })
+    if (question.type === 'single_choice' && answerData.choice_id) {
+      formAnswers.value[questionId] = answerData.choice_id
+    } else if (question.type === 'multiple_choice' && answerData.value_json) {
+      formAnswers.value[questionId] = JSON.parse(answerData.value_json)
+    } else if (question.type === 'short_text' || question.type === 'long_text') {
+      formAnswers.value[questionId] = answerData.value_text || ''
+    } else if (question.type === 'number') {
+      formAnswers.value[questionId] = answerData.value_number || ''
+    } else if (question.type === 'date') {
+      formAnswers.value[questionId] = answerData.value_text || ''
+    }
   })
 }
 
-// Force reactivity for navigation state
-const navigationKey = ref(0)
-const forceNavigationUpdate = () => {
-  navigationKey.value++
-}
-
-// Add event listeners to form inputs for reactivity
-const addFormEventListeners = () => {
-  nextTick(() => {
-    // Add event listeners to all form inputs
-    const inputs = document.querySelectorAll('input, textarea')
-    inputs.forEach(input => {
-      input.addEventListener('input', forceNavigationUpdate)
-      input.addEventListener('change', forceNavigationUpdate)
-    })
-  })
-}
-
-// Watch for section changes to re-add event listeners
+// Watch for section changes to populate form data
 watch(currentSectionId, () => {
-  nextTick(() => {
-    addFormEventListeners()
-    populateFormElements()
-  })
+  populateFormAnswers()
 })
 
 // Initialize data on component mount
 onMounted(() => {
   initializeData()
-  populateFormElements()
-  addFormEventListeners()
 })
 
 // Computed properties
@@ -214,7 +188,7 @@ const currentQuestions = computed(() => {
 
 const answeredQuestions = computed(() => {
   // Use navigationKey to force reactivity
-  navigationKey.value
+  // navigationKey.value
   let count = 0
   displayQuestions.value.forEach(question => {
     if (isQuestionAnswered(question)) {
@@ -229,9 +203,6 @@ const totalQuestions = computed(() => {
 })
 
 const canProceed = computed(() => {
-  // Use navigationKey to force reactivity
-  navigationKey.value
-  // Check if all questions in current section are answered
   return currentQuestions.value.every(question => {
     return isQuestionAnswered(question)
   })
@@ -239,15 +210,14 @@ const canProceed = computed(() => {
 
 // Helper function to check if a question is answered
 const isQuestionAnswered = (question) => {
+  const answer = formAnswers.value[question.id]
+
   if (question.type === 'single_choice') {
-    const radioInput = document.querySelector(`input[name="question_${question.id}"]:checked`)
-    return radioInput !== null
+    return answer !== null && answer !== ''
   } else if (question.type === 'multiple_choice') {
-    const checkboxInputs = document.querySelectorAll(`input[name="question_${question.id}[]"]:checked`)
-    return checkboxInputs.length > 0
+    return Array.isArray(answer) && answer.length > 0
   } else {
-    const input = document.querySelector(`input[name="question_${question.id}"], textarea[name="question_${question.id}"]`)
-    return input && input.value.trim() !== ''
+    return answer !== null && answer !== '' && String(answer).trim() !== ''
   }
 }
 
@@ -301,38 +271,36 @@ const handleNextSection = async () => {
   }
 }
 
-
-
 // Save answers for current section
 const saveSectionAnswers = async () => {
   try {
-    // Get answers from form elements by name
+    // Get answers from reactive refs
     const currentSectionAnswers = {}
-    
+
     currentQuestions.value.forEach(question => {
-      let answer = null
-      
+      const answer = formAnswers.value[question.id]
+      let processedAnswer = null
+
       if (question.type === 'single_choice') {
-        const radioInput = document.querySelector(`input[name="question_${question.id}"]:checked`)
-        if (radioInput) {
-          answer = parseInt(radioInput.value)
+        if (answer !== null && answer !== '') {
+          processedAnswer = parseInt(answer)
         }
       } else if (question.type === 'multiple_choice') {
-        const checkboxInputs = document.querySelectorAll(`input[name="question_${question.id}[]"]:checked`)
-        answer = Array.from(checkboxInputs).map(input => parseInt(input.value))
+        if (Array.isArray(answer) && answer.length > 0) {
+          processedAnswer = answer.map(val => parseInt(val))
+        }
       } else {
-        const input = document.querySelector(`input[name="question_${question.id}"], textarea[name="question_${question.id}"]`)
-        if (input && input.value) {
+        if (answer !== null && answer !== '') {
           if (question.type === 'number') {
-            answer = parseFloat(input.value)
+            processedAnswer = parseFloat(answer)
           } else {
-            answer = input.value
+            processedAnswer = answer
           }
         }
       }
-      
-      if (answer !== null && answer !== '' && !(Array.isArray(answer) && answer.length === 0)) {
-        currentSectionAnswers[question.id] = answer
+
+      if (processedAnswer !== null && processedAnswer !== '' && !(Array.isArray(processedAnswer) && processedAnswer.length === 0)) {
+        currentSectionAnswers[question.id] = processedAnswer
       }
     })
 
@@ -347,8 +315,8 @@ const saveSectionAnswers = async () => {
       return formatted
     })
 
-    // Create form for SSR submission
-    const sectionForm = useForm({
+    // Use web endpoint for background saving (fire-and-forget)
+    const payload = {
       answers: formattedAnswers,
       section_id: currentSectionId.value,
       is_partial: true,
@@ -358,21 +326,45 @@ const saveSectionAnswers = async () => {
         current_section: currentSection.value,
         total_sections: totalSections.value
       }
-    })
+    }
 
-    console.log('Sending section data via SSR')
-    sectionForm.post(`/survey/${props.surveyCode}/save-section`, {
-      onSuccess: (page) => {
-        if (page.props.responseId) {
-          responseId.value = page.props.responseId
-        }
-        console.log('Section answers saved successfully')
+    // Fire-and-forget web call with timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+      console.log('Web call timed out, continuing with navigation')
+    }, 3000) // 3 second timeout
+
+    fetch('/api/survey/question-partials', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
       },
-      onError: (errors) => {
-        console.error('Error saving section answers:', errors)
-      },
-      preserveState: true,
-      preserveScroll: true
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    })
+    .then(response => {
+      clearTimeout(timeoutId)
+      if (response.ok) {
+        return response.json()
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    })
+    .then(data => {
+      console.log('Section answers saved successfully:', data)
+      if (data.responseId) {
+        responseId.value = data.responseId
+      }
+    })
+    .catch(error => {
+      clearTimeout(timeoutId)
+      if (error.name !== 'AbortError') {
+        console.error('Error saving section answers:', error)
+      }
+      // Don't block navigation on save error, just log it
     })
   } catch (err) {
     console.error('Error saving section answers:', err)
@@ -385,33 +377,33 @@ const submitFinalSurveyResponse = async () => {
   try {
     loading.value = true
 
-    // Get all answers from form elements
+    // Get all answers from reactive refs
     const allAnswers = {}
-    
+
     displayQuestions.value.forEach(question => {
-      let answer = null
-      
+      const answer = formAnswers.value[question.id]
+      let processedAnswer = null
+
       if (question.type === 'single_choice') {
-        const radioInput = document.querySelector(`input[name="question_${question.id}"]:checked`)
-        if (radioInput) {
-          answer = parseInt(radioInput.value)
+        if (answer !== null && answer !== '') {
+          processedAnswer = parseInt(answer)
         }
       } else if (question.type === 'multiple_choice') {
-        const checkboxInputs = document.querySelectorAll(`input[name="question_${question.id}[]"]:checked`)
-        answer = Array.from(checkboxInputs).map(input => parseInt(input.value))
+        if (Array.isArray(answer) && answer.length > 0) {
+          processedAnswer = answer.map(val => parseInt(val))
+        }
       } else {
-        const input = document.querySelector(`input[name="question_${question.id}"], textarea[name="question_${question.id}"]`)
-        if (input && input.value) {
+        if (answer !== null && answer !== '') {
           if (question.type === 'number') {
-            answer = parseFloat(input.value)
+            processedAnswer = parseFloat(answer)
           } else {
-            answer = input.value
+            processedAnswer = answer
           }
         }
       }
-      
-      if (answer !== null && answer !== '' && !(Array.isArray(answer) && answer.length === 0)) {
-        allAnswers[question.id] = answer
+
+      if (processedAnswer !== null && processedAnswer !== '' && !(Array.isArray(processedAnswer) && processedAnswer.length === 0)) {
+        allAnswers[question.id] = processedAnswer
       }
     })
 
@@ -428,15 +420,13 @@ const submitFinalSurveyResponse = async () => {
       meta: {
         user_agent: navigator.userAgent,
         completed_at: new Date().toISOString(),
-        total_questions_answered: Object.keys(answers.value).length,
+        total_questions_answered: Object.keys(allAnswers).length,
         total_questions: totalQuestions.value
       }
     })
 
-    console.log('Submitting final survey via SSR')
-    finalForm.post(`/survey/${props.surveyCode}/submit`, {
+    finalForm.post(`/survey/questions`, {
       onSuccess: () => {
-        console.log('Survey completed successfully')
         // Redirect to thank you page will be handled by controller
       },
       onError: (errors) => {
@@ -454,18 +444,12 @@ const submitFinalSurveyResponse = async () => {
 
 // Helper function to format answers
 const formatAnswer = (question, questionId, answer) => {
-  let formattedAnswer = answer
-
   return {
     question_id: parseInt(questionId),
-    choice_id: question?.type === 'single_choice' ? formattedAnswer.choice_id : null,
-    value_text: ['text', 'textarea', 'short_text', 'long_text'].includes(question?.type) ? answer.value_text : null,
-    value_number: question?.type === 'number' ? formattedAnswer.value_number : null,
-    value_json: question?.type === 'multiple_choice' ? formattedAnswer.value_json : null
+    choice_id: question?.type === 'single_choice' ? answer : null,
+    value_text: ['short_text', 'long_text', 'date'].includes(question?.type) ? answer : null,
+    value_number: question?.type === 'number' ? answer : null,
+    value_json: question?.type === 'multiple_choice' ? JSON.stringify(answer) : null
   }
-}
-
-const generateRespondentToken = () => {
-  return 'resp_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now()
 }
 </script>

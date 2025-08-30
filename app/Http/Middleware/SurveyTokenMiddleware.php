@@ -75,22 +75,22 @@ class SurveyTokenMiddleware
             'response' => $response
         ]);
         
-        $currentStepRoute = '';
+        $currentStepRoute = [];
         switch ($currentStep) {
         case SurveyResponse::STEP_RESPONDENT_DATA:
-            $currentStepRoute = '/survey/respondent-data';
+            $currentStepRoute = ['/survey/respondent-data'];
             break;
         case SurveyResponse::STEP_QUESTIONS:
-            $currentStepRoute = '/survey/questions';
+            $currentStepRoute = ['/survey/questions', '/survey/question-partials', '/api/survey/question-partials'];
             break;
         case SurveyResponse::STEP_RESULT:
-            $currentStepRoute = '/survey/result';
+            $currentStepRoute = ['/survey/result'];
             break;
         }
 
         // Only redirect if not already on the correct route and route is defined
-        if ($currentStepRoute && $currentStepRoute !== $request->getPathInfo()) {
-            return redirect($currentStepRoute);
+        if (count($currentStepRoute) && !in_array($request->getPathInfo(), $currentStepRoute)) {
+            return redirect(head($currentStepRoute));
         }
 
         return $next($request);

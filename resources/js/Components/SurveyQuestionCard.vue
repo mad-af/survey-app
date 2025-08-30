@@ -28,26 +28,30 @@
         <!-- Short Text -->
         <div v-if="question.type === 'short_text'">
           <input type="text" class="w-full input input-bordered" :placeholder="'Masukkan jawaban Anda...'" 
-            :required="question.required" :name="`question_${question.id}`" :ref="`question_${question.id}`" />
+            :required="question.required" :name="`question_${question.id}`" :ref="`question_${question.id}`" 
+            :value="modelValue || ''" @input="updateValue($event.target.value)" />
         </div>
 
         <!-- Long Text -->
         <div v-else-if="question.type === 'long_text'">
           <textarea class="w-full h-24 resize-none textarea textarea-bordered" 
             :placeholder="'Masukkan jawaban Anda...'" :required="question.required" 
-            :name="`question_${question.id}`" :ref="`question_${question.id}`"></textarea>
+            :name="`question_${question.id}`" :ref="`question_${question.id}`" 
+            :value="modelValue || ''" @input="updateValue($event.target.value)"></textarea>
         </div>
 
         <!-- Number -->
         <div v-else-if="question.type === 'number'">
           <input type="number" class="w-full input input-bordered" :placeholder="'Masukkan angka...'" 
-            :required="question.required" :name="`question_${question.id}`" :ref="`question_${question.id}`" />
+            :required="question.required" :name="`question_${question.id}`" :ref="`question_${question.id}`" 
+            :value="modelValue || ''" @input="updateValue($event.target.value)" />
         </div>
 
         <!-- Date -->
         <div v-else-if="question.type === 'date'">
           <input type="date" class="w-full input input-bordered" :required="question.required" 
-            :name="`question_${question.id}`" :ref="`question_${question.id}`" />
+            :name="`question_${question.id}`" :ref="`question_${question.id}`" 
+            :value="modelValue || ''" @input="updateValue($event.target.value)" />
         </div>
 
         <!-- Single Choice -->
@@ -55,7 +59,8 @@
           <div v-for="choice in question.choices" :key="choice.id" class="form-control">
             <label class="justify-start space-x-3 cursor-pointer label">
               <input type="radio" :name="`question_${question.id}`" :value="choice.id" class="radio radio-primary" 
-                :required="question.required" :ref="`question_${question.id}_${choice.id}`" />
+                :required="question.required" :ref="`question_${question.id}_${choice.id}`" 
+                :checked="modelValue == choice.id" @change="updateValue(choice.id)" />
               <span class="label-text">{{ choice.label }}</span>
             </label>
           </div>
@@ -66,7 +71,9 @@
           <div v-for="choice in question.choices" :key="choice.id" class="form-control">
             <label class="justify-start space-x-3 cursor-pointer label">
               <input type="checkbox" :name="`question_${question.id}[]`" :value="choice.id" class="checkbox checkbox-primary" 
-                :ref="`question_${question.id}_${choice.id}`" />
+                :ref="`question_${question.id}_${choice.id}`" 
+                :checked="Array.isArray(modelValue) && modelValue.includes(choice.id)" 
+                @change="updateMultipleChoice(choice.id, $event.target.checked)" />
               <span class="label-text">{{ choice.label }}</span>
             </label>
           </div>
@@ -86,8 +93,34 @@ const props = defineProps({
   questionNumber: {
     type: Number,
     required: true
+  },
+  modelValue: {
+    type: [String, Number, Array],
+    default: null
   }
 })
+
+// Define emits
+const emit = defineEmits(['update:modelValue'])
+
+// Update model value
+const updateValue = (value) => {
+  emit('update:modelValue', value)
+}
+
+// Handle multiple choice updates
+const updateMultipleChoice = (choiceId, isChecked) => {
+  const currentValue = Array.isArray(props.modelValue) ? [...props.modelValue] : []
+  const index = currentValue.indexOf(choiceId)
+  
+  if (isChecked && index === -1) {
+    currentValue.push(choiceId)
+  } else if (!isChecked && index > -1) {
+    currentValue.splice(index, 1)
+  }
+  
+  updateValue(currentValue)
+}
 
 // Question type labels
 const getQuestionTypeLabel = (type) => {
