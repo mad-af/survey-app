@@ -57,13 +57,13 @@
        <!-- Remember Me & Forgot Password -->
        <div class="flex justify-between items-center">
          <div class="form-control">
-           <label class="cursor-pointer label">
+           <label class="cursor-pointer label" title="Tetap masuk selama 2 minggu tanpa perlu login ulang">
              <input 
                v-model="form.remember" 
                type="checkbox" 
                class="checkbox checkbox-primary checkbox-sm" 
              />
-             <span class="ml-2 text-sm label-text">Ingat saya</span>
+             <span class="ml-2 text-sm label-text">Ingat saya (2 minggu)</span>
            </label>
          </div>
          <Link :href="route('password.request')" class="text-sm link link-primary">

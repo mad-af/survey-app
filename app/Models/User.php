@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
@@ -54,5 +55,49 @@ class User extends Authenticatable
     public function surveys(): HasMany
     {
         return $this->hasMany(Survey::class, 'owner_id');
+    }
+
+    /**
+     * Generate a new remember token for the user.
+     *
+     * @return string
+     */
+    public function setRememberToken($value)
+    {
+        $this->{$this->getRememberTokenName()} = $value;
+        
+        // Log remember token generation untuk audit
+        Log::info('Remember token generated', [
+            'user_id' => $this->id,
+            'email' => $this->email,
+            'timestamp' => now()
+        ]);
+    }
+
+    /**
+     * Clear the remember token.
+     *
+     * @return void
+     */
+    public function clearRememberToken()
+    {
+        $this->setRememberToken(null);
+        $this->save();
+        
+        Log::info('Remember token cleared', [
+            'user_id' => $this->id,
+            'email' => $this->email,
+            'timestamp' => now()
+        ]);
+    }
+
+    /**
+     * Check if user has a valid remember token.
+     *
+     * @return bool
+     */
+    public function hasRememberToken(): bool
+    {
+        return !empty($this->{$this->getRememberTokenName()});
     }
 }

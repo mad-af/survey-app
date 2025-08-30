@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Str;
@@ -23,17 +24,36 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string|min:6',
+            'remember' => 'boolean', // Validasi remember field
         ]);
 
         // Attempt to authenticate the user
         $credentials = $request->only('email', 'password');
+        $remember = $request->boolean('remember');
         
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::attempt($credentials, $remember)) {
+            // Regenerate session untuk keamanan
             $request->session()->regenerate();
+            
+            // Log successful login untuk audit trail
+            Log::info('User logged in', [
+                'user_id' => Auth::id(),
+                'email' => $request->email,
+                'remember' => $remember,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
             
             // Redirect to dashboard after successful login
             return redirect()->intended('/dashboard');
         }
+
+        // Log failed login attempt
+        Log::warning('Failed login attempt', [
+            'email' => $request->email,
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent()
+        ]);
 
         // If authentication fails, throw validation exception
         throw ValidationException::withMessages([
@@ -46,6 +66,23 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        
+        // Log logout activity
+        if ($user) {
+            Log::info('User logged out', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+            
+            // Clear remember token jika ada
+            if ($user->hasRememberToken()) {
+                $user->clearRememberToken();
+            }
+        }
+        
         Auth::logout();
         
         $request->session()->invalidate();

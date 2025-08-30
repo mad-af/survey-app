@@ -51,6 +51,25 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Remember Me Cookie Configuration
+    |--------------------------------------------------------------------------
+    |
+    | These options control the "remember me" cookie that can be used to
+    | authenticate users for an extended period. The lifetime is in minutes.
+    | Default: 2 minggu (20160 menit)
+    |
+    */
+
+    'remember_cookie_name' => env('REMEMBER_COOKIE_NAME', 'remember_web'),
+    'remember_cookie_lifetime' => env('REMEMBER_COOKIE_LIFETIME', 20160), // 2 minggu
+    'remember_cookie_path' => '/',
+    'remember_cookie_domain' => env('SESSION_DOMAIN'),
+    'remember_cookie_secure' => env('SESSION_SECURE_COOKIE', false),
+    'remember_cookie_http_only' => true,
+    'remember_cookie_same_site' => env('SESSION_SAME_SITE', 'lax'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Session File Location
     |--------------------------------------------------------------------------
     |
