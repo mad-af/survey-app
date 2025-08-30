@@ -249,4 +249,47 @@ class SurveyController extends Controller
         }
     }
 
+    /**
+     * Display survey responses page
+     */
+    public function showResponses(Survey $survey)
+    {
+        try {
+            // Load survey with sections for section title mapping
+            $survey->load('sections');
+            
+            // Get all responses with related data
+            $responses = Response::with([
+                'respondent:id,external_id,name,email,phone,gender,birth_year,organization,department,role_title,location,demographics,consent_at',
+                'score.resultCategory:id,name,description,color,min_score,max_score'
+            ])
+            ->where('survey_id', $survey->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+            // Calculate statistics
+            $totalResponses = $responses->count();
+            $completedResponses = $responses->where('status', 'completed')->count();
+            $inProgressResponses = $responses->where('status', 'in_progress')->count();
+            $startedResponses = $responses->where('status', 'started')->count();
+            $abandonedResponses = $responses->where('status', 'abandoned')->count();
+
+            return Inertia::render('Dashboard/Survey/Response', [
+                'survey' => $survey,
+                'responses' => $responses,
+                'statistics' => [
+                    'total' => $totalResponses,
+                    'completed' => $completedResponses,
+                    'in_progress' => $inProgressResponses,
+                    'started' => $startedResponses,
+                    'abandoned' => $abandonedResponses,
+                    'completion_rate' => $totalResponses > 0 ? round(($completedResponses / $totalResponses) * 100, 2) : 0
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'error' => 'Failed to load survey responses: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

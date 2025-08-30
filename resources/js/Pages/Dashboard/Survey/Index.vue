@@ -301,7 +301,7 @@ const manageSurvey = (survey) => {
 const viewResponses = (survey) => {
   console.log('View responses:', survey)
   // Navigate to survey responses page
-  router.visit(`/dashboard/survey/${survey.id}/response`)
+  router.visit(`/dashboard/survey/${survey.id}/responses`)
 }
 
 const viewSurvey = (survey) => {
