@@ -63,7 +63,7 @@
                type="checkbox" 
                class="checkbox checkbox-primary checkbox-sm" 
              />
-             <span class="ml-2 text-sm label-text">Ingat saya (2 minggu)</span>
+             <span class="ml-2 text-sm label-text">Ingat saya</span>
            </label>
          </div>
          <Link :href="route('password.request')" class="text-sm link link-primary">
