@@ -98,9 +98,9 @@
         </div>
         
         <!-- Empty state for sections -->
-        <div v-else class="text-center py-8">
+        <div v-else class="py-8 text-center">
           <div class="text-base-content/60">
-            <FileText class="w-12 h-12 mx-auto mb-3 opacity-50" />
+            <FileText class="mx-auto mb-3 w-12 h-12 opacity-50" />
             <p>Tidak ada data skor per bagian yang tersedia.</p>
           </div>
         </div>
@@ -127,8 +127,6 @@ import {
   Info, 
   PieChart, 
   FileText, 
-  Download, 
-  Share2, 
   ArrowLeft 
 } from 'lucide-vue-next'
 
@@ -166,20 +164,12 @@ const getProgressBarClass = (percentage) => {
 
 const goBack = async () => {
   try {
-    // Clear survey session data from localStorage/sessionStorage
-    sessionStorage.removeItem('survey_token')
-    localStorage.removeItem('survey_token')
-    
-    // Call logout endpoint to clear server-side session
-    await axios.post('/survey/logout')
-    
     // Redirect to entry page using Inertia router
     router.visit('/entry', {
       method: 'get'
     })
   } catch (error) {
-    console.error('Error during survey logout:', error)
-    // Even if logout fails, still redirect to entry
+
     router.visit('/entry', {
       method: 'get'
     })
