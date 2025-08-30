@@ -37,4 +37,65 @@ class SurveyRespondent extends Model
     {
         return $this->belongsTo(Respondent::class);
     }
+
+    /**
+     * Update status to started
+     */
+    public function markAsStarted(): void
+    {
+        $this->update([
+            'status' => 'started',
+            'started_at' => $this->started_at ?? now()
+        ]);
+    }
+
+    /**
+     * Update status to in_progress
+     */
+    public function markAsInProgress(): void
+    {
+        $this->update([
+            'status' => 'in_progress',
+            'started_at' => $this->started_at ?? now()
+        ]);
+    }
+
+    /**
+     * Update status to completed
+     */
+    public function markAsCompleted(): void
+    {
+        $this->update([
+            'status' => 'completed',
+            'completed_at' => now()
+        ]);
+    }
+
+    /**
+     * Create or update survey respondent relationship
+     */
+    public static function createOrUpdateRelationship(int $surveyId, int $respondentId, string $status = 'in_progress'): self
+    {
+        return self::updateOrCreate(
+            [
+                'survey_id' => $surveyId,
+                'respondent_id' => $respondentId
+            ],
+            [
+                'status' => $status,
+                'invited_at' => now(),
+                'started_at' => in_array($status, ['started', 'in_progress', 'completed']) ? now() : null,
+                'completed_at' => $status === 'completed' ? now() : null
+            ]
+        );
+    }
+
+    /**
+     * Check if respondent can take survey
+     */
+    public function canTakeSurvey(): bool
+    {
+        return in_array($this->status, ['invited', 'started', 'in_progress']) && 
+               ($this->expires_at === null || $this->expires_at->isFuture());
+    }
 }
