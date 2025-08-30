@@ -54,6 +54,23 @@
          </div>
        </div>
 
+       <!-- Remember Me & Forgot Password -->
+       <div class="flex justify-between items-center">
+         <div class="form-control">
+           <label class="cursor-pointer label">
+             <input 
+               v-model="form.remember" 
+               type="checkbox" 
+               class="checkbox checkbox-primary checkbox-sm" 
+             />
+             <span class="ml-2 text-sm label-text">Ingat saya</span>
+           </label>
+         </div>
+         <Link :href="route('password.request')" class="text-sm link link-primary">
+           Lupa password?
+         </Link>
+       </div>
+
        <!-- Submit Button -->
        <button 
          type="submit" 
@@ -97,7 +114,8 @@ import { Mail, Lock, LogIn, Info } from 'lucide-vue-next'
 const route = (name) => {
   const routes = {
     'entry': '/entry',
-    'login': '/login'
+    'login': '/login',
+    'password.request': '/forgot-password'
   }
   return routes[name] || '/'
 }
@@ -105,7 +123,8 @@ const route = (name) => {
 // Form handling
 const form = useForm({
   email: '',
-  password: ''
+  password: '',
+  remember: false
 })
 
 // Submit login

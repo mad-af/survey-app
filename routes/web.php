@@ -21,6 +21,12 @@ Route::post('/login', [AuthController::class, 'login'])->middleware(['guest', 'n
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware(['auth', 'no.cache']);
 Route::post('/api/token', [AuthController::class, 'generateToken'])->name('api.token')->middleware('no.cache');
 
+// Password Reset routes
+Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request')->middleware(['guest', 'no.cache']);
+Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email')->middleware(['guest', 'no.cache']);
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset')->middleware(['guest', 'no.cache']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update')->middleware(['guest', 'no.cache']);
+
 // Sanctum CSRF cookie route
 Route::get('/sanctum/csrf-cookie', function () {
     return response()->json(['message' => 'CSRF cookie set']);
