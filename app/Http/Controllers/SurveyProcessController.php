@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Survey;
 use App\Models\Response;
 use App\Models\Answer;
+use App\Models\Respondent;
 use App\Enums\ResponseStatus;
 use Exception;
 use Inertia\Inertia;
@@ -184,11 +185,199 @@ class SurveyProcessController extends Controller
             ]);
 
         } catch (Exception $e) {
-            dd($e);
             Log::error('Failed to show respondent data page: ' . $e->getMessage());
             
             return redirect('/entry')->withErrors([
                 'survey_code' => 'Terjadi kesalahan saat memuat halaman. Silakan coba lagi.'
+            ]);
+        }
+    }
+
+    /**
+     * Store respondent data and update response
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function respondentData(Request $request)
+    {
+        try {
+            // Get survey and response from middleware
+            $response = $request->response;
+
+            // Validate request data
+            $validator = Validator::make($request->all(), [
+                'external_id' => 'nullable|string|max:255',
+                'name' => 'required|string|max:255',
+                'email' => 'nullable|email|max:255',
+                'phone' => 'nullable|string|max:20',
+                'gender' => 'nullable|in:male,female,other',
+                'birth_year' => 'nullable|integer|min:1900|max:' . date('Y'),
+                'organization' => 'nullable|string|max:255',
+                'department' => 'nullable|string|max:255',
+                'role_title' => 'nullable|string|max:255',
+                'location' => 'nullable|string|max:255',
+                'demographics' => 'nullable|array',
+                'consent' => 'required|boolean|accepted',
+                'consent_at' => 'nullable|date'
+            ], [
+                'name.required' => 'Nama wajib diisi.',
+                'name.string' => 'Nama harus berupa teks.',
+                'name.max' => 'Nama maksimal 255 karakter.',
+                'email.email' => 'Format email tidak valid.',
+                'email.max' => 'Email maksimal 255 karakter.',
+                'phone.max' => 'Nomor telepon maksimal 20 karakter.',
+                'gender.in' => 'Jenis kelamin harus salah satu dari: male, female, other.',
+                'birth_year.integer' => 'Tahun lahir harus berupa angka.',
+                'birth_year.min' => 'Tahun lahir minimal 1900.',
+                'birth_year.max' => 'Tahun lahir tidak boleh lebih dari tahun sekarang.',
+                'consent.required' => 'Persetujuan wajib diberikan.',
+                'consent.accepted' => 'Anda harus menyetujui untuk melanjutkan.'
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            // Check if respondent already exists for this response
+            if (!empty($response->respondent_id)) {
+                // Update existing respondent
+                $respondent = $response->respondent;
+                $respondent->update([
+                    'external_id' => $request->external_id,
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'gender' => $request->gender,
+                    'birth_year' => $request->birth_year,
+                    'organization' => $request->organization,
+                    'department' => $request->department,
+                    'role_title' => $request->role_title,
+                    'location' => $request->location,
+                    'demographics' => $request->demographics,
+                    'consent_at' => $request->consent_at ? now() : null,
+                ]);
+            } else {
+                // Create new respondent
+                $respondent = Respondent::create([
+                    'external_id' => $request->external_id,
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->phone,
+                    'gender' => $request->gender,
+                    'birth_year' => $request->birth_year,
+                    'organization' => $request->organization,
+                    'department' => $request->department,
+                    'role_title' => $request->role_title,
+                    'location' => $request->location,
+                    'demographics' => $request->demographics,
+                    'consent_at' => $request->consent ? now() : null,
+                ]);
+
+                // Link respondent to response
+                $response->update([
+                    'respondent_id' => $respondent->id
+                ]);
+            }
+
+            // Update response to next step
+            $response->update([
+                'current_step' => Response::STEP_QUESTIONS,
+                'status' => ResponseStatus::IN_PROGRESS
+            ]);
+
+            // Update session
+            session([
+                'current_step' => Response::STEP_QUESTIONS
+            ]);
+
+            // Redirect to questions page
+            return redirect('/survey/questions');
+
+        } catch (Exception $e) {
+            dd($e);
+            Log::error('Failed to save respondent data: ' . $e->getMessage());
+            
+            return redirect()->back()->withErrors([
+                'general' => 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.'
+            ])->withInput();
+        }
+    }
+
+    /**
+     * Show survey questions page
+     * 
+     * @param Request $request
+     * @return InertiaResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function showQuestions(Request $request)
+    {
+        try {
+            // Get survey data from session
+            $surveyId = session('survey_id');
+            $surveyCode = session('survey_code');
+            $responseId = session('response_id');
+
+
+            // Get survey with sections and questions
+            $survey = Survey::with([
+                'sections' => function($query) {
+                    $query->orderBy('order');
+                },
+                'sections.questions' => function($query) {
+                    $query->orderBy('order');
+                },
+                'sections.questions.choices' => function($query) {
+                    $query->orderBy('order');
+                }
+            ])->where('id', $surveyId)
+              ->where('code', $surveyCode)
+              ->first();
+
+            if (!$survey) {
+                return redirect('/entry')->withErrors([
+                    'general' => 'Survey tidak ditemukan atau tidak aktif.'
+                ]);
+            }
+
+            // Get existing response with answers
+            $response = Response::with([
+                'answers.question',
+                'answers.choice'
+            ])->find($responseId);
+
+            // Format existing answers for frontend
+            $existingAnswers = [];
+            if ($response && $response->answers) {
+                foreach ($response->answers as $answer) {
+                    $existingAnswers[$answer->question_id] = [
+                        'choice_id' => $answer->choice_id,
+                        'value_text' => $answer->value_text,
+                        'value_number' => $answer->value_number,
+                        'value_json' => $answer->value_json
+                    ];
+                }
+            }
+
+            $existingResponse = null;
+            if ($response) {
+                $existingResponse = [
+                    'id' => $response->id,
+                    'answers' => $existingAnswers
+                ];
+            }
+
+            return Inertia::render('Survey/Questions', [
+                'surveyCode' => $surveyCode,
+                'surveyData' => $survey,
+                'existingResponse' => $existingResponse
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Failed to load survey questions: ' . $e->getMessage());
+            
+            return redirect('/entry')->withErrors([
+                'general' => 'Terjadi kesalahan saat memuat pertanyaan survey.'
             ]);
         }
     }

@@ -267,7 +267,7 @@ const submitForm = () => {
   }
 
   // Submit to the registerRespondent route
-  form.post(`/survey/${props.surveyCode}/register`, {
+  form.post(`/survey/respondent-data`, {
     onSuccess: () => {
       // Success will be handled by Inertia.location() in controller
       console.log('Registration successful')

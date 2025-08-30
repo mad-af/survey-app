@@ -74,7 +74,7 @@ class SurveyTokenMiddleware
             'survey' => $survey,
             'response' => $response
         ]);
-
+        
         $currentStepRoute = '';
         switch ($currentStep) {
         case SurveyResponse::STEP_RESPONDENT_DATA:

@@ -67,10 +67,11 @@ Route::post('/survey/enter', [SurveyProcessController::class, 'enter'])->middlew
 Route::prefix('survey')->middleware(['survey.token', 'no.cache'])->group(function () {
     
     Route::get('/respondent-data', [SurveyProcessController::class, 'showRespondentData']);
+
+    Route::post('/respondent-data', [SurveyProcessController::class, 'respondentData']);
     
-    // Route::get('/{survey}/questions', [SurveyController::class, 'showQuestions']);
+    Route::get('/questions', [SurveyProcessController::class, 'showQuestions']);
     
-    // Route::post('/{survey}/register', [SurveyController::class, 'registerRespondent']);
     
     // Route::post('/{survey}/save-section', [SurveyController::class, 'saveSectionAnswers']);
     
