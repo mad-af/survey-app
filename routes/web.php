@@ -27,9 +27,7 @@ Route::get('/sanctum/csrf-cookie', function () {
 });
 
 Route::prefix('dashboard')->middleware(['auth', 'no.cache'])->group(function () {
-    Route::get('/', function () {
-        return Inertia::render('Dashboard/Index');
-    });
+    Route::get('/', [SurveyController::class, 'dashboard'])->name('dashboard');
     
     Route::get('/user-management', function () {
         return Inertia::render('Dashboard/UserManagement/Index');

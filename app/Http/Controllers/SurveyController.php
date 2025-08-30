@@ -292,4 +292,94 @@ class SurveyController extends Controller
             ]);
         }
     }
+
+    /**
+     * Display dashboard with statistics
+     */
+    public function dashboard()
+    {
+        try {
+            // Get statistics
+            $totalSurveys = Survey::count();
+            $activeSurveys = Survey::where('status', SurveyStatus::ACTIVE)->count();
+            $draftSurveys = Survey::where('status', SurveyStatus::DRAFT)->count();
+            $closedSurveys = Survey::where('status', SurveyStatus::CLOSED)->count();
+            
+            $totalResponses = Response::count();
+            $completedResponses = Response::whereNotNull('submitted_at')->count();
+            $totalRespondents = Response::distinct('respondent_id')->count('respondent_id');
+            
+            // Calculate new respondents this month
+            $newRespondentsThisMonth = Response::whereMonth('created_at', Carbon::now()->month)
+                                             ->whereYear('created_at', Carbon::now()->year)
+                                             ->distinct('respondent_id')
+                                             ->count('respondent_id');
+            
+            // Calculate completion rate
+            $completionRate = $totalResponses > 0 ? round(($completedResponses / $totalResponses) * 100) : 0;
+            
+            // Get recent surveys
+            $recentSurveys = Survey::with('owner:id,name')
+                                  ->withCount('responses')
+                                  ->select('id', 'owner_id', 'code', 'title', 'description', 'status', 'created_at')
+                                  ->orderBy('created_at', 'desc')
+                                  ->limit(4)
+                                  ->get();
+            
+            // Get recent activities (sample data for now)
+            $recentActivities = collect([
+                [
+                    'id' => 1,
+                    'type' => 'survey_created',
+                    'title' => 'Survey Baru Dibuat',
+                    'description' => 'Survey baru telah dibuat',
+                    'created_at' => Carbon::now()->subHours(2)->toISOString()
+                ],
+                [
+                    'id' => 2,
+                    'type' => 'response_received',
+                    'title' => 'Respons Baru Diterima',
+                    'description' => 'Respons baru diterima untuk survey',
+                    'created_at' => Carbon::now()->subHours(4)->toISOString()
+                ],
+                [
+                    'id' => 3,
+                    'type' => 'user_registered',
+                    'title' => 'Responden Baru',
+                    'description' => 'Responden baru terdaftar',
+                    'created_at' => Carbon::now()->subHours(6)->toISOString()
+                ],
+                [
+                    'id' => 4,
+                    'type' => 'survey_completed',
+                    'title' => 'Survey Selesai',
+                    'description' => 'Survey telah ditutup',
+                    'created_at' => Carbon::now()->subDay()->toISOString()
+                ]
+            ]);
+            
+            $statistics = [
+                'totalSurveys' => $totalSurveys,
+                'activeSurveys' => $activeSurveys,
+                'draftSurveys' => $draftSurveys,
+                'closedSurveys' => $closedSurveys,
+                'totalResponses' => $totalResponses,
+                'completedResponses' => $completedResponses,
+                'totalRespondents' => $totalRespondents,
+                'newRespondentsThisMonth' => $newRespondentsThisMonth,
+                'completionRate' => $completionRate
+            ];
+            
+            return Inertia::render('Dashboard/Index', [
+                'statistics' => $statistics,
+                'recentSurveys' => $recentSurveys,
+                'recentActivities' => $recentActivities
+            ]);
+            
+        } catch (\Exception $e) {
+            return back()->withErrors([
+                'error' => 'Failed to load dashboard: ' . $e->getMessage()
+            ]);
+        }
+    }
 }
