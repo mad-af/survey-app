@@ -10,10 +10,9 @@ Route::get('/', function () {
     return Inertia::render('Welcome');
 });
 
-Route::get('/entry', [SurveyController::class, 'showEntry'])->middleware('guest.survey');
-
-Route::post('/survey/enter', [SurveyController::class, 'enter']);
-Route::post('/survey/logout', [SurveyController::class, 'logout']);
+// ================================
+// Dashboard's Routes
+// ================================
 
 // Authentication routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware(['guest', 'no.cache']);
@@ -56,17 +55,25 @@ Route::prefix('dashboard')->middleware(['auth', 'no.cache'])->group(function () 
     Route::get('/survey/{survey}/responses', [SurveyController::class, 'showResponses']);
 });
 
-Route::prefix('survey')->middleware('survey.token')->group(function () {
-    Route::get('/{survey}/respondent-data', [SurveyController::class, 'showRespondentData']);
+// ================================
+// Survey's Routes
+// ================================
+Route::get('/entry', [SurveyController::class, 'index'])->middleware('guest.survey');
+
+// Route::post('/survey/enter', [SurveyController::class, 'enter']);
+// Route::post('/survey/logout', [SurveyController::class, 'logout']);
+
+Route::prefix('survey')->middleware(['survey.token', 'no.cache'])->group(function () {
+    // Route::get('/{survey}/respondent-data', [SurveyController::class, 'showRespondentData']);
     
-    Route::get('/{survey}/questions', [SurveyController::class, 'showQuestions']);
+    // Route::get('/{survey}/questions', [SurveyController::class, 'showQuestions']);
     
-    Route::post('/{survey}/register', [SurveyController::class, 'registerRespondent']);
+    // Route::post('/{survey}/register', [SurveyController::class, 'registerRespondent']);
     
-    Route::post('/{survey}/save-section', [SurveyController::class, 'saveSectionAnswers']);
+    // Route::post('/{survey}/save-section', [SurveyController::class, 'saveSectionAnswers']);
     
-    Route::post('/{survey}/submit', [SurveyController::class, 'submitSurveyResponse']);
+    // Route::post('/{survey}/submit', [SurveyController::class, 'submitSurveyResponse']);
     
-    Route::get('/{survey}/result', [SurveyController::class, 'showResult'])->name("survey.result");
+    // Route::get('/{survey}/result', [SurveyController::class, 'showResult'])->name("survey.result");
 });
 

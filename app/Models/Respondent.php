@@ -40,8 +40,5 @@ class Respondent extends Model
         return $this->hasMany(Response::class);
     }
 
-    public function surveyEnrollments(): HasMany
-    {
-        return $this->hasMany(SurveyRespondent::class);
-    }
+
 }

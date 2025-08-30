@@ -49,10 +49,7 @@ class Survey extends Model
         return $this->hasMany(Response::class);
     }
 
-    public function respondents(): HasMany
-    {
-        return $this->hasMany(SurveyRespondent::class);
-    }
+
 
     public function resultCategories(): HasMany
     {
