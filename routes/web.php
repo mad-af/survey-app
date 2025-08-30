@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SurveyController;
+use App\Http\Controllers\SurveyProcessController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -58,7 +59,7 @@ Route::prefix('dashboard')->middleware(['auth', 'no.cache'])->group(function () 
 // ================================
 // Survey's Routes
 // ================================
-Route::get('/entry', [SurveyController::class, 'index'])->middleware('guest.survey');
+Route::get('/entry', [SurveyProcessController::class, 'entry'])->middleware(['guest.survey','no.cache']);
 
 // Route::post('/survey/enter', [SurveyController::class, 'enter']);
 // Route::post('/survey/logout', [SurveyController::class, 'logout']);

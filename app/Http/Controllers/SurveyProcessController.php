@@ -6,14 +6,54 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 use App\Models\Survey;
 use App\Models\Response;
 use App\Models\Answer;
 use App\Enums\ResponseStatus;
 use Exception;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 class SurveyProcessController extends Controller
 {
+    /**
+     * Entry point for survey access
+     * 
+     * @param Request $request
+     * @return InertiaResponse
+     */
+    public function entry(Request $request): InertiaResponse
+    {
+        try {
+            // Get available surveys for public access
+            $surveys = Survey::where('status', 'active')
+                        ->where('visibility', 'public')
+                        ->where(function($query) {
+                            $query->whereNull('starts_at')
+                                  ->orWhere('starts_at', '<=', now());
+                        })
+                        ->where(function($query) {
+                            $query->whereNull('ends_at')
+                                  ->orWhere('ends_at', '>=', now());
+                        })
+                        ->select('id', 'code', 'title', 'description', 'starts_at', 'ends_at')
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+
+            return Inertia::render('Entry', [
+                'publicSurveys' => $surveys
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Failed to retrieve available surveys: ' . $e->getMessage());
+            
+            return Inertia::render('Entry', [
+                'publicSurveys' => []
+            ]);
+        }
+    }
+
     /**
      * Process survey initialization
      * 
