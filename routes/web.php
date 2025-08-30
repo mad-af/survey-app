@@ -16,17 +16,17 @@ Route::post('/survey/enter', [SurveyController::class, 'enter']);
 Route::post('/survey/logout', [SurveyController::class, 'logout']);
 
 // Authentication routes
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
-Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
-Route::post('/api/token', [AuthController::class, 'generateToken'])->name('api.token');
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware(['guest', 'no.cache']);
+Route::post('/login', [AuthController::class, 'login'])->middleware(['guest', 'no.cache']);
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware(['auth', 'no.cache']);
+Route::post('/api/token', [AuthController::class, 'generateToken'])->name('api.token')->middleware('no.cache');
 
 // Sanctum CSRF cookie route
 Route::get('/sanctum/csrf-cookie', function () {
     return response()->json(['message' => 'CSRF cookie set']);
 });
 
-Route::prefix('dashboard')->middleware('auth')->group(function () {
+Route::prefix('dashboard')->middleware(['auth', 'no.cache'])->group(function () {
     Route::get('/', function () {
         return Inertia::render('Dashboard/Index');
     });

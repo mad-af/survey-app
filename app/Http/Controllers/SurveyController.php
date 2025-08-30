@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\QuestionType;
 use App\Models\Survey;
 use App\Models\Response;
 use App\Enums\SurveyStatus;
@@ -961,7 +962,7 @@ class SurveyController extends Controller
             }
 
             // Calculate and save score
-            $this->calculateAndSaveScore($surveyResponse, $surveyModel);
+            $this->calculateAndSaveScore($surveyResponse, $surveyModel, $answers);
 
             \Illuminate\Support\Facades\DB::commit();
 
@@ -989,7 +990,7 @@ class SurveyController extends Controller
     /**
      * Calculate and save response score (consistent with SurveyTakeController)
      */
-    private function calculateAndSaveScore($response, $survey): void
+    private function calculateAndSaveScore($response, $survey, $answers = null): void
     {
         try {
             // Load survey with all necessary relationships for scoring
@@ -1000,8 +1001,14 @@ class SurveyController extends Controller
                 }
             ]);
 
-            // Load response answers with relationships
-            $response->load('answers.choice', 'answers.question.section');
+            // Use provided answers or load from database
+            if ($answers === null) {
+                $response->load('answers.choice', 'answers.question.section');
+                $responseAnswers = $response->answers;
+            } else {
+                // Convert answers array to collection for consistent interface
+                $responseAnswers = collect($answers);
+            }
 
             $totalScore = 0;
             $maxPossibleScore = 0;
@@ -1012,36 +1019,77 @@ class SurveyController extends Controller
                 $sectionScore = 0;
                 $sectionMaxScore = 0;
 
-                foreach ($section->questions as $question) {
+                foreach ($section->questions as $index => $question) {
                     $questionWeight = $question->score_weight ?? 1;
                     $questionMaxScore = 0;
                     $questionScore = 0;
 
-                    // Find the answer for this question
-                    $answer = $response->answers->where('question_id', $question->id)->first();
-
-                    if ($answer && $answer->choice_id) {
-                        // For choice-based questions, use choice score
-                        $choice = $question->choices->where('id', $answer->choice_id)->first();
-                        if ($choice) {
-                            $questionScore = $choice->score * $questionWeight;
-                        }
-                    } elseif ($answer && $answer->value_number !== null) {
-                        // For numeric questions, use the numeric value
-                        $questionScore = $answer->value_number * $questionWeight;
-                    }
-
-                    // Calculate max possible score for this question
-                    if ($question->choices->isNotEmpty()) {
-                        $questionMaxScore = $question->choices->max('score') * $questionWeight;
-                    } else {
-                        // For non-choice questions, assume max score is the weight itself
-                        $questionMaxScore = $questionWeight;
+                    switch ($question->type) {
+                        case QuestionType::SINGLE_CHOICE:
+                            // Single Choice: Hanya satu pilihan
+                            $answer = $responseAnswers->where('question_id', $question->id)->first();
+                            
+                            if ($answer) {
+                                $choiceId = is_array($answer) ? ($answer['choice_id'] ?? null) : $answer->choice_id;
+                                if ($choiceId) {
+                                    $choice = $question->choices->where('id', $choiceId)->first();
+                                    if ($choice) {
+                                        $questionScore = $choice->score * $questionWeight;
+                                    }
+                                }
+                            }
+                            $questionMaxScore = $question->choices->max('score') * $questionWeight;
+                            break;
+                            
+                        case QuestionType::MULTIPLE_CHOICE:
+                            // Multiple Choice: Bisa beberapa pilihan
+                            $answers = $responseAnswers->where('question_id', $question->id);
+                            
+                            foreach ($answers as $answer) {
+                                $choiceId = is_array($answer) ? ($answer['choice_id'] ?? null) : $answer->choice_id;
+                                if ($choiceId) {
+                                    $choice = $question->choices->where('id', $choiceId)->first();
+                                    if ($choice) {
+                                        $questionScore += $choice->score * $questionWeight;
+                                    }
+                                }
+                            }
+                            
+                            // Untuk multiple choice, max score bisa berupa:
+                            // Option 1: Jumlah semua pilihan (jika semua boleh dipilih)
+                            $questionMaxScore = $question->choices->sum('score') * $questionWeight;
+                            
+                            // Option 2: Pilihan dengan skor tertinggi (jika hanya pilihan terbaik yang dihitung)
+                            // $questionMaxScore = $question->choices->max('score') * $questionWeight;
+                            break;
+                            
+                        case QuestionType::NUMBER:
+                            // Numeric questions
+                            $answer = $responseAnswers->where('question_id', $question->id)->first();
+                            if ($answer) {
+                                $valueNumber = is_array($answer) ? ($answer['value_number'] ?? null) : $answer->value_number;
+                                if ($valueNumber !== null) {
+                                    $questionScore = $valueNumber * $questionWeight;
+                                }
+                            }
+                            $questionMaxScore = $questionWeight; // Atau nilai maksimum yang diharapkan
+                            break;
+                            
+                        default:
+                            // Handle other question types (SHORT_TEXT, LONG_TEXT, DATE)
+                            if ($question->choices->isNotEmpty()) {
+                                $questionMaxScore = $question->choices->max('score') * $questionWeight;
+                            } else {
+                                $questionMaxScore = $questionWeight;
+                            }
+                            break;
                     }
 
                     $sectionScore += $questionScore;
                     $sectionMaxScore += $questionMaxScore;
                 }
+
+
 
                 $sectionScores[] = [
                     'section_id' => $section->id,

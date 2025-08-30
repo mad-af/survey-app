@@ -19,12 +19,12 @@ use App\Http\Controllers\SurveyTakeController;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+Route::middleware(['auth:sanctum', 'no.cache'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
 // Protected API Routes - Require Authentication
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum', 'no.cache'])->group(function () {
     // User Management API Routes
     Route::apiResource('users', UserController::class);
     
@@ -48,14 +48,5 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Survey Take API Routes
     Route::get('surveys/{survey}/data', [SurveyTakeController::class, 'getSurveyData']);
-    Route::post('surveys/{survey}/responses', [SurveyTakeController::class, 'submitResponse']);
-});
-
-// Public API Routes - No Authentication Required
-Route::prefix('public')->group(function () {
-    // Get survey by code for public access
-    Route::get('surveys/{code}', [SurveyTakeController::class, 'getSurveyByCode']);
-    Route::get('surveys/{code}/existing-response', [SurveyTakeController::class, 'getExistingResponseByCode']);
-    Route::post('surveys/{code}/responses', [SurveyTakeController::class, 'submitResponseByCode']);
     Route::post('surveys/{survey}/responses', [SurveyTakeController::class, 'submitResponse']);
 });
