@@ -96,7 +96,7 @@
 
       <!-- Response Detail Modal -->
       <div v-if="selectedResponse" class="modal modal-open">
-        <div class="max-w-6xl modal-box">
+        <div class="max-w-4xl modal-box">
           <div class="flex justify-between items-center mb-4">
             <h3 class="text-lg font-bold">Response Details - #{{ selectedResponse.id }}</h3>
             <button class="btn btn-sm btn-circle btn-ghost" @click="selectedResponse = null">
@@ -104,38 +104,31 @@
             </button>
           </div>
           
-          <!-- Response Status & Progress -->
+          <!-- Response Overview -->
           <div class="grid grid-cols-1 gap-4 mb-6 md:grid-cols-3">
             <div class="card bg-base-200">
               <div class="card-body">
-                <h4 class="text-base card-title">Response Status</h4>
+                <h4 class="text-base card-title">Status & Progress</h4>
                 <div class="space-y-2 text-sm">
-                  <div><strong>Status:</strong> 
-                    <span class="ml-2 badge" :class="getStatusBadgeClass(selectedResponse.status)">
+                  <div class="flex justify-between">
+                    <span>Status:</span>
+                    <span class="badge" :class="getStatusBadgeClass(selectedResponse.status)">
                       {{ getStatusLabel(selectedResponse.status) }}
                     </span>
                   </div>
-                  <div><strong>Progress:</strong> 
-                    <span class="ml-2 badge" :class="getStepBadgeClass(selectedResponse.current_step)">
+                  <div class="flex justify-between">
+                    <span>Progress:</span>
+                    <span class="badge" :class="getStepBadgeClass(selectedResponse.current_step)">
                       {{ getStepLabel(selectedResponse.current_step) }}
                     </span>
                   </div>
-                  <div><strong>Token:</strong> {{ selectedResponse.respondent_token || '-' }}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="card bg-base-200">
-              <div class="card-body">
-                <h4 class="text-base card-title">Timeline</h4>
-                <div class="space-y-2 text-sm">
-                  <div><strong>Started:</strong> {{ formatDate(selectedResponse.started_at) }}</div>
-                  <div><strong>Last Updated:</strong> {{ formatDate(selectedResponse.updated_at) }}</div>
-                  <div><strong>Submitted:</strong> {{ formatDate(selectedResponse.submitted_at) }}</div>
-                  <div><strong>Duration:</strong> 
-                    {{ selectedResponse.status === 'completed' 
-                       ? formatDuration(selectedResponse.started_at, selectedResponse.submitted_at)
-                       : formatDuration(selectedResponse.started_at, selectedResponse.updated_at) }}
+                  <div class="flex justify-between">
+                    <span>Started:</span>
+                    <span>{{ formatDate(selectedResponse.started_at) }}</span>
+                  </div>
+                  <div v-if="selectedResponse.submitted_at" class="flex justify-between">
+                    <span>Submitted:</span>
+                    <span>{{ formatDate(selectedResponse.submitted_at) }}</span>
                   </div>
                 </div>
               </div>
@@ -143,46 +136,63 @@
             
             <div class="card bg-base-200">
               <div class="card-body">
-                <h4 class="text-base card-title">Meta Information</h4>
+                <h4 class="text-base card-title">Personal Information</h4>
                 <div class="space-y-2 text-sm">
-                  <div v-if="selectedResponse.meta">
-                    <pre class="overflow-auto p-2 max-h-20 text-xs rounded bg-base-300">{{ JSON.stringify(selectedResponse.meta, null, 2) }}</pre>
+                  <div class="flex justify-between">
+                    <span>Name:</span>
+                    <span>{{ selectedResponse.respondent?.name || 'Anonymous' }}</span>
                   </div>
-                  <div v-else class="text-base-content/60">No meta data</div>
+                  <div class="flex justify-between">
+                    <span>Email:</span>
+                    <span>{{ selectedResponse.respondent?.email || '-' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Phone:</span>
+                    <span>{{ selectedResponse.respondent?.phone || '-' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Gender:</span>
+                    <span>{{ getGenderLabel(selectedResponse.respondent?.gender) || '-' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Birth Year:</span>
+                    <span>{{ selectedResponse.respondent?.birth_year || '-' }}</span>
+                  </div>
+                  <div v-if="selectedResponse.respondent?.external_id" class="flex justify-between">
+                    <span>External ID:</span>
+                    <span>{{ selectedResponse.respondent.external_id }}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <!-- Respondent Info -->
-          <div class="grid grid-cols-1 gap-4 mb-6 md:grid-cols-2">
+
             <div class="card bg-base-200">
               <div class="card-body">
-                <h4 class="text-base card-title">Respondent Information</h4>
+                <h4 class="text-base card-title">Professional Information</h4>
                 <div class="space-y-2 text-sm">
-                  <div><strong>ID:</strong> {{ selectedResponse.respondent?.id || '-' }}</div>
-                  <div><strong>External ID:</strong> {{ selectedResponse.respondent?.external_id || '-' }}</div>
-                  <div><strong>Name:</strong> {{ selectedResponse.respondent?.name || 'Anonymous' }}</div>
-                  <div><strong>Email:</strong> {{ selectedResponse.respondent?.email || '-' }}</div>
-                  <div><strong>Phone:</strong> {{ selectedResponse.respondent?.phone || '-' }}</div>
-                  <div><strong>Gender:</strong> {{ selectedResponse.respondent?.gender || '-' }}</div>
-                  <div><strong>Birth Year:</strong> {{ selectedResponse.respondent?.birth_year || '-' }}</div>
-                  <div><strong>Consent At:</strong> {{ formatDate(selectedResponse.respondent?.consent_at) }}</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="card bg-base-200">
-              <div class="card-body">
-                <h4 class="text-base card-title">Organization Details</h4>
-                <div class="space-y-2 text-sm">
-                  <div><strong>Organization:</strong> {{ selectedResponse.respondent?.organization || '-' }}</div>
-                  <div><strong>Department:</strong> {{ selectedResponse.respondent?.department || '-' }}</div>
-                  <div><strong>Role:</strong> {{ selectedResponse.respondent?.role_title || '-' }}</div>
-                  <div><strong>Location:</strong> {{ selectedResponse.respondent?.location || '-' }}</div>
-                  <div v-if="selectedResponse.respondent?.demographics">
-                    <strong>Demographics:</strong>
-                    <pre class="overflow-auto p-2 mt-1 max-h-20 text-xs rounded bg-base-300">{{ JSON.stringify(selectedResponse.respondent.demographics, null, 2) }}</pre>
+                  <div class="flex justify-between">
+                    <span>Organization:</span>
+                    <span>{{ selectedResponse.respondent?.organization || '-' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Department:</span>
+                    <span>{{ selectedResponse.respondent?.department || '-' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Role:</span>
+                    <span>{{ selectedResponse.respondent?.role_title || '-' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Location:</span>
+                    <span>{{ selectedResponse.respondent?.location || '-' }}</span>
+                  </div>
+                  <div v-if="selectedResponse.respondent?.demographics" class="flex justify-between">
+                    <span>Education:</span>
+                    <span>{{ getEducationLabel(selectedResponse.respondent.demographics?.education) || '-' }}</span>
+                  </div>
+                  <div v-if="selectedResponse.respondent?.demographics?.experience_years" class="flex justify-between">
+                    <span>Experience:</span>
+                    <span>{{ selectedResponse.respondent.demographics.experience_years }} years</span>
                   </div>
                 </div>
               </div>
@@ -193,53 +203,58 @@
           <div v-if="selectedResponse.score" class="mb-6">
             <div class="card bg-base-200">
               <div class="card-body">
-                <h4 class="text-base card-title">Score Information</h4>
+                <h4 class="text-base card-title">Overall Score Summary</h4>
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div class="space-y-2 text-sm">
-                    <div><strong>Total Score:</strong> {{ selectedResponse.score.total_score }}/{{ selectedResponse.score.max_possible_score }}</div>
-                    <div><strong>Percentage:</strong> {{ selectedResponse.score.percentage }}%</div>
-                    <div v-if="selectedResponse.score.result_category">
-                      <strong>Category:</strong> 
-                      <span class="ml-2 badge" :class="getCategoryBadgeClass(selectedResponse.score.result_category.color)">
+                    <div class="flex justify-between">
+                      <span>Total Score:</span>
+                      <span class="font-semibold">{{ selectedResponse.score.total_score }}/{{ selectedResponse.score.max_possible_score }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                      <span>Percentage:</span>
+                      <span class="font-semibold">{{ selectedResponse.score.percentage }}%</span>
+                    </div>
+                  </div>
+                  <div v-if="selectedResponse.score.result_category" class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                      <span>Category:</span>
+                      <span class="badge" :class="getCategoryBadgeClass(selectedResponse.score.result_category.color)">
                         {{ selectedResponse.score.result_category.name }}
                       </span>
                     </div>
-                  </div>
-                  <div class="space-y-2 text-sm">
-                    <div v-if="selectedResponse.score.result_category?.description">
-                      <strong>Category Description:</strong>
-                      <p class="p-2 mt-1 text-xs rounded bg-base-300">{{ selectedResponse.score.result_category.description }}</p>
-                    </div>
-                    <div v-if="selectedResponse.score.result_category">
-                      <strong>Score Range:</strong> {{ selectedResponse.score.result_category.min_score }} - {{ selectedResponse.score.result_category.max_score }}
+                    <div class="flex justify-between">
+                      <span>Score Range:</span>
+                      <span>{{ selectedResponse.score.result_category.min_score }} - {{ selectedResponse.score.result_category.max_score }}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Section Scores -->
-          <div v-if="selectedResponse.score?.section_scores" class="mb-6">
-            <h4 class="mb-3 font-semibold">Section Scores</h4>
-            <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
-              <div v-for="sectionScore in selectedResponse.score.section_scores" :key="sectionScore.section_id" class="card bg-base-200">
+            <!-- Section Scores -->
+            <div v-if="selectedResponse.score.section_scores && selectedResponse.score.section_scores.length > 0" class="mb-6">
+              <div class="card bg-base-200">
                 <div class="card-body">
-                  <div class="flex justify-between items-start mb-2">
-                    <div class="text-sm font-medium">{{ getSectionTitle(sectionScore.section_id) }}</div>
-                    <div class="text-xs text-base-content/60">#{{ sectionScore.section_id }}</div>
-                  </div>
-                  <div class="space-y-1 text-xs">
-                    <div class="flex justify-between">
-                      <span>Score:</span>
-                      <span>{{ sectionScore.score }}/{{ sectionScore.max_score }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span>Percentage:</span>
-                      <span>{{ sectionScore.percentage }}%</span>
-                    </div>
-                    <div class="mt-2 w-full h-2 rounded-full bg-base-300">
-                      <div class="h-2 rounded-full bg-primary" :style="{ width: sectionScore.percentage + '%' }"></div>
+                  <h4 class="text-base card-title">Section-wise Results</h4>
+                  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+                    <div v-for="sectionScore in selectedResponse.score.section_scores" :key="sectionScore.section_id" class="p-3 rounded-lg bg-base-100">
+                      <div class="flex justify-between items-center mb-2">
+                        <h5 class="font-medium text-sm">{{ getSectionTitle(sectionScore.section_id) }}</h5>
+                        <span class="text-xs badge badge-outline">Section {{ sectionScore.section_id }}</span>
+                      </div>
+                      <div class="space-y-1 text-xs">
+                        <div class="flex justify-between">
+                          <span>Score:</span>
+                          <span class="font-semibold">{{ sectionScore.score }}/{{ sectionScore.max_score }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span>Percentage:</span>
+                          <span class="font-semibold">{{ Math.round((sectionScore.score / sectionScore.max_score) * 100) }}%</span>
+                        </div>
+                        <div class="w-full bg-base-300 rounded-full h-1.5 mt-2">
+                          <div class="bg-primary h-1.5 rounded-full" :style="{ width: Math.round((sectionScore.score / sectionScore.max_score) * 100) + '%' }"></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -466,6 +481,36 @@ const getStepLabel = (step) => {
       return 'Result'
     default:
       return 'Unknown'
+  }
+}
+
+const getGenderLabel = (gender) => {
+  switch (gender) {
+    case 'male':
+      return 'Male'
+    case 'female':
+      return 'Female'
+    case 'other':
+      return 'Other'
+    case 'prefer_not_to_say':
+      return 'Prefer not to say'
+    default:
+      return 'Not specified'
+  }
+}
+
+const getEducationLabel = (education) => {
+  switch (education) {
+    case 'high_school':
+      return 'High School'
+    case 'bachelor':
+      return 'Bachelor Degree'
+    case 'master':
+      return 'Master Degree'
+    case 'phd':
+      return 'PhD'
+    default:
+      return 'Not specified'
   }
 }
 
