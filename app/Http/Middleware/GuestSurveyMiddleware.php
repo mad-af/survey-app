@@ -22,9 +22,10 @@ class GuestSurveyMiddleware
         $surveyId = session('survey_id');
         $surveyCode = session('survey_code');
         $responseId = session('response_id');
+        $currentStep = session('current_step');
 
         // If all survey session data exists, verify it's valid
-        if ($surveyToken && $surveyId && $responseId && $surveyCode) {
+        if ($surveyToken && $surveyId && $responseId && $surveyCode && $currentStep) {
             // Verify token exists in database
             $response = SurveyResponse::where('respondent_token', $surveyToken)
                 ->where('survey_id', $surveyId)
@@ -47,15 +48,32 @@ class GuestSurveyMiddleware
                         $surveyActive = false;
                     }
                     
-                    // If survey is active and token is valid, redirect to respondent area
+                    // If survey is active and token is valid, redirect to appropriate step
                     if ($surveyActive) {
-                        return redirect("/survey/{$surveyCode}/respondent-data");
+                        // Determine the correct route based on current step
+                        $targetRoute = '';
+                        switch ($currentStep) {
+                            case SurveyResponse::STEP_RESPONDENT_DATA:
+                                $targetRoute = '/survey/respondent-data';
+                                break;
+                            case SurveyResponse::STEP_QUESTIONS:
+                                $targetRoute = '/survey/questions';
+                                break;
+                            case SurveyResponse::STEP_RESULT:
+                                $targetRoute = '/survey/result';
+                                break;
+                        }
+                        
+                        // Only redirect if not already on the target route
+                        if ($targetRoute != '' && $request->getPathInfo() !== $targetRoute) {
+                            return redirect($targetRoute);
+                        }
                     }
                 }
             }
             
             // If we reach here, the token/session is invalid, clear it
-            session()->forget(['survey_token', 'survey_id', 'response_id']);
+            session()->forget(['survey_token', 'survey_id', 'survey_code', 'response_id', 'current_step']);
         }
 
         return $next($request);

@@ -61,11 +61,12 @@ Route::prefix('dashboard')->middleware(['auth', 'no.cache'])->group(function () 
 // ================================
 Route::get('/entry', [SurveyProcessController::class, 'entry'])->middleware(['guest.survey','no.cache']);
 
-// Route::post('/survey/enter', [SurveyController::class, 'enter']);
+Route::post('/survey/enter', [SurveyProcessController::class, 'enter'])->middleware(['guest.survey','no.cache']);
 // Route::post('/survey/logout', [SurveyController::class, 'logout']);
 
 Route::prefix('survey')->middleware(['survey.token', 'no.cache'])->group(function () {
-    // Route::get('/{survey}/respondent-data', [SurveyController::class, 'showRespondentData']);
+    
+    Route::get('/respondent-data', [SurveyProcessController::class, 'showRespondentData']);
     
     // Route::get('/{survey}/questions', [SurveyController::class, 'showQuestions']);
     

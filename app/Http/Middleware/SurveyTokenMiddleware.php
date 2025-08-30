@@ -22,8 +22,9 @@ class SurveyTokenMiddleware
         $surveyId = session('survey_id');
         $surveyCode = session('survey_code');
         $responseId = session('response_id');
+        $currentStep = session('current_step');
 
-        if (!$surveyToken || !$surveyId || !$responseId || !$surveyCode) {
+        if (!$surveyToken || !$surveyId || !$responseId || !$surveyCode || !$currentStep) {
             return redirect('/entry')->withErrors([
                 'survey_code' => 'Sesi survey tidak valid. Silakan masukkan kode survey kembali.'
             ]);
@@ -67,10 +68,30 @@ class SurveyTokenMiddleware
         $request->merge([
             'survey_token' => $surveyToken,
             'survey_id' => $surveyId,
+            'survey_code' => $surveyCode,
             'response_id' => $responseId,
+            'current_step' => $currentStep,
             'survey' => $survey,
-            'survey_response' => $response
+            'response' => $response
         ]);
+
+        $currentStepRoute = '';
+        switch ($currentStep) {
+        case SurveyResponse::STEP_RESPONDENT_DATA:
+            $currentStepRoute = '/survey/respondent-data';
+            break;
+        case SurveyResponse::STEP_QUESTIONS:
+            $currentStepRoute = '/survey/questions';
+            break;
+        case SurveyResponse::STEP_RESULT:
+            $currentStepRoute = '/survey/result';
+            break;
+        }
+
+        // Only redirect if not already on the correct route and route is defined
+        if ($currentStepRoute && $currentStepRoute !== $request->getPathInfo()) {
+            return redirect($currentStepRoute);
+        }
 
         return $next($request);
     }

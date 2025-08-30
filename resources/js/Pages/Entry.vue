@@ -35,7 +35,8 @@
             subtitle="Tidak ada survey public yang tersedia saat ini" maxWidth="max-w-none">
             <div class="py-8 text-center">
               <div class="text-sm text-base-content/50">
-                Saat ini tidak ada survey public yang dapat diakses. Silakan gunakan kode survey yang diberikan administrator.
+                Saat ini tidak ada survey public yang dapat diakses. Silakan gunakan kode survey yang diberikan
+                administrator.
               </div>
             </div>
           </ContentCard>
@@ -57,7 +58,8 @@
         <!-- Right Column - Sticky Survey Code Entry Card -->
         <div class="lg:col-span-1">
           <div class="sticky top-8">
-            <ContentCard title="🔐 Masuk ke Survey" subtitle="Masukkan kode survey untuk mengikuti survey" maxWidth="max-w-none">
+            <ContentCard title="🔐 Masuk ke Survey" subtitle="Masukkan kode survey untuk mengikuti survey"
+              maxWidth="max-w-none">
               <form @submit.prevent="submitToken" class="space-y-6">
                 <!-- Survey Code Input -->
                 <div class="form-control">
@@ -66,7 +68,8 @@
                   </label>
                   <div class="relative">
                     <input v-model="form.survey_code" type="text" placeholder="Masukkan kode survey Anda"
-                      class="pr-12 w-full input input-bordered" :class="{ 'input-error': form.errors.survey_code }" required />
+                      class="pr-12 w-full input input-bordered" :class="{ 'input-error': form.errors.survey_code }"
+                      required />
                     <div class="flex absolute inset-y-0 right-0 items-center pr-3">
                       <Key class="w-5 h-5 text-base-content/50" />
                     </div>
@@ -90,7 +93,8 @@
                 <div>
                   <h3 class="font-bold">Informasi Kode Survey</h3>
                   <div class="mt-1 text-xs">
-                    Kode survey diberikan oleh administrator survey. Pastikan Anda memasukkan kode yang benar untuk mengakses
+                    Kode survey diberikan oleh administrator survey. Pastikan Anda memasukkan kode yang benar untuk
+                    mengakses
                     survey yang dituju.
                   </div>
                 </div>
