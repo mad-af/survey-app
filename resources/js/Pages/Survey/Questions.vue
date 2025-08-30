@@ -330,10 +330,6 @@ const saveSectionAnswers = async () => {
 
     // Fire-and-forget web call with timeout
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => {
-      controller.abort()
-      console.log('Web call timed out, continuing with navigation')
-    }, 3000) // 3 second timeout
 
     fetch('/api/survey/question-partials', {
       method: 'POST',
@@ -347,7 +343,6 @@ const saveSectionAnswers = async () => {
       signal: controller.signal
     })
     .then(response => {
-      clearTimeout(timeoutId)
       if (response.ok) {
         return response.json()
       }
