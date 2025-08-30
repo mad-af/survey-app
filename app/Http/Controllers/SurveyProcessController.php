@@ -630,14 +630,17 @@ class SurveyProcessController extends Controller
 
             DB::commit();
 
-            // Final submission - redirect to result page
-            return response()->json([
-                'success' => true,
-                'message' => 'Survey berhasil diselesaikan.',
-                'responseId' => $responseId,
-                'is_partial' => false,
-                'redirect_url' => '/survey/result'
+            // Clear survey session data
+            session()->forget([
+                'survey_token',
+                'survey_id', 
+                'survey_code',
+                'response_id',
+                'current_step'
             ]);
+
+            // Final submission - redirect to result page
+            return redirect("/survey/result?token={$response->respondent_token}");
 
         } catch (Exception $e) {
             DB::rollBack();
@@ -744,15 +747,38 @@ class SurveyProcessController extends Controller
     public function showResult(Request $request)
     {
         try {
-            // Get survey data from session
-            $surveyId = session('survey_id');
-            $responseId = session('response_id');
-            $surveyCode = session('survey_code');
+            // Check if token is provided as query parameter
+            $validator = Validator::make($request->all(), [
+                'token' => 'required|string'
+            ], [
+                'token.required' => 'Token survey wajib diisi.',
+                'token.string' => 'Token survey harus berupa teks.'
+            ]);
 
-            if (!$surveyId || !$responseId) {
+            if ($validator->fails()) {
                 return redirect('/entry')
-                    ->withErrors(['message' => 'Session survey tidak ditemukan. Silakan mulai survey kembali.']);
+                    ->withErrors(['message' => 'Token survey tidak valid.']);
             }
+
+            $token = $request->query('token');
+            
+            // If token is provided, use it to find the response
+            $response = Response::where('respondent_token', $token)->first();
+            
+            if (!$response) {
+                return redirect('/entry')
+                    ->withErrors(['message' => 'Token survey tidak valid.']);
+            }
+
+            // Check if response is completed
+            if ($response->status !== ResponseStatus::COMPLETED) {
+                return redirect('/entry')
+                    ->withErrors(['message' => 'Survey belum selesai dikerjakan.']);
+            }
+            
+            $surveyId = $response->survey_id;
+            $responseId = $response->id;
+            $surveyCode = $response->survey->code;
 
             // Get response with all necessary relationships
             $response = Response::with([
@@ -768,13 +794,7 @@ class SurveyProcessController extends Controller
             if (!$response || $response->survey_id != $surveyId) {
                 return redirect('/entry')
                     ->withErrors(['message' => 'Data response tidak ditemukan.']);
-            }
-
-            // Check if response is completed
-            // if ($response->status !== ResponseStatus::COMPLETED) {
-            //     return redirect('/entry')
-            //         ->withErrors(['message' => 'Survey belum selesai dikerjakan.']);
-            // }
+            }           
 
             $survey = $response->survey;
             $responseScore = $response->score;
