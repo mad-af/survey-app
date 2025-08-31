@@ -8,6 +8,7 @@ use App\Http\Controllers\SurveySectionController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\SurveyTakeController;
 use App\Http\Controllers\SurveyProcessController;
+use App\Http\Controllers\WilayahController;
 
 /*
 |--------------------------------------------------------------------------
@@ -59,4 +60,12 @@ Route::middleware(['auth:sanctum', 'no.cache'])->group(function () {
 // Survey Process API Routes - Require survey.token middleware
 Route::middleware(['survey.token', 'no.cache'])->group(function () {
     Route::post('/survey/question-partials', [SurveyProcessController::class, 'submitQuestionPartials']);
+});
+
+// Wilayah API Routes - Public access for address data
+Route::prefix('wilayah')->group(function () {
+    Route::get('provinces', [WilayahController::class, 'getProvinces']);
+    Route::get('regencies/{provinceCode}', [WilayahController::class, 'getRegencies']);
+    Route::get('districts/{regencyCode}', [WilayahController::class, 'getDistricts']);
+    Route::get('villages/{districtCode}', [WilayahController::class, 'getVillages']);
 });

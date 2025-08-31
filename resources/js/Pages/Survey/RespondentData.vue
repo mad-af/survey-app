@@ -101,10 +101,74 @@
         <div v-if="form.errors.role_title" class="mt-1 text-sm text-error">{{ form.errors.role_title }}</div>
 
         <!-- Location -->
-        <label class="label">Lokasi</label>
+        <!-- <label class="label">Lokasi</label>
         <input v-model="form.location" type="text" placeholder="Kota, Provinsi" class="input"
           :class="{ 'input-error': form.errors.location }" />
-        <div v-if="form.errors.location" class="mt-1 text-sm text-error">{{ form.errors.location }}</div>
+        <div v-if="form.errors.location" class="mt-1 text-sm text-error">{{ form.errors.location }}</div> -->
+      </fieldset>
+
+      <!-- Address Information Section -->
+      <fieldset class="p-4 border fieldset bg-base-200 border-base-300 rounded-box">
+        <legend class="fieldset-legend">Alamat Lengkap</legend>
+
+        <!-- Province -->
+        <label class="label">Provinsi <span class="text-error">*</span></label>
+        <select v-model="selectedProvince" @change="onProvinceChange" class="select" 
+          :class="{ 'select-error': form.errors.province_code }" :disabled="addressLoading.provinces" required>
+          <option value="">{{ addressLoading.provinces ? 'Memuat provinsi...' : 'Pilih Provinsi' }}</option>
+          <option v-for="province in provinces" :key="province.code" :value="province.code">
+            {{ province.name }}
+          </option>
+        </select>
+        <div v-if="form.errors.province_code" class="mt-1 text-sm text-error">{{ form.errors.province_code }}</div>
+
+        <!-- Regency/City -->
+        <label class="label">Kabupaten/Kota <span class="text-error">*</span></label>
+        <select v-model="selectedRegency" @change="onRegencyChange" class="select" 
+          :class="{ 'select-error': form.errors.regency_code }" :disabled="!selectedProvince || addressLoading.regencies" required>
+          <option value="">
+            {{ addressLoading.regencies ? 'Memuat kabupaten/kota...' : 
+               !selectedProvince ? 'Pilih provinsi terlebih dahulu' : 'Pilih Kabupaten/Kota' }}
+          </option>
+          <option v-for="regency in regencies" :key="regency.code" :value="regency.code">
+            {{ regency.name }}
+          </option>
+        </select>
+        <div v-if="form.errors.regency_code" class="mt-1 text-sm text-error">{{ form.errors.regency_code }}</div>
+
+        <!-- District -->
+        <label class="label">Kecamatan <span class="text-error">*</span></label>
+        <select v-model="selectedDistrict" @change="onDistrictChange" class="select" 
+          :class="{ 'select-error': form.errors.district_code }" :disabled="!selectedRegency || addressLoading.districts" required>
+          <option value="">
+            {{ addressLoading.districts ? 'Memuat kecamatan...' : 
+               !selectedRegency ? 'Pilih kabupaten/kota terlebih dahulu' : 'Pilih Kecamatan' }}
+          </option>
+          <option v-for="district in districts" :key="district.code" :value="district.code">
+            {{ district.name }}
+          </option>
+        </select>
+        <div v-if="form.errors.district_code" class="mt-1 text-sm text-error">{{ form.errors.district_code }}</div>
+
+        <!-- Village -->
+        <label class="label">Kelurahan/Desa <span class="text-error">*</span></label>
+        <select v-model="selectedVillage" @change="onVillageChange" class="select" 
+          :class="{ 'select-error': form.errors.village_code }" :disabled="!selectedDistrict || addressLoading.villages" required>
+          <option value="">
+            {{ addressLoading.villages ? 'Memuat kelurahan/desa...' : 
+               !selectedDistrict ? 'Pilih kecamatan terlebih dahulu' : 'Pilih Kelurahan/Desa' }}
+          </option>
+          <option v-for="village in villages" :key="village.code" :value="village.code">
+            {{ village.name }}
+          </option>
+        </select>
+        <div v-if="form.errors.village_code" class="mt-1 text-sm text-error">{{ form.errors.village_code }}</div>
+
+        <!-- Detailed Address -->
+        <label class="label">Alamat Detail</label>
+        <textarea v-model="form.detailed_address" placeholder="RT/RW, Nama Jalan, No. Rumah, dll" 
+          class="textarea" :class="{ 'textarea-error': form.errors.detailed_address }" rows="3"></textarea>
+        <div v-if="form.errors.detailed_address" class="mt-1 text-sm text-error">{{ form.errors.detailed_address }}</div>
       </fieldset>
 
       <!-- Consent Section -->
@@ -124,7 +188,7 @@
 
       <!-- Submit Button -->
       <button type="submit" class="w-full btn btn-primary" :class="{ 'loading': form.processing }"
-        :disabled="form.processing || !form.name || !form.gender || !form.birth_year || !form.consent">
+        :disabled="form.processing || !form.name || !form.gender || !form.birth_year || !form.consent || !selectedProvince || !selectedRegency || !selectedDistrict || !selectedVillage">
         <LogIn v-if="!form.processing" class="mr-2 w-5 h-5" />
         {{ form.processing ? 'Mengirim...' : (props.existingRespondent ? 'Update Data' : 'Submit Formulir') }}
       </button>
@@ -176,6 +240,24 @@ const geolocation = ref({
   loading: false
 })
 
+// Address/Region state
+const provinces = ref([])
+const regencies = ref([])
+const districts = ref([])
+const villages = ref([])
+
+const selectedProvince = ref('')
+const selectedRegency = ref('')
+const selectedDistrict = ref('')
+const selectedVillage = ref('')
+
+const addressLoading = ref({
+  provinces: false,
+  regencies: false,
+  districts: false,
+  villages: false
+})
+
 // Form setup with all Respondent model fields
 const form = useForm({
   external_id: props.existingRespondent?.external_id || '',
@@ -188,6 +270,16 @@ const form = useForm({
   department: props.existingRespondent?.department || '',
   role_title: props.existingRespondent?.role_title || '',
   location: props.existingRespondent?.location || '',
+  // Address fields
+  province_code: props.existingRespondent?.province_code || '',
+  province_name: props.existingRespondent?.province_name || '',
+  regency_code: props.existingRespondent?.regency_code || '',
+  regency_name: props.existingRespondent?.regency_name || '',
+  district_code: props.existingRespondent?.district_code || '',
+  district_name: props.existingRespondent?.district_name || '',
+  village_code: props.existingRespondent?.village_code || '',
+  village_name: props.existingRespondent?.village_name || '',
+  detailed_address: props.existingRespondent?.detailed_address || '',
   demographics: props.existingRespondent?.demographics || {},
   consent: props.existingRespondent?.consent || false,
   consent_at: props.existingRespondent?.consent_at || null
@@ -254,9 +346,148 @@ const getUserLocation = () => {
   )
 }
 
+// API functions for address data
+const fetchProvinces = async () => {
+  try {
+    addressLoading.value.provinces = true
+    const response = await fetch('/api/wilayah/provinces')
+    const data = await response.json()
+    provinces.value = data.data || []
+  } catch (error) {
+    console.error('Error fetching provinces:', error)
+  } finally {
+    addressLoading.value.provinces = false
+  }
+}
+
+const fetchRegencies = async (provinceCode) => {
+  try {
+    addressLoading.value.regencies = true
+    regencies.value = []
+    districts.value = []
+    villages.value = []
+    selectedRegency.value = ''
+    selectedDistrict.value = ''
+    selectedVillage.value = ''
+    
+    const response = await fetch(`/api/wilayah/regencies/${provinceCode}`)
+    const data = await response.json()
+    regencies.value = data.data || []
+  } catch (error) {
+    console.error('Error fetching regencies:', error)
+  } finally {
+    addressLoading.value.regencies = false
+  }
+}
+
+const fetchDistricts = async (regencyCode) => {
+  try {
+    addressLoading.value.districts = true
+    districts.value = []
+    villages.value = []
+    selectedDistrict.value = ''
+    selectedVillage.value = ''
+    
+    const response = await fetch(`/api/wilayah/districts/${regencyCode}`)
+    const data = await response.json()
+    districts.value = data.data || []
+  } catch (error) {
+    console.error('Error fetching districts:', error)
+  } finally {
+    addressLoading.value.districts = false
+  }
+}
+
+const fetchVillages = async (districtCode) => {
+  try {
+    addressLoading.value.villages = true
+    villages.value = []
+    selectedVillage.value = ''
+    
+    const response = await fetch(`/api/wilayah/villages/${districtCode}`)
+    const data = await response.json()
+    villages.value = data.data || []
+  } catch (error) {
+    console.error('Error fetching villages:', error)
+  } finally {
+    addressLoading.value.villages = false
+  }
+}
+
+// Event handlers for address selection
+const onProvinceChange = () => {
+  const province = provinces.value.find(p => p.code === selectedProvince.value)
+  if (province) {
+    form.province_code = province.code
+    form.province_name = province.name
+    fetchRegencies(province.code)
+  }
+  // Clear dependent fields
+  form.regency_code = ''
+  form.regency_name = ''
+  form.district_code = ''
+  form.district_name = ''
+  form.village_code = ''
+  form.village_name = ''
+}
+
+const onRegencyChange = () => {
+  const regency = regencies.value.find(r => r.code === selectedRegency.value)
+  if (regency) {
+    form.regency_code = regency.code
+    form.regency_name = regency.name
+    fetchDistricts(regency.code)
+  }
+  // Clear dependent fields
+  form.district_code = ''
+  form.district_name = ''
+  form.village_code = ''
+  form.village_name = ''
+}
+
+const onDistrictChange = () => {
+  const district = districts.value.find(d => d.code === selectedDistrict.value)
+  if (district) {
+    form.district_code = district.code
+    form.district_name = district.name
+    fetchVillages(district.code)
+  }
+  // Clear dependent fields
+  form.village_code = ''
+  form.village_name = ''
+}
+
+const onVillageChange = () => {
+  const village = villages.value.find(v => v.code === selectedVillage.value)
+  if (village) {
+    form.village_code = village.code
+    form.village_name = village.name
+  }
+}
+
 // Get location when component mounts
 onMounted(() => {
   getUserLocation()
+  fetchProvinces()
+  
+  // Initialize existing data if available
+  if (props.existingRespondent) {
+    selectedProvince.value = props.existingRespondent.province_code || ''
+    selectedRegency.value = props.existingRespondent.regency_code || ''
+    selectedDistrict.value = props.existingRespondent.district_code || ''
+    selectedVillage.value = props.existingRespondent.village_code || ''
+    
+    // Load dependent data if codes exist
+    if (selectedProvince.value) {
+      fetchRegencies(selectedProvince.value)
+    }
+    if (selectedRegency.value) {
+      fetchDistricts(selectedRegency.value)
+    }
+    if (selectedDistrict.value) {
+      fetchVillages(selectedDistrict.value)
+    }
+  }
 })
 
 // Submit form function
