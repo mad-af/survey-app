@@ -50,6 +50,10 @@ Route::middleware(['auth:sanctum', 'no.cache'])->group(function () {
     // Survey Take API Routes
     Route::get('surveys/{survey}/data', [SurveyTakeController::class, 'getSurveyData']);
     Route::post('surveys/{survey}/responses', [SurveyTakeController::class, 'submitResponse']);
+    
+    // User Password Update API Route
+    Route::put('user/password', [UserController::class, 'updatePassword']);
+    
 });
 
 // Survey Process API Routes - Require survey.token middleware

@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar bg-base-100 p-3.5 border-b border-base-300">
+  <div class="p-3.5 border-b navbar bg-base-100 border-base-300">
     <div class="flex-none lg:hidden">
       <label for="drawer-toggle" class="btn btn-square btn-ghost btn-sm">
         <Menu class="w-4 h-4" />
@@ -8,7 +8,7 @@
     <div class="flex-1">
       <h1 class="text-lg font-semibold text-base-content">My Dashboard</h1>
     </div>
-    <div class="flex items-center gap-2">
+    <div class="flex gap-2 items-center">
       <!-- Theme Selector -->
       <div class="dropdown dropdown-end">
         <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-circle">
@@ -19,7 +19,7 @@
             <span class="text-xs font-semibold text-base-content/70">Pilih Tema</span>
           </li>
           <li v-for="theme in themes" :key="theme">
-            <a @click="changeTheme(theme)" class="capitalize text-sm transition-colors">
+            <a @click="changeTheme(theme)" class="text-sm capitalize transition-colors">
               {{ theme }}
             </a>
           </li>
@@ -27,25 +27,47 @@
       </div>
 
       <!-- User Profile -->
-      <div tabindex="0" role="button" class="btn btn-ghost btn-sm px-2 py-1 h-auto min-h-0">
-        <div class="flex items-center gap-2">
-          <Avatar :src="profileImage" :name="userName" alt="Profile" />
-          <div class="text-left hidden sm:block">
-            <div class="text-sm font-medium text-base-content">{{ userName }}</div>
-            <div class="text-xs text-base-content/60">{{ userRole }}</div>
+      <div class="dropdown dropdown-end">
+        <div tabindex="0" role="button" class="px-2 py-1 h-auto min-h-0 btn btn-ghost btn-sm">
+          <div class="flex gap-2 items-center">
+            <Avatar :src="profileImage" :name="userName" alt="Profile" />
+            <div class="hidden text-left sm:block">
+              <div class="text-sm font-medium text-base-content">{{ userName }}</div>
+              <div class="text-xs text-base-content/60">{{ userRole }}</div>
+            </div>
           </div>
         </div>
+        <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-2xl bg-base-100/90 backdrop-blur-md rounded-box w-52 border border-base-300/50">
+          <li class="menu-title">
+            <span class="text-xs font-semibold text-base-content/70">Akun</span>
+          </li>
+          <li>
+            <a @click="openChangePasswordModal" class="text-sm transition-colors">
+              <Key class="w-4 h-4" />
+              Ubah Password
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
-          <Breadcrumb />
+
+  <Breadcrumb />
+
+  <!-- Change Password Modal -->
+  <ChangePasswordModal 
+    :is-open="isChangePasswordModalOpen"
+    @close="closeChangePasswordModal"
+    @submit="handleChangePassword"
+  />
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Menu, Palette } from 'lucide-vue-next'
-import Breadcrumb from './Breadcrumb.vue'
+import { ChevronDown, Key } from 'lucide-vue-next'
 import Avatar from './Avatar.vue'
+import Breadcrumb from './Breadcrumb.vue'
+import ChangePasswordModal from './ChangePasswordModal.vue'
 
 // Props
 const props = defineProps({
@@ -63,7 +85,8 @@ const props = defineProps({
   }
 })
 
-// State (imageError removed as it's now handled by Avatar component)
+// State
+const isChangePasswordModalOpen = ref(false)
 
 // Theme management - Survey-friendly themes only
 const themes = [
@@ -78,6 +101,61 @@ const themes = [
 const changeTheme = (theme) => {
   document.documentElement.setAttribute('data-theme', theme)
   localStorage.setItem('theme', theme)
+}
+
+const openChangePasswordModal = () => {
+  isChangePasswordModalOpen.value = true
+}
+
+const closeChangePasswordModal = () => {
+  isChangePasswordModalOpen.value = false
+}
+
+const handleChangePassword = async (passwordData) => {
+  try {
+    const response = await fetch('/dashboard/change-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        current_password: passwordData.currentPassword,
+        new_password: passwordData.newPassword,
+        new_password_confirmation: passwordData.confirmPassword
+      })
+    })
+
+    const result = await response.json()
+
+    if (response.ok && result.success) {
+       // Show success message
+       alert('Password berhasil diubah! Anda akan logout otomatis.')
+       closeChangePasswordModal()
+       
+       // Redirect to login page after successful password change
+       setTimeout(() => {
+         window.location.href = '/login'
+       }, 1500)
+    } else {
+      // Handle validation errors
+      if (result.errors) {
+        let errorMessage = 'Terjadi kesalahan:\n'
+        Object.values(result.errors).forEach(errors => {
+          errors.forEach(error => {
+            errorMessage += `- ${error}\n`
+          })
+        })
+        alert(errorMessage)
+      } else {
+        alert(result.message || 'Terjadi kesalahan saat mengubah password')
+      }
+    }
+  } catch (error) {
+    console.error('Error changing password:', error)
+    alert('Terjadi kesalahan saat mengubah password')
+  }
 }
 
 // Lifecycle

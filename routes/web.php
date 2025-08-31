@@ -6,6 +6,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\SurveyProcessController;
+use App\Http\Controllers\ChangePasswordController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome');
@@ -38,6 +39,9 @@ Route::prefix('dashboard')->middleware(['auth', 'no.cache'])->group(function () 
     Route::get('/user-management', function () {
         return Inertia::render('Dashboard/UserManagement/Index');
     })->middleware('role:admin');
+    
+    // Change Password route
+    Route::post('/change-password', [ChangePasswordController::class, 'update'])->name('change-password');
     
     Route::get('/survey', function () {
         return Inertia::render('Dashboard/Survey/Index');
