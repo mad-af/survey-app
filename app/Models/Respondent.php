@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Respondent extends Model
 {
@@ -21,15 +22,13 @@ class Respondent extends Model
         'organization',
         'department',
         'role_title',
-        'location',
-        'demographics',
+        'location_id',
         'consent_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'demographics' => 'array',
             'consent_at' => 'datetime',
             'birth_year' => 'integer',
         ];
@@ -40,5 +39,8 @@ class Respondent extends Model
         return $this->hasMany(Response::class);
     }
 
-
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class);
+    }
 }

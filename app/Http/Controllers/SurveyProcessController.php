@@ -15,6 +15,7 @@ use App\Models\Respondent;
 use App\Models\Choice;
 use App\Models\ResponseScore;
 use App\Models\ResultCategory;
+use App\Models\Location;
 use App\Enums\ResponseStatus;
 use Exception;
 use Inertia\Inertia;
@@ -220,7 +221,16 @@ class SurveyProcessController extends Controller
                 'organization' => 'nullable|string|max:255',
                 'department' => 'nullable|string|max:255',
                 'role_title' => 'nullable|string|max:255',
-                'location' => 'nullable|string|max:255',
+                // Location fields
+                'province_code' => 'required|string',
+                'province_name' => 'required|string|max:255',
+                'regency_code' => 'required|string',
+                'regency_name' => 'required|string|max:255',
+                'district_code' => 'required|string',
+                'district_name' => 'required|string|max:255',
+                'village_code' => 'required|string',
+                'village_name' => 'required|string|max:255',
+                'detailed_address' => 'nullable|string|max:500',
                 'demographics' => 'nullable|array',
                 'consent' => 'required|boolean|accepted',
                 'consent_at' => 'nullable|date'
@@ -235,6 +245,14 @@ class SurveyProcessController extends Controller
                 'birth_year.integer' => 'Tahun lahir harus berupa angka.',
                 'birth_year.min' => 'Tahun lahir minimal 1900.',
                 'birth_year.max' => 'Tahun lahir tidak boleh lebih dari tahun sekarang.',
+                'province_code.required' => 'Provinsi wajib dipilih.',
+                'province_name.required' => 'Nama provinsi wajib diisi.',
+                'regency_code.required' => 'Kabupaten/Kota wajib dipilih.',
+                'regency_name.required' => 'Nama kabupaten/kota wajib diisi.',
+                'district_code.required' => 'Kecamatan wajib dipilih.',
+                'district_name.required' => 'Nama kecamatan wajib diisi.',
+                'village_code.required' => 'Kelurahan/Desa wajib dipilih.',
+                'village_name.required' => 'Nama kelurahan/desa wajib diisi.',
                 'consent.required' => 'Persetujuan wajib diberikan.',
                 'consent.accepted' => 'Anda harus menyetujui untuk melanjutkan.'
             ]);
@@ -242,6 +260,29 @@ class SurveyProcessController extends Controller
             if ($validator->fails()) {
                 return redirect()->back()->withErrors($validator)->withInput();
             }
+
+            // Handle location data - extract coordinates from demographics if available
+            $latitude = null;
+            $longitude = null;
+            if ($request->demographics && isset($request->demographics['geolocation'])) {
+                $latitude = $request->demographics['geolocation']['latitude'] ?? null;
+                $longitude = $request->demographics['geolocation']['longitude'] ?? null;
+            }
+
+            // Create or update location record
+            $location = Location::create([
+                'province_code' => $request->province_code,
+                'province_name' => $request->province_name,
+                'regency_code' => $request->regency_code,
+                'regency_name' => $request->regency_name,
+                'district_code' => $request->district_code,
+                'district_name' => $request->district_name,
+                'village_code' => $request->village_code,
+                'village_name' => $request->village_name,
+                'detailed_address' => $request->detailed_address,
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+            ]);
 
             // Check if respondent already exists for this response
             if (!empty($response->respondent_id)) {
@@ -257,8 +298,7 @@ class SurveyProcessController extends Controller
                     'organization' => $request->organization,
                     'department' => $request->department,
                     'role_title' => $request->role_title,
-                    'location' => $request->location,
-                    'demographics' => $request->demographics,
+                    'location_id' => $location->id,
                     'consent_at' => $request->consent_at ? now() : null,
                 ]);
             } else {
@@ -273,8 +313,7 @@ class SurveyProcessController extends Controller
                     'organization' => $request->organization,
                     'department' => $request->department,
                     'role_title' => $request->role_title,
-                    'location' => $request->location,
-                    'demographics' => $request->demographics,
+                    'location_id' => $location->id,
                     'consent_at' => $request->consent ? now() : null,
                 ]);
 

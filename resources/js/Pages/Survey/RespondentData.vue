@@ -269,7 +269,6 @@ const form = useForm({
   organization: props.existingRespondent?.organization || '',
   department: props.existingRespondent?.department || '',
   role_title: props.existingRespondent?.role_title || '',
-  location: props.existingRespondent?.location || '',
   // Address fields
   province_code: props.existingRespondent?.province_code || '',
   province_name: props.existingRespondent?.province_name || '',
