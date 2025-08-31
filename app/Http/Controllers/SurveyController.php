@@ -260,7 +260,8 @@ class SurveyController extends Controller
             
             // Get all responses with related data
             $responses = Response::with([
-                'respondent:id,external_id,name,email,phone,gender,birth_year,organization,department,role_title,location,demographics,consent_at',
+                'respondent:id,external_id,name,email,phone,gender,birth_year,organization,department,role_title,location_id,consent_at',
+                'respondent.location:id,province_code,province_name,regency_code,regency_name,district_code,district_name,village_code,village_name,detailed_address,latitude,longitude',
                 'score.resultCategory:id,name,description,color,min_score,max_score'
             ])
             ->where('survey_id', $survey->id)

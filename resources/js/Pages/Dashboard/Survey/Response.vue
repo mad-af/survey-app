@@ -182,17 +182,44 @@
                     <span>Role:</span>
                     <span>{{ selectedResponse.respondent?.role_title || '-' }}</span>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Location Information -->
+          <div v-if="selectedResponse.respondent?.location" class="mb-6">
+            <div class="card bg-base-200">
+              <div class="card-body">
+                <h4 class="text-base card-title">Location Information</h4>
+                <div class="space-y-2 text-sm">
                   <div class="flex justify-between">
-                    <span>Location:</span>
-                    <span>{{ selectedResponse.respondent?.location || '-' }}</span>
+                    <span>Province:</span>
+                    <span>{{ selectedResponse.respondent.location.province_name || '-' }}</span>
                   </div>
-                  <div v-if="selectedResponse.respondent?.demographics" class="flex justify-between">
-                    <span>Education:</span>
-                    <span>{{ getEducationLabel(selectedResponse.respondent.demographics?.education) || '-' }}</span>
+                  <div class="flex justify-between">
+                    <span>Regency:</span>
+                    <span>{{ selectedResponse.respondent.location.regency_name || '-' }}</span>
                   </div>
-                  <div v-if="selectedResponse.respondent?.demographics?.experience_years" class="flex justify-between">
-                    <span>Experience:</span>
-                    <span>{{ selectedResponse.respondent.demographics.experience_years }} years</span>
+                  <div class="flex justify-between">
+                    <span>District:</span>
+                    <span>{{ selectedResponse.respondent.location.district_name || '-' }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Village:</span>
+                    <span>{{ selectedResponse.respondent.location.village_name || '-' }}</span>
+                  </div>
+                  <div v-if="selectedResponse.respondent.location.detailed_address" class="flex justify-between">
+                    <span>Detailed Address:</span>
+                    <span>{{ selectedResponse.respondent.location.detailed_address }}</span>
+                  </div>
+                  <div v-if="selectedResponse.respondent.location.latitude && selectedResponse.respondent.location.longitude" class="flex justify-between">
+                    <span>Coordinates:</span>
+                    <span>{{ selectedResponse.respondent.location.latitude }}, {{ selectedResponse.respondent.location.longitude }}</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>Full Address:</span>
+                    <span>{{ getFullAddress(selectedResponse.respondent.location) }}</span>
                   </div>
                 </div>
               </div>
@@ -335,6 +362,10 @@ const filteredResponses = computed(() => {
       response.respondent?.email?.toLowerCase().includes(query) ||
       response.respondent?.organization?.toLowerCase().includes(query) ||
       response.respondent?.department?.toLowerCase().includes(query) ||
+      response.respondent?.location?.province_name?.toLowerCase().includes(query) ||
+      response.respondent?.location?.regency_name?.toLowerCase().includes(query) ||
+      response.respondent?.location?.district_name?.toLowerCase().includes(query) ||
+      response.respondent?.location?.village_name?.toLowerCase().includes(query) ||
       response.respondent_token?.toLowerCase().includes(query)
     )
   }
@@ -373,12 +404,13 @@ const tableColumns = computed(() => [
     formatter: (value, item) => item.respondent?.email || '-'
   },
   {
-    key: 'organization',
-    label: 'Organization',
+    key: 'location',
+    label: 'Location',
     formatter: (value, item) => {
-      const org = item.respondent?.organization || '-'
-      const dept = item.respondent?.department || '-'
-      return dept !== '-' ? `${org} - ${dept}` : org
+      if (!item.respondent?.location) return '-'
+      const regency = item.respondent.location.regency_name || '-'
+      const province = item.respondent.location.province_name || '-'
+      return regency !== '-' && province !== '-' ? `${regency}, ${province}` : (regency !== '-' ? regency : province)
     }
   },
   {
@@ -499,21 +531,6 @@ const getGenderLabel = (gender) => {
   }
 }
 
-const getEducationLabel = (education) => {
-  switch (education) {
-    case 'high_school':
-      return 'High School'
-    case 'bachelor':
-      return 'Bachelor Degree'
-    case 'master':
-      return 'Master Degree'
-    case 'phd':
-      return 'PhD'
-    default:
-      return 'Not specified'
-  }
-}
-
 const getCategoryBadgeClass = (color) => {
   if (!color) return 'badge-ghost'
   
@@ -562,6 +579,24 @@ const formatDuration = (startDate, endDate) => {
   } catch (error) {
     return '-'
   }
+}
+
+const getFullAddress = (location) => {
+  if (!location) return '-'
+  
+  const parts = []
+  if (location.village_name) parts.push(location.village_name)
+  if (location.district_name) parts.push(location.district_name)
+  if (location.regency_name) parts.push(location.regency_name)
+  if (location.province_name) parts.push(location.province_name)
+  
+  let address = parts.join(', ')
+  
+  if (location.detailed_address) {
+    address = location.detailed_address + ', ' + address
+  }
+  
+  return address || '-'
 }
 
 const getSectionTitle = (sectionId) => {
