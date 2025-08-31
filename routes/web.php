@@ -37,7 +37,7 @@ Route::prefix('dashboard')->middleware(['auth', 'no.cache'])->group(function () 
     
     Route::get('/user-management', function () {
         return Inertia::render('Dashboard/UserManagement/Index');
-    });
+    })->middleware('role:admin');
     
     Route::get('/survey', function () {
         return Inertia::render('Dashboard/Survey/Index');

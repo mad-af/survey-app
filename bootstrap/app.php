@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'survey.token' => \App\Http\Middleware\SurveyTokenMiddleware::class,
             'guest.survey' => \App\Http\Middleware\GuestSurveyMiddleware::class,
             'no.cache' => \App\Http\Middleware\NoCache::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

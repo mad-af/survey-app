@@ -82,8 +82,17 @@ import {
   FileText,
 } from 'lucide-vue-next'
 
+// Props
+const props = defineProps({
+  currentRoute: {
+    type: String,
+    default: ''
+  }
+})
+
 // Get current page info
 const page = usePage()
+const user = computed(() => page.props.auth?.user || {})
 
 // Computed menu items with active state based on current URL
 const menuItems = computed(() => [
@@ -101,14 +110,21 @@ const menuItems = computed(() => [
   },
 ])
 
-const otherMenuItems = computed(() => [
-  {
-    name: 'User Managements',
-    href: '/dashboard/user-management',
-    icon: Users,
-    active: page.url === '/dashboard/user-management',
+const otherMenuItems = computed(() => {
+  const items = []
+  
+  // Only show User Management for admin users
+  if (user.value.role === 'admin') {
+    items.push({
+      name: 'User Managements',
+      href: '/dashboard/user-management',
+      icon: Users,
+      active: page.url === '/dashboard/user-management',
+    })
   }
-])
+  
+  return items
+})
 
 // Methods
 const handleLogout = () => {
