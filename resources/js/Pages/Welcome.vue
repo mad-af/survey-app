@@ -253,15 +253,15 @@ const props = defineProps({
   totalRespondents: {
     type: Number,
     default: 0
+  },
+  totalResponses: {
+    type: Number,
+    default: 0
   }
 })
 
 const isLoading = ref(false)
 const activeSurveys = computed(() => props.publicSurveys)
 const totalRespondents = computed(() => props.totalRespondents)
-const totalResponses = computed(() => {
-  return activeSurveys.value.reduce((total, survey) => {
-    return total + (survey.responses_count || 0)
-  }, 0)
-})
+const totalResponses = computed(() => props.totalResponses)
 </script>

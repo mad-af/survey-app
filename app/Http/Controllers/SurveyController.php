@@ -401,7 +401,6 @@ class SurveyController extends Controller
                                             ->orWhere('ends_at', '>=', now());
                                   })
                                   ->withCount('responses')
-                                  ->select('id', 'code', 'title', 'description', 'created_at')
                                   ->orderBy('created_at', 'desc')
                                   ->limit(6)
                                   ->get()
@@ -418,15 +417,20 @@ class SurveyController extends Controller
 
             // Get total respondents count
             $totalRespondents = Response::distinct('respondent_id')->count('respondent_id');
+            
+            // Get total responses count
+            $totalResponses = Response::count();
 
             return [
                 'publicSurveys' => $publicSurveys,
-                'totalRespondents' => $totalRespondents
+                'totalRespondents' => $totalRespondents,
+                'totalResponses' => $totalResponses
             ];
         } catch (\Exception $e) {
             return [
                 'publicSurveys' => collect([]),
-                'totalRespondents' => 0
+                'totalRespondents' => 0,
+                'totalResponses' => 0
             ];
         }
     }
@@ -440,7 +444,8 @@ class SurveyController extends Controller
         
         return Inertia::render('Welcome', [
             'publicSurveys' => $data['publicSurveys'],
-            'totalRespondents' => $data['totalRespondents']
+            'totalRespondents' => $data['totalRespondents'],
+            'totalResponses' => $data['totalResponses']
         ]);
     }
 
