@@ -1,171 +1,97 @@
 <template>
-  <Head title="Selamat Datang" />
+  <Head title="Survey App - Platform Kuisioner Modern" />
   
-  <CenteredLayout 
-    title="🎉 Selamat Datang di Survey App!"
-    subtitle="Aplikasi survey modern dengan teknologi terdepan"
-  >
-    <!-- Welcome Message -->
-    <div class="alert alert-success mb-6">
-      <Sparkles class="w-6 h-6" />
-      <div>
-        <h3 class="font-bold">Konfigurasi Berhasil!</h3>
-        <div class="text-sm"> Semua teknologi telah dikonfigurasi dengan sempurna!</div>
-      </div>
-    </div>
-    
-    <!-- Tech Stack -->
-    <div class="card bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20 mb-6">
-      <div class="card-body">
-        <h2 class="card-title gap-2 mb-4">
-          <Code class="w-5 h-5 text-primary" />
-          Teknologi yang Digunakan
-        </h2>
-        <p class="text-base-content/70 mb-4">
-          Aplikasi ini dibangun dengan teknologi modern dan terpercaya untuk memberikan pengalaman terbaik.
-        </p>
-                
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
-            <div class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-              <span class="text-white font-bold text-sm">L</span>
-            </div>
-            <div>
-              <div class="font-semibold text-sm">Laravel 12</div>
-              <div class="text-xs text-base-content/60">Backend Framework</div>
-            </div>
+  <div class="min-h-screen bg-base-100">
+    <!-- Navigation Header -->
+    <header class="px-4 border-b shadow-sm navbar bg-base-100 border-base-300">
+      <div class="navbar-start">
+        <div class="dropdown">
+          <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
+            <Menu class="w-5 h-5" />
           </div>
-          
-          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
-            <Zap class="w-8 h-8 text-blue-500" />
-            <div>
-              <div class="font-semibold text-sm">Inertia.js</div>
-              <div class="text-xs text-base-content/60">SPA Bridge</div>
-            </div>
-          </div>
-          
-          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
-            <div class="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-              <span class="text-white font-bold text-sm">V</span>
-            </div>
-            <div>
-              <div class="font-semibold text-sm">Vue.js 3</div>
-              <div class="text-xs text-base-content/60">Frontend Framework</div>
-            </div>
-          </div>
-          
-          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
-            <Paintbrush class="w-8 h-8 text-purple-500" />
-            <div>
-              <div class="font-semibold text-sm">DaisyUI</div>
-              <div class="text-xs text-base-content/60">UI Components</div>
-            </div>
-          </div>
-          
-          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
-            <Star class="w-8 h-8 text-yellow-500" />
-            <div>
-              <div class="font-semibold text-sm">Lucide Icons</div>
-              <div class="text-xs text-base-content/60">Icon Library</div>
-            </div>
-          </div>
-          
-          <div class="flex items-center gap-2 p-3 bg-base-100 rounded-lg border border-base-300">
-            <Palette class="w-8 h-8 text-cyan-500" />
-            <div>
-              <div class="font-semibold text-sm">Tailwind CSS</div>
-              <div class="text-xs text-base-content/60">Styling</div>
-            </div>
-          </div>
+          <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+            <li><a href="#surveys">Survey Aktif</a></li>
+            <li><a href="#about">Tentang Kami</a></li>
+            <li><a href="/entry">Ikuti Survey</a></li>
+            <li><a href="/login">Login Admin</a></li>
+          </ul>
         </div>
+        <a class="text-xl font-bold btn btn-ghost">
+          <FileText class="w-6 h-6 text-primary" />
+          SurveyApp
+        </a>
       </div>
-    </div>
-                
-    <!-- Quick Actions -->
-    <div class="card bg-base-100 border border-base-300 mb-6">
-      <div class="card-body">
-        <h2 class="card-title gap-2 mb-4">
-          <Zap class="w-5 h-5 text-warning" />
-          Mulai Sekarang
-        </h2>
-        <p class="text-base-content/70 mb-4">
-          Jelajahi fitur-fitur yang tersedia atau mulai membuat survey pertama Anda.
-        </p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a href="/dashboard" class="btn btn-primary gap-2">
-            <BarChart3 class="w-4 h-4" />
-            Dashboard
-          </a>
-          <a href="/surveys" class="btn btn-outline btn-secondary gap-2">
-            <FileText class="w-4 h-4" />
-            Lihat Survey
-          </a>
-          <a href="/test-daisy" class="btn btn-outline btn-accent gap-2">
-            <TestTube class="w-4 h-4" />
-            Test Components
+      
+      <div class="hidden navbar-center lg:flex">
+        <ul class="px-1 menu menu-horizontal">
+          <li><a href="#surveys" class="hover:text-primary">Survey Aktif</a></li>
+          <li><a href="#about" class="hover:text-primary">Tentang Kami</a></li>
+          <!-- <li><a href="/entry" class="hover:text-primary">Ikuti Survey</a></li> -->
+        </ul>
+      </div>
+      
+      <div class="navbar-end">
+        <div class="flex gap-2 items-center">
+          <!-- <a href="/entry" class="gap-2 btn btn-sm btn-primary">
+            <Play class="w-4 h-4" />
+            Ikuti Survey
+          </a> -->
+          <a href="/login" class="gap-2 btn btn-sm btn-ghost">
+            <LogIn class="w-4 h-4" />
+            Login
           </a>
         </div>
       </div>
-    </div>
-    
-    <!-- Interactive Demo -->
-    <div class="card bg-base-100 border border-base-300">
-      <div class="card-body">
-        <h2 class="card-title gap-2 mb-4">
-          <Play class="w-5 h-5 text-info" />
-          Demo Interaktif
-        </h2>
-        <p class="text-base-content/70 mb-4">
-          Coba fitur-fitur interaktif untuk melihat bagaimana aplikasi bekerja.
-        </p>
-        
-        <div class="flex flex-wrap gap-4 mb-6">
-          <button 
-            @click="showMessage = !showMessage"
-            class="btn btn-outline gap-2"
-          >
-            <component :is="showMessage ? EyeOff : Eye" class="w-4 h-4" />
-            {{ showMessage ? 'Sembunyikan' : 'Tampilkan' }} Pesan
-          </button>
-          
-          <button 
-            @click="toggleAnimation = !toggleAnimation"
-            class="btn btn-outline gap-2"
-            :class="{ 'btn-active': toggleAnimation }"
-          >
-            <Sparkles class="w-4 h-4" :class="{ 'animate-spin': toggleAnimation }" />
-            {{ toggleAnimation ? 'Stop' : 'Start' }} Animasi
-          </button>
-        </div>
-        
-        <div v-if="showMessage" class="alert alert-info mb-4">
-          <Info class="w-6 h-6" />
-          <div>
-            <h3 class="font-bold">Pesan Demo</h3>
-            <div class="text-sm">Ini adalah contoh pesan interaktif menggunakan DaisyUI!</div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero min-h-[60vh] bg-gradient-to-br from-primary/10 to-secondary/10">
+      <div class="text-center hero-content">
+        <div class="max-w-4xl">
+          <h1 class="mb-6 text-5xl font-bold">
+            Platform <span class="text-primary">Kuisioner</span> Modern
+          </h1>
+          <p class="mb-8 text-xl text-base-content/70">
+            Buat, bagikan, dan analisis survey dengan mudah. 
+            Dapatkan insight berharga dari responden Anda dengan teknologi terdepan.
+          </p>
+          <div class="flex flex-col gap-4 justify-center sm:flex-row">
+            <a href="/entry" class="gap-2 btn btn-primary btn-lg">
+              <Play class="w-5 h-5" />
+              Ikuti Survey
+            </a>
+            <!-- <a href="/login" class="gap-2 btn btn-outline btn-lg">
+              <LogIn class="w-5 h-5" />
+              Login Admin
+            </a> -->
           </div>
         </div>
-        
-        <div class="stats stats-vertical lg:stats-horizontal shadow w-full">
-          <div class="stat">
+      </div>
+    </section>
+
+    <!-- Statistics Section -->
+    <section class="py-16 bg-base-200">
+      <div class="container px-4 mx-auto">
+        <div class="w-full shadow stats stats-vertical lg:stats-horizontal">
+          <div class="stat bg-base-100">
             <div class="stat-figure text-primary">
               <Users class="w-8 h-8" />
             </div>
-            <div class="stat-title">Total Pengguna</div>
-            <div class="stat-value text-primary">1,247</div>
+            <div class="stat-title">Total Responden</div>
+            <div class="stat-value text-primary">{{ totalRespondents.toLocaleString() }}</div>
             <div class="stat-desc">↗︎ 12% dari bulan lalu</div>
           </div>
           
-          <div class="stat">
+          <div class="stat bg-base-100">
             <div class="stat-figure text-secondary">
               <FileText class="w-8 h-8" />
             </div>
             <div class="stat-title">Survey Aktif</div>
-            <div class="stat-value text-secondary">25</div>
+            <div class="stat-value text-secondary">{{ activeSurveys.length }}</div>
             <div class="stat-desc">↗︎ 8% dari minggu lalu</div>
           </div>
           
-          <div class="stat">
+          <div class="stat bg-base-100">
             <div class="stat-figure text-accent">
               <CheckCircle class="w-8 h-8" />
             </div>
@@ -175,45 +101,194 @@
           </div>
         </div>
       </div>
-    </div>
-    
-    <template #actions>
-      <button class="btn btn-outline gap-2">
-        <BookOpen class="w-4 h-4" />
-        Dokumentasi
-      </button>
-      <button class="btn btn-primary gap-2">
-        <Rocket class="w-4 h-4" />
-        Mulai Sekarang
-      </button>
-    </template>
-  </CenteredLayout>
+    </section>
+
+    <!-- Active Surveys Section -->
+    <section id="surveys" class="py-16">
+      <div class="container px-4 mx-auto">
+        <div class="mb-12 text-center">
+          <h2 class="mb-4 text-4xl font-bold">Survey Aktif</h2>
+          <p class="text-xl text-base-content/70">
+            Ikuti survey yang sedang berlangsung dan berikan pendapat Anda
+          </p>
+        </div>
+
+        <!-- Loading State -->
+        <div v-if="isLoading" class="flex justify-center items-center py-12">
+          <span class="loading loading-spinner loading-lg"></span>
+          <span class="ml-3 text-lg">Memuat survey...</span>
+        </div>
+
+        <!-- Surveys Grid -->
+        <div v-else-if="activeSurveys.length > 0" class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div v-for="survey in activeSurveys" :key="survey.id" class="shadow-lg transition-shadow card bg-base-100 hover:shadow-xl">
+            <div class="card-body">
+              <h3 class="mb-2 text-lg card-title">{{ survey.title }}</h3>
+              <p class="mb-4 text-base-content/70 line-clamp-3">{{ survey.description }}</p>
+              
+              <div class="flex gap-2 items-center mb-4 text-sm text-base-content/60">
+                <Clock class="w-4 h-4" />
+                <span>Estimasi: {{ survey.estimated_duration || '5-10' }} menit</span>
+              </div>
+              
+              <div class="flex gap-2 items-center mb-4 text-sm text-base-content/60">
+                <Users class="w-4 h-4" />
+                <span>{{ survey.responses_count || 0 }} responden</span>
+              </div>
+              
+              <div class="justify-end card-actions">
+                <a href="/entry" class="gap-2 btn btn-primary">
+                  <Play class="w-4 h-4" />
+                  Ikuti Survey
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else class="py-12 text-center">
+          <div class="flex flex-col gap-4 items-center">
+            <FileText class="w-16 h-16 text-base-content/30" />
+            <h3 class="text-2xl font-semibold text-base-content/70">Belum Ada Survey Aktif</h3>
+            <p class="text-base-content/50">Survey baru akan segera tersedia. Silakan kembali lagi nanti.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-16 bg-base-200">
+      <div class="container px-4 mx-auto">
+        <div class="mb-12 text-center">
+          <h2 class="mb-4 text-4xl font-bold">Tentang SurveyApp</h2>
+          <p class="mx-auto max-w-3xl text-xl text-base-content/70">
+            Platform survey modern yang memudahkan Anda dalam membuat, mendistribusikan, 
+            dan menganalisis kuisioner dengan teknologi terdepan.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-3">
+           <div class="shadow-lg card bg-base-100">
+             <div class="text-center card-body">
+               <Zap class="mx-auto mb-4 w-12 h-12 text-primary" />
+               <h3 class="justify-center mb-2 card-title">Mudah Digunakan</h3>
+               <p class="text-base-content/70">
+                 Interface yang intuitif memungkinkan siapa saja dapat membuat survey profesional dalam hitungan menit.
+               </p>
+             </div>
+           </div>
+ 
+           <div class="shadow-lg card bg-base-100">
+             <div class="text-center card-body">
+               <BarChart3 class="mx-auto mb-4 w-12 h-12 text-secondary" />
+               <h3 class="justify-center mb-2 card-title">Analisis Mendalam</h3>
+               <p class="text-base-content/70">
+                 Dapatkan insight berharga dengan visualisasi data yang komprehensif dan laporan real-time.
+               </p>
+             </div>
+           </div>
+ 
+           <div class="shadow-lg card bg-base-100">
+             <div class="text-center card-body">
+               <Shield class="mx-auto mb-4 w-12 h-12 text-accent" />
+               <h3 class="justify-center mb-2 card-title">Aman & Terpercaya</h3>
+               <p class="text-base-content/70">
+                 Data responden dilindungi dengan enkripsi tingkat enterprise dan kepatuhan terhadap standar privasi.
+               </p>
+             </div>
+           </div>
+         </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="p-10 footer footer-center bg-base-300 text-base-content">
+      <aside>
+        <div class="flex gap-2 items-center mb-4">
+          <FileText class="w-8 h-8 text-primary" />
+          <span class="text-2xl font-bold">SurveyApp</span>
+        </div>
+        <p class="font-bold">
+          Platform Kuisioner Modern
+        </p> 
+        <p>Copyright © 2024 - All right reserved</p>
+      </aside>
+      <nav>
+        <div class="grid grid-flow-col gap-4">
+          <a href="#about" class="link link-hover">Tentang Kami</a>
+          <a href="/entry" class="link link-hover">Ikuti Survey</a>
+          <a href="/login" class="link link-hover">Login Admin</a>
+          <!-- <a href="/dashboard" class="link link-hover">Dashboard</a> -->
+        </div>
+      </nav>
+    </footer>
+  </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { Head } from '@inertiajs/vue3'
-import CenteredLayout from '@/Layouts/CenteredLayout.vue'
-import { 
-  Sparkles, 
-  Rocket, 
-  CheckCircle, 
-  Zap, 
-  Palette, 
-  Paintbrush, 
-  Star, 
-  Eye, 
-  EyeOff,
-  Code,
-  BarChart3,
+import {
+  Menu,
   FileText,
-  TestTube,
+  LogIn,
+  BarChart3,
   Play,
   Info,
   Users,
-  BookOpen
+  CheckCircle,
+  Clock,
+  Zap,
+  Shield
 } from 'lucide-vue-next'
 
-const showMessage = ref(false)
-const toggleAnimation = ref(false)
+// Reactive state
+const isLoading = ref(true)
+const activeSurveys = ref([])
+const totalRespondents = ref(1247)
+
+// Fetch active surveys
+const fetchActiveSurveys = async () => {
+  try {
+    isLoading.value = true
+    // Simulate API call - replace with actual API endpoint
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    // Mock data - replace with actual API call
+    activeSurveys.value = [
+      {
+        id: 1,
+        title: 'Survey Kepuasan Pelanggan 2024',
+        description: 'Bantu kami meningkatkan layanan dengan memberikan feedback tentang pengalaman Anda menggunakan produk kami.',
+        estimated_duration: '5-7',
+        responses_count: 234
+      },
+      {
+        id: 2,
+        title: 'Penelitian Perilaku Konsumen Digital',
+        description: 'Studi tentang bagaimana teknologi digital mempengaruhi keputusan pembelian dan preferensi konsumen modern.',
+        estimated_duration: '10-15',
+        responses_count: 156
+      },
+      {
+        id: 3,
+        title: 'Survey Tren Makanan Sehat',
+        description: 'Eksplorasi preferensi dan kebiasaan makan sehat di kalangan masyarakat Indonesia.',
+        estimated_duration: '8-12',
+        responses_count: 89
+      }
+    ]
+  } catch (error) {
+    console.error('Error fetching surveys:', error)
+    activeSurveys.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Initialize data on component mount
+onMounted(() => {
+  fetchActiveSurveys()
+})
 </script>
