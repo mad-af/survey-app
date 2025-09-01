@@ -6,7 +6,7 @@
       </label>
     </div>
     <div class="flex-1">
-      <h1 class="text-lg font-semibold text-base-content">My Dashboard</h1>
+      <h1 class="text-lg font-semibold text-base-content">{{ pageTitle }}</h1>
     </div>
     <div class="flex gap-2 items-center">
       <!-- Theme Selector -->
@@ -64,7 +64,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { ChevronDown, Key } from 'lucide-vue-next'
+import { Key, Menu, Palette } from 'lucide-vue-next'
 import Avatar from './Avatar.vue'
 import Breadcrumb from './Breadcrumb.vue'
 import ChangePasswordModal from './ChangePasswordModal.vue'
@@ -82,6 +82,10 @@ const props = defineProps({
   profileImage: {
     type: String,
     default: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face'
+  },
+  pageTitle: {
+    type: String,
+    default: 'My Dashboard'
   }
 })
 

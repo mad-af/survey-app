@@ -88,7 +88,9 @@ const isLoading = ref(false)
 const users = ref([])
 
 // Inject toast function from layout
-const showToast = inject('showToast')
+const showToast = inject('showToast', () => {
+  console.warn('showToast injection not available')
+})
 
 // Table configuration
 const tableColumns = ref([

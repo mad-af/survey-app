@@ -216,7 +216,7 @@ const props = defineProps({
   },
   sectionId: {
     type: [String, Number],
-    required: true
+    default: null
   },
   availableSections: {
     type: Array,

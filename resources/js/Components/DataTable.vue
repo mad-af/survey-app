@@ -166,7 +166,16 @@ const emit = defineEmits([
   'update:selectedItems',
   'update:currentPage',
   'copy-success',
-  'copy-error'
+  'copy-error',
+  // Action events
+  'manage-survey',
+  'view-responses',
+  'view-survey',
+  'edit-survey',
+  'delete-survey',
+  'manage-user',
+  'edit-user',
+  'delete-user'
 ])
 
 // Reactive data
