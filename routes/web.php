@@ -8,9 +8,7 @@ use App\Http\Controllers\SurveyController;
 use App\Http\Controllers\SurveyProcessController;
 use App\Http\Controllers\ChangePasswordController;
 
-Route::get('/', function () {
-    return Inertia::render('Welcome');
-});
+Route::get('/', [SurveyController::class, 'welcome']);
 
 // ================================
 // Dashboard's Routes

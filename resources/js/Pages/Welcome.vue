@@ -79,7 +79,7 @@
             </div>
             <div class="stat-title">Total Responden</div>
             <div class="stat-value text-primary">{{ totalRespondents.toLocaleString() }}</div>
-            <div class="stat-desc">↗︎ 12% dari bulan lalu</div>
+            <div class="stat-desc text-success">↗︎ Terus bertambah</div>
           </div>
           
           <div class="stat bg-base-100">
@@ -88,16 +88,16 @@
             </div>
             <div class="stat-title">Survey Aktif</div>
             <div class="stat-value text-secondary">{{ activeSurveys.length }}</div>
-            <div class="stat-desc">↗︎ 8% dari minggu lalu</div>
+            <div class="stat-desc text-info">Siap diikuti</div>
           </div>
           
           <div class="stat bg-base-100">
             <div class="stat-figure text-accent">
-              <CheckCircle class="w-8 h-8" />
+              <BarChart3 class="w-8 h-8" />
             </div>
-            <div class="stat-title">Response Rate</div>
-            <div class="stat-value text-accent">89%</div>
-            <div class="stat-desc">↗︎ 5% dari bulan lalu</div>
+            <div class="stat-title">Total Respons</div>
+            <div class="stat-value text-accent">{{ totalResponses.toLocaleString() }}</div>
+            <div class="stat-desc text-success">Dari semua survey</div>
           </div>
         </div>
       </div>
@@ -227,68 +227,41 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { Head } from '@inertiajs/vue3'
+import { ref, computed } from 'vue'
+import { Head, Link } from '@inertiajs/vue3'
 import {
   Menu,
-  FileText,
-  LogIn,
-  BarChart3,
-  Play,
-  Info,
+  X,
   Users,
+  FileText,
   CheckCircle,
   Clock,
+  ArrowRight,
   Zap,
-  Shield
+  BarChart3,
+  Shield,
+  LogIn,
+  Play
 } from 'lucide-vue-next'
 
-// Reactive state
-const isLoading = ref(true)
-const activeSurveys = ref([])
-const totalRespondents = ref(1247)
-
-// Fetch active surveys
-const fetchActiveSurveys = async () => {
-  try {
-    isLoading.value = true
-    // Simulate API call - replace with actual API endpoint
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Mock data - replace with actual API call
-    activeSurveys.value = [
-      {
-        id: 1,
-        title: 'Survey Kepuasan Pelanggan 2024',
-        description: 'Bantu kami meningkatkan layanan dengan memberikan feedback tentang pengalaman Anda menggunakan produk kami.',
-        estimated_duration: '5-7',
-        responses_count: 234
-      },
-      {
-        id: 2,
-        title: 'Penelitian Perilaku Konsumen Digital',
-        description: 'Studi tentang bagaimana teknologi digital mempengaruhi keputusan pembelian dan preferensi konsumen modern.',
-        estimated_duration: '10-15',
-        responses_count: 156
-      },
-      {
-        id: 3,
-        title: 'Survey Tren Makanan Sehat',
-        description: 'Eksplorasi preferensi dan kebiasaan makan sehat di kalangan masyarakat Indonesia.',
-        estimated_duration: '8-12',
-        responses_count: 89
-      }
-    ]
-  } catch (error) {
-    console.error('Error fetching surveys:', error)
-    activeSurveys.value = []
-  } finally {
-    isLoading.value = false
+// Props from controller
+const props = defineProps({
+  publicSurveys: {
+    type: Array,
+    default: () => []
+  },
+  totalRespondents: {
+    type: Number,
+    default: 0
   }
-}
+})
 
-// Initialize data on component mount
-onMounted(() => {
-  fetchActiveSurveys()
+const isLoading = ref(false)
+const activeSurveys = computed(() => props.publicSurveys)
+const totalRespondents = computed(() => props.totalRespondents)
+const totalResponses = computed(() => {
+  return activeSurveys.value.reduce((total, survey) => {
+    return total + (survey.responses_count || 0)
+  }, 0)
 })
 </script>

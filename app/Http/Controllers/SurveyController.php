@@ -383,4 +383,65 @@ class SurveyController extends Controller
             ]);
         }
     }
+
+    /**
+     * Get public surveys for welcome page
+     */
+    public function getPublicSurveys()
+    {
+        try {
+            $publicSurveys = Survey::where('status', SurveyStatus::ACTIVE)
+                                  ->where('visibility', SurveyVisibility::PUBLIC)
+                                  ->where(function ($query) {
+                                      $query->whereNull('starts_at')
+                                            ->orWhere('starts_at', '<=', now());
+                                  })
+                                  ->where(function ($query) {
+                                      $query->whereNull('ends_at')
+                                            ->orWhere('ends_at', '>=', now());
+                                  })
+                                  ->withCount('responses')
+                                  ->select('id', 'code', 'title', 'description', 'created_at')
+                                  ->orderBy('created_at', 'desc')
+                                  ->limit(6)
+                                  ->get()
+                                  ->map(function ($survey) {
+                                      return [
+                                          'id' => $survey->id,
+                                          'code' => $survey->code,
+                                          'title' => $survey->title,
+                                          'description' => $survey->description,
+                                          'estimated_duration' => '5-10',
+                                          'responses_count' => $survey->responses_count
+                                      ];
+                                  });
+
+            // Get total respondents count
+            $totalRespondents = Response::distinct('respondent_id')->count('respondent_id');
+
+            return [
+                'publicSurveys' => $publicSurveys,
+                'totalRespondents' => $totalRespondents
+            ];
+        } catch (\Exception $e) {
+            return [
+                'publicSurveys' => collect([]),
+                'totalRespondents' => 0
+            ];
+        }
+    }
+
+    /**
+     * Display welcome page with public surveys
+     */
+    public function welcome()
+    {
+        $data = $this->getPublicSurveys();
+        
+        return Inertia::render('Welcome', [
+            'publicSurveys' => $data['publicSurveys'],
+            'totalRespondents' => $data['totalRespondents']
+        ]);
+    }
+
 }
