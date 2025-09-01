@@ -74,7 +74,7 @@
                       <Key class="w-5 h-5 text-base-content/50" />
                     </div>
                   </div>
-                  <div v-if="form.errors.survey_code" class="label">
+                  <div v-if="form.errors.survey_code || true" class="whitespace-break-spaces label">
                     <span class="label-text-alt text-error">{{ form.errors.survey_code }}</span>
                   </div>
                 </div>
