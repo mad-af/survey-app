@@ -40,19 +40,6 @@
               </div>
             </div>
           </ContentCard>
-
-          <!-- Placeholder content for demonstration -->
-          <div v-if="!publicSurveys || publicSurveys.length === 0" class="space-y-6">
-            <div class="flex justify-center items-center h-64 rounded-lg bg-base-200">
-              <p class="text-base-content/50">Konten tambahan bisa ditambahkan di sini</p>
-            </div>
-            <div class="flex justify-center items-center h-64 rounded-lg bg-base-200">
-              <p class="text-base-content/50">Scroll untuk melihat efek sticky</p>
-            </div>
-            <div class="flex justify-center items-center h-64 rounded-lg bg-base-200">
-              <p class="text-base-content/50">Card di kanan akan tetap terlihat</p>
-            </div>
-          </div>
         </div>
 
         <!-- Right Column - Sticky Survey Code Entry Card -->

@@ -169,7 +169,7 @@ const handleManageSurvey = () => {
 
 const handleViewResponses = () => {
   // Navigate to responses page
-  router.visit(`/dashboard/survey/${props.surveyId}/response`)
+  router.visit(`/dashboard/survey/${props.surveyId}/responses`)
 }
 
 const handleDeleteSurvey = async () => {
