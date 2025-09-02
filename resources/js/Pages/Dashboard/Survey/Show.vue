@@ -24,8 +24,7 @@
         <!-- Quick Actions and Statistics Cards -->
         <div class="space-y-6">
           <SurveyQuickActions @edit-survey="handleEditSurvey" @manage-survey="handleManageSurvey"
-            @view-responses="handleViewResponses" @share-survey="handleShareSurvey" @export-data="handleExportData"
-            @delete-survey="handleDeleteSurvey" />
+            @view-responses="handleViewResponses" @delete-survey="handleDeleteSurvey" />
 
           <SurveyStatistics :statistics="surveyStatistics" />
         </div>
@@ -171,16 +170,6 @@ const handleManageSurvey = () => {
 const handleViewResponses = () => {
   // Navigate to responses page
   router.visit(`/dashboard/survey/${props.surveyId}/response`)
-}
-
-const handleShareSurvey = () => {
-  console.log('Share survey clicked')
-  // Open share modal or copy link
-}
-
-const handleExportData = () => {
-  console.log('Export data clicked')
-  // Export survey data
 }
 
 const handleDeleteSurvey = async () => {

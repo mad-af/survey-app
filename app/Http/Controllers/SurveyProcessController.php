@@ -108,7 +108,7 @@ class SurveyProcessController extends Controller
             }
             
             // Generate unique token for this response
-            $token = bin2hex(random_bytes(32));
+            $token = \Illuminate\Support\Str::uuid()->toString();
 
             // Create new response record
             $response = Response::create([
