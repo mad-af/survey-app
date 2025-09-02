@@ -1,0 +1,19 @@
+FROM mysql:8.0
+
+# Set environment variables
+ENV MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_DATABASE=survey_app
+ENV MYSQL_USER=survey_user
+ENV MYSQL_PASSWORD=survey_password
+
+# Copy custom MySQL configuration if needed
+# COPY my.cnf /etc/mysql/conf.d/
+
+# Expose MySQL port
+EXPOSE 3306
+
+# Create directory for MySQL data
+VOLUME ["/var/lib/mysql"]
+
+# Start MySQL service
+CMD ["mysqld"]

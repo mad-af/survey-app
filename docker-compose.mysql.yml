@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  mysql:
+    build:
+      context: .
+      dockerfile: Dockerfile.mysql
+    container_name: survey_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: survey_app
+      MYSQL_USER: survey_user
+      MYSQL_PASSWORD: survey_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - survey_network
+    command: --default-authentication-plugin=mysql_native_password
+
+  # Optional: phpMyAdmin for database management
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: survey_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: survey_user
+      PMA_PASSWORD: survey_password
+    ports:
+      - "8081:80"
+    depends_on:
+      - mysql
+    networks:
+      - survey_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  survey_network:
+    driver: bridge
