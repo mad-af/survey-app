@@ -135,7 +135,7 @@ const submitLogin = () => {
     },
     onError: (errors) => {
       // Errors will be automatically handled by Inertia
-      console.log('Login failed:', errors)
+      // console.log('Login failed:', errors)
     }
   })
 }

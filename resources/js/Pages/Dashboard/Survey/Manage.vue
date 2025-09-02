@@ -163,7 +163,7 @@ const handleDeleteSection = async (section) => {
       // Refresh sections list
       await fetchSections()
       
-      console.log('Section deleted successfully')
+      // console.log('Section deleted successfully')
     } catch (error) {
       console.error('Error deleting section:', error)
       alert('Error deleting section. Please try again.')
@@ -188,7 +188,7 @@ const handleDeleteQuestion = async (question, section) => {
       // Refresh sections list to get updated questions
       await fetchSections()
       
-      console.log('Question deleted successfully')
+      // console.log('Question deleted successfully')
     } catch (error) {
       console.error('Error deleting question:', error)
       alert('Error deleting question. Please try again.')

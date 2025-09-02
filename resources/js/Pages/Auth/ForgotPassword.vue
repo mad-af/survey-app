@@ -104,7 +104,7 @@ const submitForgotPassword = () => {
       // Success message will be handled by status prop
     },
     onError: (errors) => {
-      console.log('Forgot password failed:', errors)
+      // console.log('Forgot password failed:', errors)
     }
   })
 }

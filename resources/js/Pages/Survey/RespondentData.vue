@@ -312,11 +312,11 @@ const getUserLocation = () => {
         }
       }
 
-      console.log('Geolocation obtained:', {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy
-      })
+      // console.log('Geolocation obtained:', {
+      //   latitude: position.coords.latitude,
+      //   longitude: position.coords.longitude,
+      //   accuracy: position.coords.accuracy
+      // })
     },
     (error) => {
       geolocation.value.loading = false
@@ -500,7 +500,7 @@ const submitForm = () => {
   form.post(`/survey/respondent-data`, {
     onSuccess: () => {
       // Success will be handled by Inertia.location() in controller
-      console.log('Registration successful')
+      // console.log('Registration successful')
     },
     onError: (errors) => {
       // Handle validation errors

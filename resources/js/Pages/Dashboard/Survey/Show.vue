@@ -77,7 +77,7 @@ const props = defineProps({
 
 // Inject toast function with fallback
 const showToast = inject('showToast', (message, type) => {
-  console.log(`Toast [${type}]: ${message}`)
+  // console.log(`Toast [${type}]: ${message}`)
   alert(message)
 })
 

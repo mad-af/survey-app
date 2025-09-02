@@ -349,7 +349,7 @@ const saveSectionAnswers = async () => {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`)
     })
     .then(data => {
-      console.log('Section answers saved successfully:', data)
+      // console.log('Section answers saved successfully:', data)
       if (data.responseId) {
         responseId.value = data.responseId
       }

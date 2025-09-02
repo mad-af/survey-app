@@ -295,25 +295,25 @@ const filteredSurveys = computed(() => {
 })
 
 const manageSurvey = (survey) => {
-  console.log('Manage survey:', survey)
+  // console.log('Manage survey:', survey)
   // Navigate to survey manage page
   router.visit(`/dashboard/survey/${survey.id}/manage`)
 }
 
 const viewResponses = (survey) => {
-  console.log('View responses:', survey)
+  // console.log('View responses:', survey)
   // Navigate to survey responses page
   router.visit(`/dashboard/survey/${survey.id}/responses`)
 }
 
 const viewSurvey = (survey) => {
-  console.log('View survey:', survey)
+  // console.log('View survey:', survey)
   // Navigate to survey detail page
   router.visit(`/dashboard/survey/${survey.id}`)
 }
 
 const editSurvey = (survey) => {
-  console.log('Edit survey:', survey)
+  // console.log('Edit survey:', survey)
   editingSurvey.value = survey
   isEditSurveyDrawerOpen.value = true
 }
@@ -322,7 +322,7 @@ const deleteSurvey = async (survey) => {
   if (confirm(`Are you sure you want to delete survey "${survey.title}"?`)) {
     try {
       await removeSurvey(survey.id)
-      console.log('Survey deleted successfully')
+      // console.log('Survey deleted successfully')
     } catch (err) {
       console.error('Failed to delete survey:', err)
     }

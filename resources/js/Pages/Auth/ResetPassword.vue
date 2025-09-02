@@ -142,7 +142,7 @@ const submitResetPassword = () => {
       // Redirect will be handled by the backend
     },
     onError: (errors) => {
-      console.log('Reset password failed:', errors)
+      // console.log('Reset password failed:', errors)
     }
   })
 }

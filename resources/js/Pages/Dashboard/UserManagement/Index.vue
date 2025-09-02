@@ -273,7 +273,7 @@ const filteredUsers = computed(() => {
 })
 
 const editUser = (user) => {
-  console.log('Edit user:', user)
+  // console.log('Edit user:', user)
   editingUser.value = user
   isEditUserDrawerOpen.value = true
 }
@@ -282,7 +282,7 @@ const deleteUser = async (user) => {
   if (confirm(`Are you sure you want to delete user ${user.name}?`)) {
     try {
       await removeUser(user.id)
-      console.log('User deleted successfully')
+      // console.log('User deleted successfully')
     } catch (err) {
       console.error('Failed to delete user:', err)
     }
@@ -311,7 +311,7 @@ const handleCreateUser = async (userData) => {
   try {
     await createUser(userData)
     closeAddUserDrawer()
-    console.log('User created successfully')
+    // console.log('User created successfully')
   } catch (err) {
     console.error('Failed to create user:', err)
   }
@@ -321,7 +321,7 @@ const handleUpdateUser = async (userData) => {
   try {
     await updateUser(userData)
     closeEditUserDrawer()
-    console.log('User updated successfully')
+    // console.log('User updated successfully')
   } catch (err) {
     console.error('Failed to update user:', err)
   }
