@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Models\Survey;
+use App\Models\SurveyLock;
 use App\Models\Response;
 use App\Models\Answer;
 use App\Models\Respondent;
@@ -433,8 +434,7 @@ class SurveyProcessController extends Controller
      */
     public function submitQuestionPartials(Request $request)
     {
-
-        try {
+        return $this->executeWithQueueLock(function() use ($request) {
             // Get survey data from session
             $surveyId = session('survey_id');
             $responseId = session('response_id');
@@ -487,70 +487,63 @@ class SurveyProcessController extends Controller
 
             DB::beginTransaction();
 
-            // Process and save answers
-            $answersData = $request->input('answers', []);
-            $meta = $request->input('meta', []);
+            try {
+                // Process and save answers with optimized approach
+                $answersData = $request->input('answers', []);
+                $meta = $request->input('meta', []);
 
-            foreach ($answersData as $answerData) {
-                // Check if answer already exists
-                $existingAnswer = Answer::where('response_id', $responseId)
-                                       ->where('question_id', $answerData['question_id'])
-                                       ->first();
+                // Sort answers by question_id to prevent deadlock
+                usort($answersData, function($a, $b) {
+                    return $a['question_id'] <=> $b['question_id'];
+                });
 
-                $answerPayload = [
-                    'response_id' => $responseId,
-                    'question_id' => $answerData['question_id'],
-                    'choice_id' => $answerData['choice_id'] ?? null,
-                    'value_text' => $answerData['value_text'] ?? null,
-                    'value_number' => $answerData['value_number'] ?? null,
-                    'value_json' => $answerData['value_json'] ?? null,
+                foreach ($answersData as $answerData) {
+                     // Use updateOrCreate to handle insert/update in single query
+                     Answer::updateOrCreate(
+                        [
+                            'response_id' => $responseId,
+                            'question_id' => $answerData['question_id']
+                        ],
+                        [
+                            'choice_id' => $answerData['choice_id'] ?? null,
+                            'value_text' => $answerData['value_text'] ?? null,
+                            'value_number' => $answerData['value_number'] ?? null,
+                            'value_json' => $answerData['value_json'] ?? null,
+                            'updated_at' => now()
+                        ]
+                    );
+                }
+
+                // Update response status and metadata for partial save
+                $responseUpdateData = [
+                    'status' => ResponseStatus::IN_PROGRESS,
                     'updated_at' => now()
                 ];
 
-                if ($existingAnswer) {
-                    // Update existing answer
-                    $existingAnswer->update($answerPayload);
-                } else {
-                    // Create new answer
-                    $answerPayload['created_at'] = now();
-                    Answer::create($answerPayload);
+                // Update meta information
+                if (!empty($meta)) {
+                    $existingMeta = $response->meta ? json_decode($response->meta, true) : [];
+                    $updatedMeta = array_merge($existingMeta, $meta);
+                    $responseUpdateData['meta'] = json_encode($updatedMeta);
                 }
+
+                $response->update($responseUpdateData);
+
+                DB::commit();
+
+                // Return partial save response
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Jawaban berhasil disimpan.',
+                    'responseId' => $responseId,
+                    'is_partial' => true
+                ]);
+
+            } catch (Exception $e) {
+                DB::rollBack();
+                throw $e;
             }
-
-            // Update response status and metadata for partial save
-            $responseUpdateData = [
-                'status' => ResponseStatus::IN_PROGRESS,
-                'updated_at' => now()
-            ];
-
-            // Update meta information
-            if (!empty($meta)) {
-                $existingMeta = $response->meta ? json_decode($response->meta, true) : [];
-                $updatedMeta = array_merge($existingMeta, $meta);
-                $responseUpdateData['meta'] = json_encode($updatedMeta);
-            }
-
-            $response->update($responseUpdateData);
-
-            DB::commit();
-
-            // Return partial save response
-            return response()->json([
-                'success' => true,
-                'message' => 'Jawaban berhasil disimpan.',
-                'responseId' => $responseId,
-                'is_partial' => true
-            ]);
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to save partial survey answers: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat menyimpan jawaban. Silakan coba lagi.'
-            ], 500);
-        }
+        });
     }
 
     /**
@@ -561,7 +554,7 @@ class SurveyProcessController extends Controller
      */
     public function submitQuestions(Request $request)
     {
-        try {
+        return $this->executeWithQueueLock(function() use ($request) {
             // Get survey data from session
             $surveyId = session('survey_id');
             $responseId = session('response_id');
@@ -614,84 +607,77 @@ class SurveyProcessController extends Controller
 
             DB::beginTransaction();
 
-            // Process and save answers
-            $answersData = $request->input('answers', []);
-            $meta = $request->input('meta', []);
+            try {
+                // Process and save answers with optimized approach
+                $answersData = $request->input('answers', []);
+                $meta = $request->input('meta', []);
 
-            foreach ($answersData as $answerData) {
-                // Check if answer already exists
-                $existingAnswer = Answer::where('response_id', $responseId)
-                                       ->where('question_id', $answerData['question_id'])
-                                       ->first();
+                // Sort answers by question_id to prevent deadlock
+                usort($answersData, function($a, $b) {
+                    return $a['question_id'] <=> $b['question_id'];
+                });
 
-                $answerPayload = [
-                    'response_id' => $responseId,
-                    'question_id' => $answerData['question_id'],
-                    'choice_id' => $answerData['choice_id'] ?? null,
-                    'value_text' => $answerData['value_text'] ?? null,
-                    'value_number' => $answerData['value_number'] ?? null,
-                    'value_json' => $answerData['value_json'] ?? null,
+                foreach ($answersData as $answerData) {
+                     // Use updateOrCreate to handle insert/update in single query
+                     Answer::updateOrCreate(
+                        [
+                            'response_id' => $responseId,
+                            'question_id' => $answerData['question_id']
+                        ],
+                        [
+                            'choice_id' => $answerData['choice_id'] ?? null,
+                            'value_text' => $answerData['value_text'] ?? null,
+                            'value_number' => $answerData['value_number'] ?? null,
+                            'value_json' => $answerData['value_json'] ?? null,
+                            'updated_at' => now()
+                        ]
+                    );
+                }
+
+                // Update response status and metadata for final submission
+                $responseUpdateData = [
+                    'status' => ResponseStatus::COMPLETED,
+                    'submitted_at' => now(),
+                    'current_step' => Response::STEP_RESULT,
                     'updated_at' => now()
                 ];
 
-                if ($existingAnswer) {
-                    // Update existing answer
-                    $existingAnswer->update($answerPayload);
-                } else {
-                    // Create new answer
-                    $answerPayload['created_at'] = now();
-                    Answer::create($answerPayload);
+                // Update meta information
+                if (!empty($meta)) {
+                    $existingMeta = $response->meta ? json_decode($response->meta, true) : [];
+                    $updatedMeta = array_merge($existingMeta, $meta);
+                    $responseUpdateData['meta'] = json_encode($updatedMeta);
                 }
+
+                $response->update($responseUpdateData);
+                
+                // Calculate and save score for completed response
+                $this->calculateScore($response);
+
+                // Update session
+                session([
+                    'current_step' => Response::STEP_RESULT
+                ]);
+
+                DB::commit();
+
+                // Clear survey session data
+                session()->forget([
+                    'survey_token',
+                    'survey_id', 
+                    'survey_code',
+                    'response_id',
+                    'current_step'
+                ]);
+
+                // Final submission - redirect to result page
+                return redirect("/survey/result?token={$response->respondent_token}");
+
+            } catch (Exception $e) {
+                DB::rollBack();
+                throw $e;
             }
-
-            // Update response status and metadata for final submission
-            $responseUpdateData = [
-                'status' => ResponseStatus::COMPLETED,
-                'submitted_at' => now(),
-                'current_step' => Response::STEP_RESULT,
-                'updated_at' => now()
-            ];
-
-            // Update meta information
-            if (!empty($meta)) {
-                $existingMeta = $response->meta ? json_decode($response->meta, true) : [];
-                $updatedMeta = array_merge($existingMeta, $meta);
-                $responseUpdateData['meta'] = json_encode($updatedMeta);
-            }
-
-            $response->update($responseUpdateData);
-            
-            // Calculate and save score for completed response
-            $this->calculateScore($response);
-
-            // Update session
-            session([
-                'current_step' => Response::STEP_RESULT
-            ]);
-
-            DB::commit();
-
-            // Clear survey session data
-            session()->forget([
-                'survey_token',
-                'survey_id', 
-                'survey_code',
-                'response_id',
-                'current_step'
-            ]);
-
-            // Final submission - redirect to result page
-            return redirect("/survey/result?token={$response->respondent_token}");
-
-        } catch (Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to submit survey answers: ' . $e->getMessage());
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat menyimpan jawaban. Silakan coba lagi.'
-            ], 500);
-        }
+        });
     }
 
     /**
@@ -957,5 +943,95 @@ class SurveyProcessController extends Controller
             return redirect('/entry')
                 ->withErrors(['message' => 'Terjadi kesalahan saat menampilkan hasil survey.']);
         }
+    }
+
+    /**
+     * Execute database operation with queue-based locking mechanism
+     * 
+     * @param callable $callback
+     * @param string $lockKey
+     * @param int $maxWaitTime
+     * @return mixed
+     */
+    private function executeWithQueueLock(callable $callback, string $lockKey = null, int $maxWaitTime = 30)
+    {
+        // Generate unique lock key based on response_id if not provided
+        $responseId = session('response_id');
+        if (!$lockKey) {
+            $lockKey = "survey_submit_lock_{$responseId}";
+        }
+        
+        $lock = null;
+        $startTime = time();
+        
+        try {
+            // Try to acquire lock with timeout
+            while (!$lock && (time() - $startTime) < $maxWaitTime) {
+                // Use SurveyLock model for database-based locking
+                $lock = SurveyLock::acquireLock($lockKey, $responseId, 'submit', $maxWaitTime);
+                
+                if (!$lock) {
+                    // Get queue position for user feedback
+                    $queuePosition = SurveyLock::getQueuePosition($lockKey);
+                    
+                    // Wait 500ms before trying again
+                    usleep(500000);
+                    Log::info("Waiting for lock: {$lockKey}, Queue position: {$queuePosition}");
+                }
+            }
+            
+            if (!$lock) {
+                Log::error("Failed to acquire lock within {$maxWaitTime} seconds: {$lockKey}");
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Sistem sedang sibuk, silakan coba lagi dalam beberapa saat.',
+                    'queue_full' => true
+                ], 503);
+            }
+            
+            Log::info("Lock acquired: {$lockKey}, Lock ID: {$lock->id}");
+            
+            // Execute the callback with acquired lock
+            return $callback();
+            
+        } catch (Exception $e) {
+            Log::error('Failed to execute with queue lock: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan jawaban. Silakan coba lagi.'
+            ], 500);
+            
+        } finally {
+            // Always release the lock
+            if ($lock) {
+                SurveyLock::releaseLock($lockKey);
+                Log::info("Lock released: {$lockKey}, Lock ID: {$lock->id}");
+            }
+        }
+    }
+    
+    /**
+     * Get queue status for current response
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getQueueStatus()
+    {
+        $responseId = session('response_id');
+        $lockKey = "survey_submit_lock_{$responseId}";
+        
+        // Clean up expired locks
+        SurveyLock::cleanupExpiredLocks();
+        
+        $queuePosition = SurveyLock::getQueuePosition($lockKey);
+        $totalInQueue = SurveyLock::where('expires_at', '>', now())->count();
+        
+        return response()->json([
+            'success' => true,
+            'queue_position' => $queuePosition,
+            'total_in_queue' => $totalInQueue,
+            'estimated_wait_time' => $queuePosition * 5 // Estimate 5 seconds per operation
+        ]);
     }
 }

@@ -10,6 +10,8 @@ use App\Http\Controllers\ChangePasswordController;
 
 Route::get('/', [SurveyController::class, 'welcome']);
 
+Route::get('/queue-status', [SurveyProcessController::class, 'getQueueStatus']);
+
 // ================================
 // Dashboard's Routes
 // ================================
