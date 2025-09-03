@@ -17,8 +17,9 @@
           </ul>
         </div>
         <a class="text-xl font-bold btn btn-ghost">
-          <FileText class="w-6 h-6 text-primary" />
-          SurveyApp
+          <!-- <FileText class="w-6 h-6 text-primary" />
+          SurveyApp -->
+          <img src="/beraksi.webp" alt="SurveyApp Logo" class="h-6 lg:h-8 lg:w-32" />
         </a>
       </div>
       

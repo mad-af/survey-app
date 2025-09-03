@@ -4,12 +4,13 @@
       <div class="flex flex-col space-y-4 lg:flex-row lg:justify-between lg:items-center lg:space-y-0 border-b-primary">
         <!-- Logo and Survey Title -->
         <div class="flex items-center space-x-2 lg:space-x-4">
-          <div class="flex items-center space-x-2">
+          <!-- <div class="flex items-center space-x-2">
             <FileText class="w-6 h-6 lg:w-8 lg:h-8 text-primary" />
             <div>
               <h1 class="text-lg font-bold lg:text-xl text-base-content">SurveyApp</h1>
             </div>
-          </div>
+          </div> -->
+          <img src="/beraksi.webp" alt="SurveyApp Logo" class="h-6 lg:h-8 lg:w-32" />
         </div>
 
         <!-- Progress Bar -->
