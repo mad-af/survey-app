@@ -64,6 +64,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { router } from '@inertiajs/vue3'
 import { Key, Menu, Palette } from 'lucide-vue-next'
 import Avatar from './Avatar.vue'
 import Breadcrumb from './Breadcrumb.vue'
@@ -117,45 +118,34 @@ const closeChangePasswordModal = () => {
 
 const handleChangePassword = async (passwordData) => {
   try {
-    const response = await fetch('/dashboard/change-password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-        'Accept': 'application/json'
+    router.post('/dashboard/change-password', {
+      current_password: passwordData.currentPassword,
+      new_password: passwordData.newPassword,
+      new_password_confirmation: passwordData.confirmPassword
+    }, {
+      onSuccess: () => {
+        // Controller will handle redirect to login page
+        closeChangePasswordModal()
       },
-      body: JSON.stringify({
-        current_password: passwordData.currentPassword,
-        new_password: passwordData.newPassword,
-        new_password_confirmation: passwordData.confirmPassword
-      })
-    })
-
-    const result = await response.json()
-
-    if (response.ok && result.success) {
-       // Show success message
-       alert('Password berhasil diubah! Anda akan logout otomatis.')
-       closeChangePasswordModal()
-       
-       // Redirect to login page after successful password change
-       setTimeout(() => {
-         window.location.href = '/login'
-       }, 1500)
-    } else {
-      // Handle validation errors
-      if (result.errors) {
-        let errorMessage = 'Terjadi kesalahan:\n'
-        Object.values(result.errors).forEach(errors => {
-          errors.forEach(error => {
-            errorMessage += `- ${error}\n`
+      onError: (errors) => {
+        // Handle validation errors
+        if (errors) {
+          let errorMessage = 'Terjadi kesalahan:\n'
+          Object.values(errors).forEach(errorArray => {
+            if (Array.isArray(errorArray)) {
+              errorArray.forEach(error => {
+                errorMessage += `- ${error}\n`
+              })
+            } else {
+              errorMessage += `- ${errorArray}\n`
+            }
           })
-        })
-        alert(errorMessage)
-      } else {
-        alert(result.message || 'Terjadi kesalahan saat mengubah password')
+          alert(errorMessage)
+        } else {
+          alert('Terjadi kesalahan saat mengubah password')
+        }
       }
-    }
+    })
   } catch (error) {
     console.error('Error changing password:', error)
     alert('Terjadi kesalahan saat mengubah password')

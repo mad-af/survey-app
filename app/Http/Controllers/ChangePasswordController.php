@@ -33,24 +33,16 @@ class ChangePasswordController extends Controller
 
             // Verify current password
             if (!Hash::check($request->current_password, $user->password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Password saat ini tidak benar.',
-                    'errors' => [
-                        'current_password' => ['Password saat ini tidak benar.']
-                    ]
-                ], 422);
+                return back()->withErrors([
+                    'current_password' => 'Password saat ini tidak benar.'
+                ]);
             }
 
             // Check if new password is different from current password
             if (Hash::check($request->new_password, $user->password)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Password baru harus berbeda dari password saat ini.',
-                    'errors' => [
-                        'new_password' => ['Password baru harus berbeda dari password saat ini.']
-                    ]
-                ], 422);
+                return back()->withErrors([
+                    'new_password' => 'Password baru harus berbeda dari password saat ini.'
+                ]);
             }
 
             // Update password
@@ -72,16 +64,17 @@ class ChangePasswordController extends Controller
             $request->session()->invalidate();
             $request->session()->regenerateToken();
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Password berhasil diubah! Anda akan logout otomatis.'
-            ]);
+            return redirect()->route('login')->with('status', 'Password berhasil diubah! Silakan login dengan password baru.');
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat mengubah password.',
-                'error' => $e->getMessage()
-            ], 500);
+            Log::error('Password change failed', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return back()->withErrors([
+                'general' => 'Terjadi kesalahan saat mengubah password. Silakan coba lagi.'
+            ]);
         }
     }
 }
