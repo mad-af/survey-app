@@ -44,26 +44,28 @@ import Toast from '@/Components/Toast.vue'
 
 // Props
 const props = defineProps({
-  userName: {
-    type: String,
-    default: 'Esther H.'
-  },
-  userRole: {
-    type: String,
-    default: 'Designer'
-  },
-  profileImage: {
-    type: String,
-    default: null
-  },
   pageTitle: {
     type: String,
     default: 'My Dashboard'
   }
 })
 
-// Get current route
+// Get current page and user data
 const page = usePage()
+const user = computed(() => page.props.auth?.user || {})
+
+// Get user data from authenticated user
+const userName = computed(() => user.value.name || 'User')
+const userRole = computed(() => {
+  const role = user.value.role
+  // Convert role to display format based on UserRole enum
+  if (role === 'admin') return 'Administrator'
+  if (role === 'surveyor') return 'Surveyor'
+  return role || 'User'
+})
+const profileImage = computed(() => user.value.profile_image || null)
+
+// Get current route
 const currentRoute = computed(() => {
   return page.component.value || 'dashboard'
 })
