@@ -170,6 +170,7 @@ const emit = defineEmits([
   // Action events
   'manage-survey',
   'view-responses',
+  'view-response',
   'view-survey',
   'edit-survey',
   'delete-survey',

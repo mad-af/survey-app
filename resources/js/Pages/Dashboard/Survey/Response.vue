@@ -455,7 +455,6 @@ const getQuestionAnswers = (questionId) => {
     response: selectedResponse.value
   }))
   
-  console.log('Question answers for selected response:', answers)
   return answers
 }
 
@@ -619,7 +618,6 @@ const viewResponse = async (response) => {
 
 const closeModal = () => {
   selectedResponse.value = null
-  document.getElementById('response_modal').close()
 }
 
 
