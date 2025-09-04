@@ -225,6 +225,9 @@
       </nav>
     </footer>
   </div>
+  
+  <!-- Theme Selector Component -->
+  <ThemeSelector />
 </template>
 
 <script setup>
@@ -232,18 +235,16 @@ import { ref, computed } from 'vue'
 import { Head, Link } from '@inertiajs/vue3'
 import {
   Menu,
-  X,
   Users,
   FileText,
-  CheckCircle,
   Clock,
-  ArrowRight,
   Zap,
   BarChart3,
   Shield,
   LogIn,
   Play
 } from 'lucide-vue-next'
+import ThemeSelector from '@/Components/ThemeSelector.vue'
 
 // Props from controller
 const props = defineProps({

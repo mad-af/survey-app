@@ -449,4 +449,226 @@ class SurveyController extends Controller
         ]);
     }
 
+    /**
+     * Export survey responses to CSV
+     */
+    public function exportResponses(Survey $survey, Request $request)
+    {
+        try {
+            // Get export type from request (all, filtered, completed)
+            $exportType = $request->get('type', 'all');
+            $statusFilter = $request->get('status_filter');
+            $searchQuery = $request->get('search_query');
+            
+            // Build query for responses
+            $query = Response::with([
+                'respondent:id,external_id,name,email,phone,gender,birth_year,organization,department,role_title,location_id,consent_at',
+                'respondent.location:id,province_code,province_name,regency_code,regency_name,district_code,district_name,village_code,village_name,detailed_address,latitude,longitude',
+                'score.resultCategory:id,name,description,color,min_score,max_score'
+            ])->where('survey_id', $survey->id);
+            
+            // Apply filters based on export type
+            switch ($exportType) {
+                case 'completed':
+                    $query->where('status', 'completed');
+                    break;
+                case 'filtered':
+                    if ($statusFilter) {
+                        $query->where('status', $statusFilter);
+                    }
+                    if ($searchQuery) {
+                        $query->whereHas('respondent', function ($q) use ($searchQuery) {
+                            $q->where('name', 'like', '%' . $searchQuery . '%')
+                              ->orWhere('email', 'like', '%' . $searchQuery . '%')
+                              ->orWhere('organization', 'like', '%' . $searchQuery . '%')
+                              ->orWhere('department', 'like', '%' . $searchQuery . '%');
+                        })->orWhere('respondent_token', 'like', '%' . $searchQuery . '%');
+                    }
+                    break;
+                default: // 'all'
+                    // No additional filters
+                    break;
+            }
+            
+            $responses = $query->orderBy('created_at', 'desc')->get();
+            
+            if ($responses->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No data to export'
+                ], 400);
+            }
+            
+            // Generate CSV content
+            $csvContent = $this->generateCSVContent($responses);
+            
+            // Generate filename
+            $filename = 'survey-responses-' . $exportType . '-' . date('Y-m-d') . '.csv';
+            
+            return response($csvContent)
+                ->header('Content-Type', 'text/csv')
+                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+                
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to export responses',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    /**
+     * Generate CSV content from responses data
+     */
+    private function generateCSVContent($responses)
+    {
+        // Define CSV headers
+        $headers = [
+            'Response ID',
+            'Survey ID',
+            'Respondent Token',
+            'Status',
+            'Current Step',
+            'Started At',
+            'Submitted At',
+            'Respondent Name',
+            'Respondent Email',
+            'Respondent Phone',
+            'Respondent Gender',
+            'Respondent Birth Year',
+            'Respondent Organization',
+            'Respondent Department',
+            'Respondent Role Title',
+            'Respondent External ID',
+            'Province',
+            'Regency',
+            'District',
+            'Village',
+            'Detailed Address',
+            'Latitude',
+            'Longitude',
+            'Total Score',
+            'Max Possible Score',
+            'Score Percentage',
+            'Result Category',
+            'Duration (minutes)'
+        ];
+        
+        // Generate CSV rows
+        $rows = [];
+        foreach ($responses as $response) {
+            $respondent = $response->respondent;
+            $location = $respondent ? $respondent->location : null;
+            $score = $response->score;
+            $resultCategory = $score ? $score->resultCategory : null;
+            
+            // Calculate duration
+            $duration = '';
+            if ($response->started_at && $response->submitted_at) {
+                $start = Carbon::parse($response->started_at);
+                $end = Carbon::parse($response->submitted_at);
+                $duration = $start->diffInMinutes($end);
+            }
+            
+            $rows[] = [
+                $response->id ?? '',
+                $response->survey_id ?? '',
+                $response->respondent_token ?? '',
+                $this->getStatusLabel($response->status) ?? '',
+                $this->getStepLabel($response->current_step) ?? '',
+                $response->started_at ? $response->started_at->format('Y-m-d H:i:s') : '',
+                $response->submitted_at ? $response->submitted_at->format('Y-m-d H:i:s') : '',
+                $respondent->name ?? '',
+                $respondent->email ?? '',
+                $respondent->phone ?? '',
+                $this->getGenderLabel($respondent->gender ?? null) ?? '',
+                $respondent->birth_year ?? '',
+                $respondent->organization ?? '',
+                $respondent->department ?? '',
+                $respondent->role_title ?? '',
+                $respondent->external_id ?? '',
+                $location->province_name ?? '',
+                $location->regency_name ?? '',
+                $location->district_name ?? '',
+                $location->village_name ?? '',
+                $location->detailed_address ?? '',
+                $location->latitude ?? '',
+                $location->longitude ?? '',
+                $score->total_score ?? '',
+                $score->max_possible_score ?? '',
+                $score->percentage ?? '',
+                $resultCategory->name ?? '',
+                $duration
+            ];
+        }
+        
+        // Combine headers and rows
+        $csvArray = array_merge([$headers], $rows);
+        
+        // Convert to CSV string
+        $output = fopen('php://temp', 'r+');
+        foreach ($csvArray as $row) {
+            fputcsv($output, $row);
+        }
+        rewind($output);
+        $csvContent = stream_get_contents($output);
+        fclose($output);
+        
+        return $csvContent;
+    }
+    
+    /**
+     * Helper method to get status label
+     */
+    private function getStatusLabel($status)
+    {
+        switch ($status) {
+            case 'completed':
+                return 'Completed';
+            case 'in_progress':
+                return 'In Progress';
+            case 'started':
+                return 'Started';
+            case 'abandoned':
+                return 'Abandoned';
+            default:
+                return 'Unknown';
+        }
+    }
+    
+    /**
+     * Helper method to get step label
+     */
+    private function getStepLabel($step)
+    {
+        switch ($step) {
+            case 'personal_info':
+                return 'Personal Info';
+            case 'survey_questions':
+                return 'Survey Questions';
+            case 'completed':
+                return 'Completed';
+            default:
+                return ucfirst(str_replace('_', ' ', $step));
+        }
+    }
+    
+    /**
+     * Helper method to get gender label
+     */
+    private function getGenderLabel($gender)
+    {
+        switch ($gender) {
+            case 'male':
+                return 'Male';
+            case 'female':
+                return 'Female';
+            case 'other':
+                return 'Other';
+            default:
+                return '';
+        }
+    }
+
 }

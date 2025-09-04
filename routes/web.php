@@ -60,6 +60,8 @@ Route::prefix('dashboard')->middleware(['auth', 'no.cache'])->group(function () 
     });
     
     Route::get('/survey/{survey}/responses', [SurveyController::class, 'showResponses']);
+    
+    Route::get('/survey/{survey}/responses/export', [SurveyController::class, 'exportResponses']);
 
 });
 

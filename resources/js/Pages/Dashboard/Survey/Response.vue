@@ -60,6 +60,14 @@
               >
                 <RefreshCw class="w-4 h-4" />
               </button>
+              <button
+                class="btn btn-sm btn-success"
+                @click="exportResponses('all')"
+                title="Export All Responses"
+              >
+                <Download class="w-4 h-4" />
+                Export
+              </button>
             </div>
           </div>
           
@@ -316,7 +324,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { Eye, RefreshCw, FileText, X, BarChart3 } from 'lucide-vue-next'
+import { Eye, RefreshCw, FileText, X, BarChart3, Download } from 'lucide-vue-next'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
 import SurveyStatisticsCard from '@/Components/SurveyStatisticsCard.vue'
@@ -620,4 +628,41 @@ const refreshData = () => {
   // TODO: Implement refresh functionality
   window.location.reload()
 }
+
+// Export functions
+const exportResponses = async (type) => {
+  try {
+    // Build query parameters
+    const params = new URLSearchParams({
+      type: type
+    })
+    
+    // Add filters for 'filtered' export type
+    if (type === 'filtered') {
+      if (statusFilter.value) {
+        params.append('status_filter', statusFilter.value)
+      }
+      if (searchQuery.value) {
+        params.append('search_query', searchQuery.value)
+      }
+    }
+    
+    // Create export URL
+    const exportUrl = `/dashboard/survey/${props.survey.id}/responses/export?${params.toString()}`
+    
+    // Create a temporary link to trigger download
+    const link = document.createElement('a')
+    link.href = exportUrl
+    link.download = ''
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+  } catch (error) {
+    console.error('Export failed:', error)
+    alert('Export failed. Please try again.')
+  }
+}
+
+
 </script>
