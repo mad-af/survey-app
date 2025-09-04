@@ -255,10 +255,20 @@ class SurveyController extends Controller
     public function showResponses(Survey $survey)
     {
         try {
-            // Load survey with sections for section title mapping
-            $survey->load('sections');
+            // Load survey with sections, questions, and choices for complete structure
+            $survey->load([
+                'sections' => function($query) {
+                    $query->orderBy('order');
+                },
+                'sections.questions' => function($query) {
+                    $query->orderBy('order');
+                },
+                'sections.questions.choices' => function($query) {
+                    $query->orderBy('order');
+                }
+            ]);
             
-            // Get all responses with related data
+            // Get all responses with related data (answers will be loaded on demand)
             $responses = Response::with([
                 'respondent:id,external_id,name,email,phone,gender,birth_year,organization,department,role_title,location_id,consent_at',
                 'respondent.location:id,province_code,province_name,regency_code,regency_name,district_code,district_name,village_code,village_name,detailed_address,latitude,longitude',
@@ -267,6 +277,17 @@ class SurveyController extends Controller
             ->where('survey_id', $survey->id)
             ->orderBy('created_at', 'desc')
             ->get();
+            
+            // Load answers only for responses that need them (completed responses)
+            $responseIds = $responses->where('status', 'completed')->pluck('id');
+            if ($responseIds->isNotEmpty()) {
+                $responses->load([
+                    'answers' => function($query) use ($responseIds) {
+                        $query->whereIn('response_id', $responseIds)
+                              ->select('id', 'response_id', 'question_id', 'choice_id', 'value_text', 'value_number', 'value_json');
+                    }
+                ]);
+            }
 
             // Calculate statistics
             $totalResponses = $responses->count();
@@ -291,6 +312,34 @@ class SurveyController extends Controller
             return back()->withErrors([
                 'error' => 'Failed to load survey responses: ' . $e->getMessage()
             ]);
+        }
+    }
+
+    /**
+     * Get response details with answers for a specific response
+     */
+    public function getResponseDetails(Survey $survey, Response $response)
+    {
+        try {
+            // Verify response belongs to survey
+            if ($response->survey_id !== $survey->id) {
+                return response()->json(['error' => 'Response not found'], 404);
+            }
+
+            // Load response with answers
+            $response->load([
+                'answers:id,response_id,question_id,choice_id,value_text,value_number,value_json',
+                'respondent:id,external_id,name,email,phone,gender,birth_year,organization,department,role_title,location_id,consent_at',
+                'respondent.location:id,province_code,province_name,regency_code,regency_name,district_code,district_name,village_code,village_name,detailed_address,latitude,longitude',
+                'score.resultCategory:id,name,description,color,min_score,max_score'
+            ]);
+
+            return response()->json([
+                'response' => $response
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to load response details: ' . $e->getMessage()], 500);
         }
     }
 

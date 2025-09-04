@@ -72,13 +72,13 @@
           </div>
           
           <DataTable
-            v-if="filteredResponses.length > 0"
-            :data="filteredResponses"
-            :columns="tableColumns"
-            :actions="tableActions"
-            :items-per-page="15"
-            @view-response="viewResponse"
-          />
+              v-if="filteredResponses.length > 0"
+              :data="filteredResponses"
+              :columns="tableColumns"
+              :actions="tableActions"
+              :items-per-page="15"
+              @view-response="viewResponse"
+            />
           
           <div v-else class="py-8 text-center">
             <div class="text-base-content/60">
@@ -103,221 +103,14 @@
       </div>
 
       <!-- Response Detail Modal -->
-      <div v-if="selectedResponse" class="modal modal-open">
-        <div class="max-w-4xl modal-box">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-bold">Response Details - #{{ selectedResponse.id }}</h3>
-            <button class="btn btn-sm btn-circle btn-ghost" @click="selectedResponse = null">
-              <X class="w-4 h-4" />
-            </button>
-          </div>
-          
-          <!-- Response Overview -->
-          <div class="grid grid-cols-1 gap-4 mb-6 md:grid-cols-3">
-            <div class="card bg-base-200">
-              <div class="card-body">
-                <h4 class="text-base card-title">Status & Progress</h4>
-                <div class="space-y-2 text-sm">
-                  <div class="flex justify-between">
-                    <span>Status:</span>
-                    <span class="badge" :class="getStatusBadgeClass(selectedResponse.status)">
-                      {{ getStatusLabel(selectedResponse.status) }}
-                    </span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Progress:</span>
-                    <span class="badge" :class="getStepBadgeClass(selectedResponse.current_step)">
-                      {{ getStepLabel(selectedResponse.current_step) }}
-                    </span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Started:</span>
-                    <span>{{ formatDate(selectedResponse.started_at) }}</span>
-                  </div>
-                  <div v-if="selectedResponse.submitted_at" class="flex justify-between">
-                    <span>Submitted:</span>
-                    <span>{{ formatDate(selectedResponse.submitted_at) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="card bg-base-200">
-              <div class="card-body">
-                <h4 class="text-base card-title">Personal Information</h4>
-                <div class="space-y-2 text-sm">
-                  <div class="flex justify-between">
-                    <span>Name:</span>
-                    <span>{{ selectedResponse.respondent?.name || 'Anonymous' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Email:</span>
-                    <span>{{ selectedResponse.respondent?.email || '-' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Phone:</span>
-                    <span>{{ selectedResponse.respondent?.phone || '-' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Gender:</span>
-                    <span>{{ getGenderLabel(selectedResponse.respondent?.gender) || '-' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Birth Year:</span>
-                    <span>{{ selectedResponse.respondent?.birth_year || '-' }}</span>
-                  </div>
-                  <div v-if="selectedResponse.respondent?.external_id" class="flex justify-between">
-                    <span>External ID:</span>
-                    <span>{{ selectedResponse.respondent.external_id }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <ResponseDetailModal 
+        :response="selectedResponse" 
+        :survey="survey" 
+        @close="closeModal" 
+      />
 
-            <div class="card bg-base-200">
-              <div class="card-body">
-                <h4 class="text-base card-title">Professional Information</h4>
-                <div class="space-y-2 text-sm">
-                  <div class="flex justify-between">
-                    <span>Organization:</span>
-                    <span>{{ selectedResponse.respondent?.organization || '-' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Department:</span>
-                    <span>{{ selectedResponse.respondent?.department || '-' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Role:</span>
-                    <span>{{ selectedResponse.respondent?.role_title || '-' }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Location Information -->
-          <div v-if="selectedResponse.respondent?.location" class="mb-6">
-            <div class="card bg-base-200">
-              <div class="card-body">
-                <h4 class="text-base card-title">Location Information</h4>
-                <div class="space-y-2 text-sm">
-                  <div class="flex justify-between">
-                    <span>Province:</span>
-                    <span>{{ selectedResponse.respondent.location.province_name || '-' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Regency:</span>
-                    <span>{{ selectedResponse.respondent.location.regency_name || '-' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>District:</span>
-                    <span>{{ selectedResponse.respondent.location.district_name || '-' }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Village:</span>
-                    <span>{{ selectedResponse.respondent.location.village_name || '-' }}</span>
-                  </div>
-                  <div v-if="selectedResponse.respondent.location.detailed_address" class="flex justify-between">
-                    <span>Detailed Address:</span>
-                    <span>{{ selectedResponse.respondent.location.detailed_address }}</span>
-                  </div>
-                  <div v-if="selectedResponse.respondent.location.latitude && selectedResponse.respondent.location.longitude" class="flex justify-between">
-                    <span>Coordinates:</span>
-                    <span>{{ selectedResponse.respondent.location.latitude }}, {{ selectedResponse.respondent.location.longitude }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span>Full Address:</span>
-                    <span>{{ getFullAddress(selectedResponse.respondent.location) }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          <!-- Score Information -->
-          <div v-if="selectedResponse.score" class="mb-6">
-            <div class="card bg-base-200">
-              <div class="card-body">
-                <h4 class="text-base card-title">Overall Score Summary</h4>
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                      <span>Total Score:</span>
-                      <span class="font-semibold">{{ selectedResponse.score.total_score }}/{{ selectedResponse.score.max_possible_score }}</span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span>Percentage:</span>
-                      <span class="font-semibold">{{ selectedResponse.score.percentage }}%</span>
-                    </div>
-                  </div>
-                  <div v-if="selectedResponse.score.result_category" class="space-y-2 text-sm">
-                    <div class="flex justify-between">
-                      <span>Category:</span>
-                      <span class="badge" :class="getCategoryBadgeClass(selectedResponse.score.result_category.color)">
-                        {{ selectedResponse.score.result_category.name }}
-                      </span>
-                    </div>
-                    <div class="flex justify-between">
-                      <span>Score Range:</span>
-                      <span>{{ selectedResponse.score.result_category.min_score }} - {{ selectedResponse.score.result_category.max_score }}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Section Scores -->
-            <div v-if="selectedResponse.score.section_scores && selectedResponse.score.section_scores.length > 0" class="mb-6">
-              <div class="card bg-base-200">
-                <div class="card-body">
-                  <h4 class="text-base card-title">Section-wise Results</h4>
-                  <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                    <div v-for="sectionScore in selectedResponse.score.section_scores" :key="sectionScore.section_id" class="p-3 rounded-lg bg-base-100">
-                      <div class="flex justify-between items-center mb-2">
-                        <h5 class="font-medium text-sm">{{ getSectionTitle(sectionScore.section_id) }}</h5>
-                        <span class="text-xs badge badge-outline">Section {{ sectionScore.section_id }}</span>
-                      </div>
-                      <div class="space-y-1 text-xs">
-                        <div class="flex justify-between">
-                          <span>Score:</span>
-                          <span class="font-semibold">{{ sectionScore.score }}/{{ sectionScore.max_score }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                          <span>Percentage:</span>
-                          <span class="font-semibold">{{ Math.round((sectionScore.score / sectionScore.max_score) * 100) }}%</span>
-                        </div>
-                        <div class="w-full bg-base-300 rounded-full h-1.5 mt-2">
-                          <div class="bg-primary h-1.5 rounded-full" :style="{ width: Math.round((sectionScore.score / sectionScore.max_score) * 100) + '%' }"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- No Score Data -->
-          <div v-else class="mb-6">
-            <div class="card bg-base-200">
-              <div class="text-center card-body">
-                <div class="text-base-content/60">
-                  <BarChart3 class="mx-auto mb-2 w-8 h-8 opacity-50" />
-                  <p class="font-medium">No score data available</p>
-                  <p class="text-sm">Score will be calculated when the response is completed.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Modal Actions -->
-          <div class="flex gap-2 justify-end pt-4 mt-6 border-t border-base-300">
-            <button class="btn btn-sm btn-outline" @click="closeModal">
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   </DashboardLayout>
 </template>
@@ -329,6 +122,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
 import SurveyStatisticsCard from '@/Components/SurveyStatisticsCard.vue'
 import DataTable from '@/Components/DataTable.vue'
+import ResponseDetailModal from '@/Components/ResponseDetailModal.vue'
 
 // Props from backend
 const props = defineProps({
@@ -612,16 +406,222 @@ const getSectionTitle = (sectionId) => {
   const section = props.survey.sections.find(s => s.id === sectionId)
   return section ? section.title : `Section ${sectionId}`
 }
+
+const getTotalQuestions = computed(() => {
+  if (!selectedSurveyForStructure.value?.sections) return 0
+  return selectedSurveyForStructure.value.sections.reduce((total, section) => {
+    return total + (section.questions ? section.questions.length : 0)
+  }, 0)
+})
+
+// Helper functions for survey structure modal
+const getQuestionCount = (section) => {
+  return section.questions ? section.questions.length : 0
+}
+
+const getQuestionTypeBadgeClass = (type) => {
+  const typeClasses = {
+    'text': 'badge-primary',
+    'textarea': 'badge-secondary', 
+    'radio': 'badge-accent',
+    'checkbox': 'badge-info',
+    'select': 'badge-success',
+    'number': 'badge-warning',
+    'date': 'badge-error'
+  }
+  return typeClasses[type] || 'badge-ghost'
+}
+
+const getQuestionTypeLabel = (type) => {
+  const typeLabels = {
+    'text': 'Text Input',
+    'textarea': 'Long Text',
+    'radio': 'Single Choice',
+    'checkbox': 'Multiple Choice', 
+    'select': 'Dropdown',
+    'number': 'Number',
+    'date': 'Date'
+  }
+  return typeLabels[type] || type
+}
+
+const getQuestionAnswers = (questionId) => {
+  // Only get answers from the selected response, not all responses
+  if (!selectedResponse.value || !selectedResponse.value.answers) return []
+  
+  const questionAnswers = selectedResponse.value.answers.filter(answer => answer.question_id === questionId)
+  const answers = questionAnswers.map(answer => ({
+    ...answer,
+    response: selectedResponse.value
+  }))
+  
+  console.log('Question answers for selected response:', answers)
+  return answers
+}
+
+const formatAnswerValue = (answer) => {
+  // Handle choice answers
+  if (answer.choice_id) {
+    const choiceText = getChoiceText(answer.choice_id)
+    return choiceText || `Choice ${answer.choice_id}`
+  }
+  
+  // Handle text answers
+  if (answer.value_text) {
+    if (answer.value_text.length > 50) {
+      return answer.value_text.substring(0, 50) + '...'
+    }
+    return answer.value_text
+  }
+  
+  // Handle number answers
+  if (answer.value_number !== null && answer.value_number !== undefined) {
+    return answer.value_number.toString()
+  }
+  
+  // Handle JSON answers
+  if (answer.value_json) {
+    try {
+      const jsonData = typeof answer.value_json === 'string' ? JSON.parse(answer.value_json) : answer.value_json
+      const jsonStr = JSON.stringify(jsonData, null, 2)
+      if (jsonStr.length > 50) {
+        return jsonStr.substring(0, 50) + '...'
+      }
+      return jsonStr
+    } catch (e) {
+      return 'Invalid JSON'
+    }
+  }
+  
+  return 'No answer'
+}
+
+// Helper functions for question and answer details
+const getQuestionText = (questionId) => {
+  if (!props.survey?.sections) return `Question ${questionId}`
+  for (const section of props.survey.sections) {
+    if (section.questions) {
+      const question = section.questions.find(q => q.id === questionId)
+      if (question) return question.text
+    }
+  }
+  return `Question ${questionId}`
+}
+
+const getQuestionType = (questionId) => {
+  if (!props.survey?.sections) return 'text'
+  for (const section of props.survey.sections) {
+    if (section.questions) {
+      const question = section.questions.find(q => q.id === questionId)
+      if (question) return question.type
+    }
+  }
+  return 'text'
+}
+
+const isQuestionRequired = (questionId) => {
+  if (!props.survey?.sections) return false
+  for (const section of props.survey.sections) {
+    if (section.questions) {
+      const question = section.questions.find(q => q.id === questionId)
+      if (question) return question.required
+    }
+  }
+  return false
+}
+
+const getQuestionSectionId = (questionId) => {
+  if (!props.survey?.sections) return null
+  for (const section of props.survey.sections) {
+    if (section.questions) {
+      const question = section.questions.find(q => q.id === questionId)
+      if (question) return section.id
+    }
+  }
+  return null
+}
+
+const getQuestionOrder = (questionId) => {
+  if (!props.survey?.sections) return 0
+  for (const section of props.survey.sections) {
+    if (section.questions) {
+      const question = section.questions.find(q => q.id === questionId)
+      if (question) return question.order
+    }
+  }
+  return 0
+}
+
+const getChoiceText = (choiceId) => {
+  if (!props.survey?.sections) return `Choice ${choiceId}`
+  for (const section of props.survey.sections) {
+    if (section.questions) {
+      for (const question of section.questions) {
+        if (question.choices) {
+          const choice = question.choices.find(c => c.id === choiceId)
+          if (choice) return choice.text
+        }
+      }
+    }
+  }
+  return `Choice ${choiceId}`
+}
+
+const getChoiceScore = (choiceId) => {
+  if (!props.survey?.sections) return null
+  for (const section of props.survey.sections) {
+    if (section.questions) {
+      for (const question of section.questions) {
+        if (question.choices) {
+          const choice = question.choices.find(c => c.id === choiceId)
+          if (choice) return choice.score
+        }
+      }
+    }
+  }
+  return null
+}
+
+const formatJsonAnswer = (jsonValue) => {
+  if (!jsonValue) return 'No answer'
+  if (Array.isArray(jsonValue)) {
+    return jsonValue.join(', ')
+  }
+  if (typeof jsonValue === 'object') {
+    return JSON.stringify(jsonValue, null, 2)
+  }
+  return String(jsonValue)
+}
+
 // Functions
-const viewResponse = (response) => {
-  selectedResponse.value = response
-  document.getElementById('response_modal').showModal()
+const viewResponse = async (response) => {
+  try {
+    // If response already has answers loaded, use it directly
+    if (response.answers && response.answers.length > 0) {
+      selectedResponse.value = response
+    } else {
+      // Load response details with answers from API
+      const apiResponse = await fetch(`/dashboard/survey/${props.survey.id}/responses/${response.id}/details`)
+      if (apiResponse.ok) {
+        const data = await apiResponse.json()
+        selectedResponse.value = data.response
+      } else {
+        // Fallback to original response if API fails
+        selectedResponse.value = response
+      }
+    }
+  } catch (error) {
+    console.error('Error loading response details:', error)
+    // Fallback to original response if API fails
+    selectedResponse.value = response
+  }
 }
 
 const closeModal = () => {
   selectedResponse.value = null
   document.getElementById('response_modal').close()
 }
+
 
 
 const refreshData = () => {
@@ -663,6 +663,4 @@ const exportResponses = async (type) => {
     alert('Export failed. Please try again.')
   }
 }
-
-
 </script>
