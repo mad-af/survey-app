@@ -1,5 +1,5 @@
 <template>
-  <Head title="Survey App - Platform Kuisioner Modern" />
+  <Head title="AKUSUKA - Aplikasi kuisioner dan survey kabupaten" />
   
   <div class="min-h-screen bg-base-100">
     <!-- Navigation Header -->
@@ -19,7 +19,13 @@
         <a class="text-xl font-bold btn btn-ghost">
           <!-- <FileText class="w-6 h-6 text-primary" />
           SurveyApp -->
-          <img src="/beraksi.webp" alt="SurveyApp Logo" class="h-6 lg:h-8 lg:w-32" />
+          <div class="flex gap-2 items-center">
+            <img src="/beraksi.webp" alt="AKUSUKA Logo" class="h-6 lg:h-8" />
+            <!-- <div class="hidden sm:block">
+              <div class="text-lg font-bold text-primary">AKUSUKA</div>
+              <div class="text-xs text-base-content/70">Partisipasi Mudah Manfaat Nyata</div>
+            </div> -->
+          </div>
         </a>
       </div>
       
@@ -50,11 +56,13 @@
       <div class="text-center hero-content">
         <div class="max-w-4xl">
           <h1 class="mb-6 text-5xl font-bold">
-            Platform <span class="text-primary">Kuisioner</span> Modern
+            <span class="text-primary">AKUSUKA</span> Aplikasi kuisioner dan survey kabupaten
           </h1>
+          <p class="mb-4 text-2xl font-semibold text-secondary">
+            Partisipasi Mudah Manfaat Nyata
+          </p>
           <p class="mb-8 text-xl text-base-content/70">
-            Buat, bagikan, dan analisis survey dengan mudah. 
-            Dapatkan insight berharga dari responden Anda dengan teknologi terdepan.
+            Platform survey modern untuk kabupaten yang memudahkan partisipasi masyarakat dalam memberikan masukan dan pendapat.
           </p>
           <div class="flex flex-col gap-4 justify-center sm:flex-row">
             <a href="/entry" class="gap-2 btn btn-primary btn-lg">
@@ -162,10 +170,9 @@
     <section id="about" class="py-16 bg-base-200">
       <div class="container px-4 mx-auto">
         <div class="mb-12 text-center">
-          <h2 class="mb-4 text-4xl font-bold">Tentang SurveyApp</h2>
+          <h2 class="mb-4 text-4xl font-bold">Tentang AKUSUKA</h2>
           <p class="mx-auto max-w-3xl text-xl text-base-content/70">
-            Platform survey modern yang memudahkan Anda dalam membuat, mendistribusikan, 
-            dan menganalisis kuisioner dengan teknologi terdepan.
+            Aplikasi kuisioner dan survey kabupaten yang mengutamakan partisipasi mudah dengan manfaat nyata bagi pembangunan daerah.
           </p>
         </div>
 
@@ -208,10 +215,13 @@
       <aside>
         <div class="flex gap-2 items-center mb-4">
           <FileText class="w-8 h-8 text-primary" />
-          <span class="text-2xl font-bold">SurveyApp</span>
+          <span class="text-2xl font-bold">AKUSUKA</span>
         </div>
         <p class="font-bold">
-          Platform Kuisioner Modern
+          Aplikasi kuisioner dan survey kabupaten
+        </p>
+        <p class="text-sm text-base-content/70">
+          Partisipasi Mudah Manfaat Nyata
         </p> 
         <p>Copyright © 2024 - All right reserved</p>
       </aside>

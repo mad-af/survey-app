@@ -2,18 +2,14 @@
   <aside class="flex flex-col w-60 min-h-full bg-base-100 text-base-content">
       <!-- Logo -->
       <div class="p-4">
-        <!-- <div class="flex gap-3 justify-center items-center"> -->
-          <!-- <div class="flex justify-center items-center rounded-xl shadow-sm size-8 bg-primary">
-            <ClipboardList class="size-5 text-primary-content" />
-          </div>
+        <div class="flex flex-col gap-2 justify-center items-center text-center">
+          <img src="/beraksi.webp" alt="AKUSUKA Logo" class="h-6 lg:h-8 lg:w-32" />
           <div class="text-start">
-            <span class="block text-base font-bold tracking-wide text-base-content">Survey App</span>
-            <span class="block text-xs text-base-content/60">Dashboard</span>
-          </div> -->
-        <!-- </div> -->
-         <div class="flex justify-center items-center">
-           <img src="/beraksi.webp" alt="SurveyApp Logo" class="h-6 lg:h-8 lg:w-32" />
-         </div>
+            <span class="block text-sm font-bold tracking-wide text-base-content">AKUSUKA</span>
+            <span class="block text-xs text-base-content/80">Aplikasi kuisioner dan survey kabupaten</span>
+            <span class="block text-xs text-primary font-medium mt-1">Partisipasi Mudah Manfaat Nyata</span>
+          </div>
+        </div>
       </div>
 
       <!-- Navigation Menu -->
