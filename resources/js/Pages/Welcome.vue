@@ -3,7 +3,7 @@
   
   <div class="min-h-screen bg-base-100">
     <!-- Navigation Header -->
-    <header class="px-4 border-b shadow-sm navbar bg-base-100 border-base-300">
+    <header class="sticky top-0 z-50 px-4 border-b shadow-sm navbar bg-base-100 border-base-300">
       <div class="navbar-start">
         <div class="dropdown">
           <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">

@@ -499,13 +499,14 @@ class SurveyController extends Controller
     }
 
     /**
-     * Export survey responses to CSV
+     * Export survey responses to CSV or PDF
      */
     public function exportResponses(Survey $survey, Request $request)
     {
         try {
-            // Get export type from request (all, filtered, completed)
+            // Get export type and format from request
             $exportType = $request->get('type', 'all');
+            $format = $request->get('format', 'excel'); // excel or pdf
             $statusFilter = $request->get('status_filter');
             $searchQuery = $request->get('search_query');
             
@@ -548,15 +549,18 @@ class SurveyController extends Controller
                 ], 400);
             }
             
-            // Generate CSV content
-            $csvContent = $this->generateCSVContent($responses);
-            
-            // Generate filename
-            $filename = 'survey-responses-' . $exportType . '-' . date('Y-m-d') . '.csv';
-            
-            return response($csvContent)
-                ->header('Content-Type', 'text/csv')
-                ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            // Generate content based on format
+            if ($format === 'pdf') {
+                return $this->generatePDFExport($survey, $responses, $exportType);
+            } else {
+                // Default to CSV/Excel format
+                $csvContent = $this->generateCSVContent($responses);
+                $filename = 'survey-responses-' . $exportType . '-' . date('Y-m-d') . '.csv';
+                
+                return response($csvContent)
+                    ->header('Content-Type', 'text/csv')
+                    ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            }
                 
         } catch (\Exception $e) {
             return response()->json([
@@ -665,6 +669,130 @@ class SurveyController extends Controller
         fclose($output);
         
         return $csvContent;
+    }
+    
+    /**
+     * Generate PDF export from responses data
+     */
+    private function generatePDFExport($survey, $responses, $exportType)
+    {
+        // Create HTML content for PDF
+        $html = $this->generatePDFHTML($survey, $responses, $exportType);
+        
+        $filename = 'survey-responses-' . $exportType . '-' . date('Y-m-d') . '.html';
+        
+        // Return HTML that can be printed to PDF by browser
+        return response($html, 200, [
+            'Content-Type' => 'text/html; charset=utf-8',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0'
+        ]);
+    }
+    
+    /**
+     * Generate HTML content for PDF export
+     */
+    private function generatePDFHTML($survey, $responses, $exportType)
+    {
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Survey Responses Export</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .survey-info { margin-bottom: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; font-weight: bold; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .print-button { margin: 20px 0; text-align: center; }
+        .print-button button { padding: 10px 20px; font-size: 16px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+            .print-button { display: none; }
+        }
+    </style>
+    <script>
+        function printToPDF() {
+            window.print();
+        }
+        // Auto-trigger print dialog after page loads
+        window.onload = function() {
+            setTimeout(function() {
+                window.print();
+            }, 1000);
+        };
+    </script>
+</head>
+<body>
+    <div class="print-button no-print">
+        <button onclick="printToPDF()">Print to PDF</button>
+    </div>
+    
+    <div class="header">
+        <h1>Survey Responses Export</h1>
+        <h2>' . htmlspecialchars($survey->title) . '</h2>
+    </div>
+    
+    <div class="survey-info">
+        <p><strong>Survey Code:</strong> ' . htmlspecialchars($survey->code) . '</p>
+        <p><strong>Export Type:</strong> ' . ucfirst($exportType) . '</p>
+        <p><strong>Export Date:</strong> ' . date('Y-m-d H:i:s') . '</p>
+        <p><strong>Total Responses:</strong> ' . count($responses) . '</p>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Response ID</th>
+                <th>Status</th>
+                <th>Respondent Name</th>
+                <th>Email</th>
+                <th>Organization</th>
+                <th>Department</th>
+                <th>Province</th>
+                <th>Regency</th>
+                <th>Started At</th>
+                <th>Submitted At</th>
+                <th>Score</th>
+                <th>Result Category</th>
+            </tr>
+        </thead>
+        <tbody>';
+        
+        foreach ($responses as $response) {
+            $respondent = $response->respondent;
+            $location = $respondent ? $respondent->location : null;
+            $score = $response->score;
+            $resultCategory = $score ? $score->resultCategory : null;
+            
+            $html .= '<tr>
+                <td>' . htmlspecialchars($response->id ?? '') . '</td>
+                <td>' . htmlspecialchars($this->getStatusLabel($response->status)) . '</td>
+                <td>' . htmlspecialchars($respondent->name ?? '') . '</td>
+                <td>' . htmlspecialchars($respondent->email ?? '') . '</td>
+                <td>' . htmlspecialchars($respondent->organization ?? '') . '</td>
+                <td>' . htmlspecialchars($respondent->department ?? '') . '</td>
+                <td>' . htmlspecialchars($location->province_name ?? '') . '</td>
+                <td>' . htmlspecialchars($location->regency_name ?? '') . '</td>
+                <td>' . ($response->started_at ? $response->started_at->format('Y-m-d H:i:s') : '') . '</td>
+                <td>' . ($response->submitted_at ? $response->submitted_at->format('Y-m-d H:i:s') : '') . '</td>
+                <td>' . htmlspecialchars($score->total_score ?? '') . '</td>
+                <td>' . htmlspecialchars($resultCategory->name ?? '') . '</td>
+            </tr>';
+        }
+        
+        $html .= '</tbody>
+    </table>
+</body>
+</html>';
+        
+        return $html;
     }
     
     /**

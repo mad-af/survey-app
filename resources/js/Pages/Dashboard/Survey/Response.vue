@@ -60,14 +60,26 @@
               >
                 <RefreshCw class="w-4 h-4" />
               </button>
-              <button
-                class="btn btn-sm btn-success"
-                @click="exportResponses('all')"
-                title="Export All Responses"
-              >
-                <Download class="w-4 h-4" />
-                Export
-              </button>
+              <div class="dropdown dropdown-end">
+                <div tabindex="0" role="button" class="btn btn-sm btn-success">
+                  <Download class="w-4 h-4" />
+                  Export
+                </div>
+                <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+                  <li>
+                    <a @click="exportResponses('all', 'excel')" class="flex gap-2 items-center">
+                      <Download class="w-4 h-4" />
+                      Export as Excel
+                    </a>
+                  </li>
+                  <li>
+                    <a @click="exportResponses('all', 'pdf')" class="flex gap-2 items-center">
+                      <Download class="w-4 h-4" />
+                      Export as PDF
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
           
@@ -628,11 +640,12 @@ const refreshData = () => {
 }
 
 // Export functions
-const exportResponses = async (type) => {
+const exportResponses = async (type, format = 'excel') => {
   try {
     // Build query parameters
     const params = new URLSearchParams({
-      type: type
+      type: type,
+      format: format
     })
     
     // Add filters for 'filtered' export type
