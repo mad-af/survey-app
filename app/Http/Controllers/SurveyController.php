@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Inertia\Inertia;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class SurveyController extends Controller
 {
@@ -679,16 +680,13 @@ class SurveyController extends Controller
         // Create HTML content for PDF
         $html = $this->generatePDFHTML($survey, $responses, $exportType);
         
-        $filename = 'survey-responses-' . $exportType . '-' . date('Y-m-d') . '.html';
+        $filename = 'survey-responses-' . $exportType . '-' . date('Y-m-d') . '.pdf';
         
-        // Return HTML that can be printed to PDF by browser
-        return response($html, 200, [
-            'Content-Type' => 'text/html; charset=utf-8',
-            'Content-Disposition' => 'inline; filename="' . $filename . '"',
-            'Cache-Control' => 'no-cache, no-store, must-revalidate',
-            'Pragma' => 'no-cache',
-            'Expires' => '0'
-        ]);
+        // Generate PDF using dompdf
+        $pdf = Pdf::loadHTML($html);
+        $pdf->setPaper('A4', 'landscape');
+        
+        return $pdf->download($filename);
     }
     
     /**
@@ -702,38 +700,16 @@ class SurveyController extends Controller
     <meta charset="utf-8">
     <title>Survey Responses Export</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .survey-info { margin-bottom: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; font-weight: bold; }
+        body { font-family: Arial, sans-serif; margin: 20px; font-size: 10px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        .survey-info { margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #333; padding: 4px; text-align: left; font-size: 8px; }
+        th { background-color: #e0e0e0; font-weight: bold; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        .print-button { margin: 20px 0; text-align: center; }
-        .print-button button { padding: 10px 20px; font-size: 16px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
-        @media print {
-            body { margin: 0; }
-            .no-print { display: none; }
-            .print-button { display: none; }
-        }
     </style>
-    <script>
-        function printToPDF() {
-            window.print();
-        }
-        // Auto-trigger print dialog after page loads
-        window.onload = function() {
-            setTimeout(function() {
-                window.print();
-            }, 1000);
-        };
-    </script>
 </head>
 <body>
-    <div class="print-button no-print">
-        <button onclick="printToPDF()">Print to PDF</button>
-    </div>
-    
     <div class="header">
         <h1>Survey Responses Export</h1>
         <h2>' . htmlspecialchars($survey->title) . '</h2>
@@ -749,18 +725,18 @@ class SurveyController extends Controller
     <table>
         <thead>
             <tr>
-                <th>Response ID</th>
+                <th>ID</th>
                 <th>Status</th>
-                <th>Respondent Name</th>
+                <th>Name</th>
                 <th>Email</th>
                 <th>Organization</th>
                 <th>Department</th>
                 <th>Province</th>
                 <th>Regency</th>
-                <th>Started At</th>
-                <th>Submitted At</th>
+                <th>Started</th>
+                <th>Submitted</th>
                 <th>Score</th>
-                <th>Result Category</th>
+                <th>Category</th>
             </tr>
         </thead>
         <tbody>';
@@ -780,8 +756,8 @@ class SurveyController extends Controller
                 <td>' . htmlspecialchars($respondent->department ?? '') . '</td>
                 <td>' . htmlspecialchars($location->province_name ?? '') . '</td>
                 <td>' . htmlspecialchars($location->regency_name ?? '') . '</td>
-                <td>' . ($response->started_at ? $response->started_at->format('Y-m-d H:i:s') : '') . '</td>
-                <td>' . ($response->submitted_at ? $response->submitted_at->format('Y-m-d H:i:s') : '') . '</td>
+                <td>' . ($response->started_at ? $response->started_at->format('Y-m-d H:i') : '') . '</td>
+                <td>' . ($response->submitted_at ? $response->submitted_at->format('Y-m-d H:i') : '') . '</td>
                 <td>' . htmlspecialchars($score->total_score ?? '') . '</td>
                 <td>' . htmlspecialchars($resultCategory->name ?? '') . '</td>
             </tr>';
