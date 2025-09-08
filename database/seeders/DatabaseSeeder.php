@@ -16,20 +16,27 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Run SurveySeeder first
+        $this->call(SurveySeeder::class);
+        
         // Create Users
-        $admin = User::create([
-            'name' => 'Administrator',
-            'email' => 'admin@survey.com',
-            'password' => bcrypt('password'),
-            'role' => 'admin',
-        ]);
+        $admin = User::firstOrCreate(
+            ['email' => 'admin@survey.com'],
+            [
+                'name' => 'Administrator',
+                'password' => bcrypt('password'),
+                'role' => 'admin',
+            ]
+        );
 
-        $surveyor = User::create([
-            'name' => 'John Surveyor',
-            'email' => 'surveyor@survey.com',
-            'password' => bcrypt('password'),
-            'role' => 'surveyor',
-        ]);
+        $surveyor = User::firstOrCreate(
+            ['email' => 'surveyor@survey.com'],
+            [
+                'name' => 'John Surveyor',
+                'password' => bcrypt('password'),
+                'role' => 'surveyor',
+            ]
+        );
 
         // Create Surveys
         $survey1 = Survey::create([

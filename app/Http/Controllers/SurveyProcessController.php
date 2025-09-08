@@ -876,7 +876,7 @@ class SurveyProcessController extends Controller
                             'description' => $section->description,
                             'score' => $storedScore['score'],
                             'max_score' => $storedScore['max_score'],
-                            'percentage' => $storedScore['percentage']
+                            'percentage' => round($storedScore['percentage'], 2)
                         ];
                     }
                 }
