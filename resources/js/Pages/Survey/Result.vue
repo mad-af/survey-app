@@ -28,7 +28,7 @@
               <span class="text-lg opacity-80">/ {{ surveyResult.score.max_possible_score }}</span>
             </div>
             <div class="flex gap-2 items-center mt-2">
-              <div class="badge badge-accent badge-lg">
+              <div class="badge badge-info badge-lg">
                 {{ surveyResult.score.percentage }}%
               </div>
               <span v-if="surveyResult.score.category" class="text-sm opacity-90">
@@ -157,9 +157,9 @@ const getCategoryAlertClass = (color) => {
 }
 
 const getProgressBarClass = (percentage) => {
-  if (percentage >= 80) return 'bg-success'
-  if (percentage >= 60) return 'bg-warning'
-  return 'bg-error'
+  // if (percentage >= 80) return 'bg-success'
+  // if (percentage >= 60) return 'bg-warning'
+  return 'bg-info'
 }
 
 const goBack = async () => {
