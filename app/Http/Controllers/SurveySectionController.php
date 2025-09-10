@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\SurveySection;
 use App\Models\Survey;
+use App\Models\ResultCategory;
+use App\Models\ResultCategoryRule;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -100,6 +102,22 @@ class SurveySectionController extends Controller
                 // Reload the created section to get updated order
                 $section = $section->fresh();
             }
+
+            // Auto-create ResultCategory and ResultCategoryRule for this section
+            $resultCategory = ResultCategory::create([
+                'owner_type' => 'survey_section',
+                'owner_id' => $section->id,
+                'name' => 'Section ' . $section->order . ': ' . $section->title,
+            ]);
+
+            // Create default rule (else)
+            ResultCategoryRule::create([
+                'result_category_id' => $resultCategory->id,
+                'operation' => 'else',
+                'title' => 'Default',
+                'score' => 0,
+                'color' => 'primary',
+            ]);
 
             // Load relationships
             $section->load('questions.choices');
@@ -223,6 +241,16 @@ class SurveySectionController extends Controller
                         if ($sectionToNormalize->order != $normalizedOrder) {
                             $sectionToNormalize->update(['order' => $normalizedOrder]);
                         }
+                        
+                        // Update ResultCategory name to reflect new order
+                        $resultCategory = ResultCategory::where('owner_type', 'survey_section')
+                            ->where('owner_id', $sectionToNormalize->id)
+                            ->first();
+                        if ($resultCategory) {
+                            $resultCategory->update([
+                                'name' => 'Section ' . $normalizedOrder . ': ' . $sectionToNormalize->title
+                            ]);
+                        }
                     }
                     
                     // Remove order from updateData since we already updated it
@@ -231,6 +259,19 @@ class SurveySectionController extends Controller
             }
 
             $section->update($updateData);
+            
+            // Update ResultCategory name if title changed
+            if (isset($updateData['title'])) {
+                $resultCategory = ResultCategory::where('owner_type', 'survey_section')
+                    ->where('owner_id', $section->id)
+                    ->first();
+                if ($resultCategory) {
+                    $resultCategory->update([
+                        'name' => 'Section ' . $section->order . ': ' . $section->title
+                    ]);
+                }
+            }
+            
             $section->load('questions.choices');
 
             return response()->json([
@@ -262,6 +303,18 @@ class SurveySectionController extends Controller
             }
 
             $deletedOrder = $section->order;
+            
+            // Delete associated ResultCategory and its rules
+            $resultCategory = ResultCategory::where('owner_type', 'survey_section')
+                ->where('owner_id', $section->id)
+                ->first();
+            if ($resultCategory) {
+                // Delete all rules first
+                ResultCategoryRule::where('result_category_id', $resultCategory->id)->delete();
+                // Then delete the category
+                $resultCategory->delete();
+            }
+            
             $section->delete();
 
             // Reorder remaining sections to fill the gap
@@ -272,6 +325,16 @@ class SurveySectionController extends Controller
 
             foreach ($remainingSections as $remainingSection) {
                 $remainingSection->update(['order' => $remainingSection->order - 1]);
+                
+                // Update ResultCategory name to reflect new order
+                $resultCategory = ResultCategory::where('owner_type', 'survey_section')
+                    ->where('owner_id', $remainingSection->id)
+                    ->first();
+                if ($resultCategory) {
+                    $resultCategory->update([
+                        'name' => 'Section ' . $remainingSection->order . ': ' . $remainingSection->title
+                    ]);
+                }
             }
 
             return response()->json([

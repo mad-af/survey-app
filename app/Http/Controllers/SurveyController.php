@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Enums\QuestionType;
 use App\Models\Survey;
 use App\Models\Response;
+use App\Models\ResultCategory;
+use App\Models\ResultCategoryRule;
 use App\Enums\SurveyStatus;
 use App\Enums\SurveyVisibility;
 use Illuminate\Http\Request;
@@ -75,6 +77,22 @@ class SurveyController extends Controller
                 'visibility' => $request->visibility,
                 'starts_at' => $request->start_date ? date('Y-m-d H:i:s', strtotime($request->start_date)) : null,
                 'ends_at' => $request->end_date ? date('Y-m-d H:i:s', strtotime($request->end_date)) : null,
+            ]);
+
+            // Auto-create default ResultCategory and ResultCategoryRule for the survey
+            $resultCategory = ResultCategory::create([
+                'owner_type' => 'App\\Models\\Survey',
+                'owner_id' => $survey->id,
+                'survey_id' => $survey->id,
+                'name' => 'Default Survey Result',
+            ]);
+
+            ResultCategoryRule::create([
+                'result_category_id' => $resultCategory->id,
+                'operation' => 'else',
+                'title' => 'Default',
+                'score' => 0,
+                'color' => 'primary',
             ]);
 
             // Load the owner relationship
@@ -177,6 +195,18 @@ class SurveyController extends Controller
                     'success' => false,
                     'message' => 'You do not have permission to delete this survey'
                 ], 403);
+            }
+
+            // Auto-delete ResultCategory and ResultCategoryRule associated with this survey
+            $resultCategories = ResultCategory::where('owner_type', 'App\\Models\\Survey')
+                                             ->where('owner_id', $survey->id)
+                                             ->get();
+            
+            foreach ($resultCategories as $resultCategory) {
+                // Delete associated ResultCategoryRule first
+                ResultCategoryRule::where('result_category_id', $resultCategory->id)->delete();
+                // Then delete the ResultCategory
+                $resultCategory->delete();
             }
 
             $survey->delete();
