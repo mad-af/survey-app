@@ -34,6 +34,9 @@
               <span v-if="surveyResult.score.category" class="text-sm opacity-90">
                 {{ surveyResult.score.category.name }}
               </span>
+              <span v-if="surveyResult.score.category_rule" class="badge badge-outline" :class="getRuleBadgeClass(surveyResult.score.category_rule.color)">
+                {{ surveyResult.score.category_rule.title }}
+              </span>
             </div>
           </div>
           <div class="text-right">
@@ -44,10 +47,16 @@
     </div>
 
     <!-- Category Description -->
-    <div v-if="surveyResult.score.category" class="mb-6 alert" :class="getCategoryAlertClass(surveyResult.score.category.color)">
+    <div v-if="surveyResult.score.category" class="mb-6 alert" :class="getCategoryAlertClass(surveyResult.score.category_rule?.color)">
       <Info class="w-5 h-5" />
       <div>
         <h3 class="font-semibold">{{ surveyResult.score.category.name }}</h3>
+        <p v-if="surveyResult.score.category_rule" class="text-sm mt-1">
+          {{ surveyResult.score.category_rule.title }}
+          <span class="ml-2 opacity-75">
+            ({{ surveyResult.score.category_rule.operation }} {{ surveyResult.score.category_rule.score }})
+          </span>
+        </p>
       </div>
     </div>
 
@@ -153,6 +162,17 @@ const getCategoryAlertClass = (color) => {
     'info': 'alert-info'
   }
   return colorMap[color] || 'alert-info'
+}
+
+const getRuleBadgeClass = (color) => {
+  if (!color) return 'badge-info'
+  const colorMap = {
+    'success': 'badge-success',
+    'warning': 'badge-warning', 
+    'error': 'badge-error',
+    'info': 'badge-info'
+  }
+  return colorMap[color] || 'badge-info'
 }
 
 const getProgressBarClass = (percentage) => {

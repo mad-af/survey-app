@@ -847,9 +847,6 @@ class SurveyProcessController extends Controller
             // Get response with all necessary relationships
             $response = Response::with([
                 'survey.sections',
-                'survey.resultCategories' => function ($query) {
-                    $query->orderBy('min_score');
-                },
                 'score.resultCategory',
                 'answers.question.section',
                 'answers.choice'
@@ -858,9 +855,18 @@ class SurveyProcessController extends Controller
             if (!$response || $response->survey_id != $surveyId) {
                 return redirect('/entry')
                     ->withErrors(['message' => 'Data response tidak ditemukan.']);
-            }           
+            }
 
+            // Load result categories using direct query to avoid polymorphic relation issues
             $survey = $response->survey;
+            $resultCategories = \App\Models\ResultCategory::where('owner_type', 'survey')
+                ->where('owner_id', $survey->id)
+                ->orderBy('min_score')
+                ->with('resultCategoryRules')
+                ->get();
+            
+            // Manually assign the result categories to survey
+            $survey->setRelation('resultCategories', $resultCategories);
             $responseScore = $response->score;
 
             // Prepare section scores for display
@@ -938,6 +944,7 @@ class SurveyProcessController extends Controller
             ]);
 
         } catch (Exception $e) {
+            dd($e);
             Log::error('Error showing survey result: ' . $e->getMessage());
             return redirect('/entry')
                 ->withErrors(['message' => 'Terjadi kesalahan saat menampilkan hasil survey.']);
