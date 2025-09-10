@@ -49,7 +49,7 @@
           <h4 class="font-medium text-sm mb-2">Category Details:</h4>
           <div class="space-y-1 text-xs">
             <p><span class="font-medium">Name:</span> {{ selectedCategory.name }}</p>
-            <p v-if="selectedCategory.description"><span class="font-medium">Description:</span> {{ selectedCategory.description }}</p>
+            
             <p><span class="font-medium">Color:</span> 
               <span class="badge badge-sm" :class="`badge-${selectedCategory.color}`">{{ selectedCategory.color }}</span>
             </p>

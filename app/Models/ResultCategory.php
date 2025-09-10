@@ -16,7 +16,6 @@ class ResultCategory extends Model
         'owner_type',
         'owner_id',
         'name',
-        'description',
     ];
 
     protected $casts = [

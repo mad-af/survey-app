@@ -48,7 +48,6 @@
       <Info class="w-5 h-5" />
       <div>
         <h3 class="font-semibold">{{ surveyResult.score.category.name }}</h3>
-        <p class="text-sm">{{ surveyResult.score.category.description }}</p>
       </div>
     </div>
 

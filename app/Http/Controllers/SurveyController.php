@@ -273,7 +273,7 @@ class SurveyController extends Controller
             $responses = Response::with([
                 'respondent:id,external_id,name,email,phone,gender,birth_year,organization,department,role_title,location_id,consent_at',
                 'respondent.location:id,province_code,province_name,regency_code,regency_name,district_code,district_name,village_code,village_name,detailed_address,latitude,longitude',
-                'score.resultCategory:id,name,description,color,min_score,max_score'
+                'score.resultCategory:id,name,color,min_score,max_score'
             ])
             ->where('survey_id', $survey->id)
             ->orderBy('created_at', 'desc')
@@ -332,7 +332,7 @@ class SurveyController extends Controller
                 'answers:id,response_id,question_id,choice_id,value_text,value_number,value_json',
                 'respondent:id,external_id,name,email,phone,gender,birth_year,organization,department,role_title,location_id,consent_at',
                 'respondent.location:id,province_code,province_name,regency_code,regency_name,district_code,district_name,village_code,village_name,detailed_address,latitude,longitude',
-                'score.resultCategory:id,name,description,color,min_score,max_score'
+                'score.resultCategory:id,name,color,min_score,max_score'
             ]);
 
             return response()->json([
@@ -515,7 +515,7 @@ class SurveyController extends Controller
             $query = Response::with([
                 'respondent:id,external_id,name,email,phone,gender,birth_year,organization,department,role_title,location_id,consent_at',
                 'respondent.location:id,province_code,province_name,regency_code,regency_name,district_code,district_name,village_code,village_name,detailed_address,latitude,longitude',
-                'score.resultCategory:id,name,description,color,min_score,max_score'
+                'score.resultCategory:id,name,color,min_score,max_score'
             ])->where('survey_id', $survey->id);
             
             // Apply filters based on export type

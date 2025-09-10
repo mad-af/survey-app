@@ -249,8 +249,7 @@ class DatabaseSeeder extends Seeder
             $surveyResultCategory = ResultCategory::create([
                 'owner_type' => 'survey',
                 'owner_id' => $survey->id,
-                'name' => 'Kategori Hasil ' . $survey->title,
-                'description' => 'Kategori hasil untuk survey: ' . $survey->title,
+                'name' => 'Survey',
             ]);
 
             // Create Result Category Rules for Survey
@@ -285,8 +284,7 @@ class DatabaseSeeder extends Seeder
             $sectionResultCategory = ResultCategory::create([
                 'owner_type' => 'survey_section',
                 'owner_id' => $section->id,
-                'name' => 'Kategori Hasil ' . $section->title,
-                'description' => 'Kategori hasil untuk section: ' . $section->title,
+                'name' => 'Section ' . $section->order,
             ]);
 
             // Create Result Category Rules for Section

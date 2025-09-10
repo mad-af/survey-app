@@ -926,7 +926,6 @@ class SurveyProcessController extends Controller
                     'category' => $responseScore && $responseScore->resultCategory ? [
                         'id' => $responseScore->resultCategory->id,
                         'name' => $responseScore->resultCategory->name,
-                        'description' => $responseScore->resultCategory->description,
                         'color' => $responseScore->resultCategory->color
                     ] : null
                 ],

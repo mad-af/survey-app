@@ -16,7 +16,6 @@ return new class extends Migration
             $table->enum('owner_type', ['survey', 'survey_section'])->default('survey')->comment('penentu jenis induk');
             $table->unsignedBigInteger('owner_id')->default(0)->comment('id survey / section');
             $table->string('name');
-            $table->text('description')->nullable();
             $table->timestamps();
             
             $table->index(['owner_type', 'owner_id'], 'idx_result_categories_owner');
