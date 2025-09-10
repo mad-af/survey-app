@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OperationType;
+use App\Enums\OwnerType;
 use App\Enums\QuestionType;
 use App\Models\Survey;
 use App\Models\Response;
@@ -82,7 +84,7 @@ class SurveyController extends Controller
 
             // Auto-create default ResultCategory and ResultCategoryRule for the survey
             $resultCategory = ResultCategory::create([
-                'owner_type' => 'survey',
+                'owner_type' => OwnerType::SURVEY,
                 'owner_id' => $survey->id,
                 'survey_id' => $survey->id,
                 'name' => 'Survey',
@@ -90,7 +92,7 @@ class SurveyController extends Controller
 
             ResultCategoryRule::create([
                 'result_category_id' => $resultCategory->id,
-                'operation' => 'else',
+                'operation' => OperationType::ELSE,
                 'title' => 'Hasil Umum',
                 'score' => 0,
                 'color' => 'info',
@@ -199,7 +201,7 @@ class SurveyController extends Controller
             }
 
             // Auto-delete ResultCategory and ResultCategoryRule associated with this survey
-            $resultCategories = ResultCategory::where('owner_type', 'survey')
+            $resultCategories = ResultCategory::where('owner_type', OwnerType::SURVEY)
                                              ->where('owner_id', $survey->id)
                                              ->get();
             

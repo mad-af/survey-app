@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OperationType;
 use App\Models\ResultCategoryRule;
 use App\Models\ResultCategory;
 use Illuminate\Http\Request;
@@ -38,7 +39,7 @@ class ResultCategoryRuleController extends Controller
     {
         try {
             $validated = $request->validate([
-                'operation' => ['required', Rule::in(['lt', 'gt', 'else'])],
+                'operation' => ['required', Rule::in(OperationType::values())],
                 'title' => 'required|string|max:255',
                 'score' => 'required|numeric|min:0|max:100',
                 'color' => ['required', Rule::in(['primary', 'secondary', 'accent', 'success', 'warning', 'error', 'info'])]
@@ -75,7 +76,7 @@ class ResultCategoryRuleController extends Controller
             }
 
             $validated = $request->validate([
-                'operation' => ['required', Rule::in(['lt', 'gt', 'else'])],
+                'operation' => ['required', Rule::in(OperationType::values())],
                 'title' => 'required|string|max:255',
                 'score' => 'required|numeric|min:0|max:100',
                 'color' => ['required', Rule::in(['primary', 'secondary', 'accent', 'success', 'warning', 'error', 'info'])]

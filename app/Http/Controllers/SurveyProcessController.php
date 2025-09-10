@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OperationType;
+use App\Enums\OwnerType;
 use App\Enums\QuestionType;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -858,7 +860,7 @@ class SurveyProcessController extends Controller
 
             // Load result categories using direct query to avoid polymorphic relation issues
             $survey = $response->survey;
-            $resultCategories = \App\Models\ResultCategory::where('owner_type', 'survey')
+            $resultCategories = \App\Models\ResultCategory::where('owner_type', OwnerType::SURVEY)
                 ->where('owner_id', $survey->id)
                 ->with('resultCategoryRules')
                 ->get();
@@ -866,7 +868,7 @@ class SurveyProcessController extends Controller
             // Load section result categories
             $sectionResultCategories = [];
             foreach ($survey->sections as $section) {
-                $sectionResultCategories[$section->id] = \App\Models\ResultCategory::where('owner_type', 'survey_section')
+                $sectionResultCategories[$section->id] = \App\Models\ResultCategory::where('owner_type', OwnerType::SURVEY_SECTION)
                     ->where('owner_id', $section->id)
                     ->with('resultCategoryRules')
                     ->get();
@@ -894,13 +896,13 @@ class SurveyProcessController extends Controller
                                     $ruleMatches = false;
                                     
                                     switch ($rule->operation) {
-                                        case 'lt':
+                                        case OperationType::LT:
                                             $ruleMatches = $sectionPercentage < $rule->score;
                                             break;
-                                        case 'gt':
+                                        case OperationType::GT:
                                             $ruleMatches = $sectionPercentage > $rule->score;
                                             break;
-                                        case 'else':
+                                        case OperationType::ELSE:
                                             $ruleMatches = true; // Always matches as fallback
                                             break;
                                     }
@@ -965,13 +967,13 @@ class SurveyProcessController extends Controller
                                 $ruleMatches = false;
                                 
                                 switch ($rule->operation) {
-                                    case 'lt':
+                                    case OperationType::LT:
                                         $ruleMatches = $finalSectionScore < $rule->score;
                                         break;
-                                    case 'gt':
+                                    case OperationType::GT:
                                         $ruleMatches = $finalSectionScore > $rule->score;
                                         break;
-                                    case 'else':
+                                    case OperationType::ELSE:
                                         $ruleMatches = true; // Always matches as fallback
                                         break;
                                 }
@@ -1008,7 +1010,7 @@ class SurveyProcessController extends Controller
             }
 
             // Get result categories for survey
-            $surveyResultCategories = \App\Models\ResultCategory::where('owner_type', 'survey')
+            $surveyResultCategories = \App\Models\ResultCategory::where('owner_type', OwnerType::SURVEY)
                 ->where('owner_id', $survey->id)
                 ->with('resultCategoryRules')
                 ->get();
@@ -1025,13 +1027,13 @@ class SurveyProcessController extends Controller
                         $ruleMatches = false;
                         
                         switch ($rule->operation) {
-                            case 'lt':
+                            case OperationType::LT:
                                 $ruleMatches = $totalPercentage < $rule->score;
                                 break;
-                            case 'gt':
+                            case OperationType::GT:
                                 $ruleMatches = $totalPercentage > $rule->score;
                                 break;
-                            case 'else':
+                            case OperationType::ELSE:
                                 $ruleMatches = true; // Always matches as fallback
                                 break;
                         }

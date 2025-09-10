@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OperationType;
+use App\Enums\OwnerType;
 use App\Models\SurveySection;
 use App\Models\Survey;
 use App\Models\ResultCategory;
@@ -105,7 +107,7 @@ class SurveySectionController extends Controller
 
             // Auto-create ResultCategory and ResultCategoryRule for this section
             $resultCategory = ResultCategory::create([
-                'owner_type' => 'survey_section',
+                'owner_type' => OwnerType::SURVEY_SECTION,
                 'owner_id' => $section->id,
                 'name' => 'Section ' . $section->order,
             ]);
@@ -113,7 +115,7 @@ class SurveySectionController extends Controller
             // Create default rule (else)
             ResultCategoryRule::create([
                 'result_category_id' => $resultCategory->id,
-                'operation' => 'else',
+                'operation' => OperationType::ELSE,
                 'title' => 'Hasil Umum',
                 'score' => 0,
                 'color' => 'info',
@@ -243,7 +245,7 @@ class SurveySectionController extends Controller
                         }
                         
                         // Update ResultCategory name to reflect new order
-                        $resultCategory = ResultCategory::where('owner_type', 'survey_section')
+                        $resultCategory = ResultCategory::where('owner_type', OwnerType::SURVEY_SECTION)
                             ->where('owner_id', $sectionToNormalize->id)
                             ->first();
                         if ($resultCategory) {
@@ -262,7 +264,7 @@ class SurveySectionController extends Controller
             
             // Update ResultCategory name if title changed
             if (isset($updateData['title'])) {
-                $resultCategory = ResultCategory::where('owner_type', 'survey_section')
+                $resultCategory = ResultCategory::where('owner_type', OwnerType::SURVEY_SECTION)
                     ->where('owner_id', $section->id)
                     ->first();
                 if ($resultCategory) {
@@ -305,7 +307,7 @@ class SurveySectionController extends Controller
             $deletedOrder = $section->order;
             
             // Delete associated ResultCategory and its rules
-            $resultCategory = ResultCategory::where('owner_type', 'survey_section')
+            $resultCategory = ResultCategory::where('owner_type', OwnerType::SURVEY_SECTION)
                 ->where('owner_id', $section->id)
                 ->first();
             if ($resultCategory) {
@@ -327,7 +329,7 @@ class SurveySectionController extends Controller
                 $remainingSection->update(['order' => $remainingSection->order - 1]);
                 
                 // Update ResultCategory name to reflect new order
-                $resultCategory = ResultCategory::where('owner_type', 'survey_section')
+                $resultCategory = ResultCategory::where('owner_type', OwnerType::SURVEY_SECTION)
                     ->where('owner_id', $remainingSection->id)
                     ->first();
                 if ($resultCategory) {

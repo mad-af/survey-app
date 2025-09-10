@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\OwnerType;
 use App\Models\ResultCategory;
 use App\Models\Survey;
 use Illuminate\Http\Request;
@@ -19,14 +20,14 @@ class ResultCategoryController extends Controller
             $surveyCategories = ResultCategory::with(['resultCategoryRules' => function ($query) {
                 $query->orderBy('operation');
             }])
-            ->where('owner_type', 'survey')
+            ->where('owner_type', OwnerType::SURVEY)
             ->where('owner_id', $survey->id)
             ->get();
 
             $sectionCategories = ResultCategory::with(['resultCategoryRules' => function ($query) {
                 $query->orderBy('operation');
             }, 'surveySection'])
-            ->where('owner_type', 'survey_section')
+            ->where('owner_type', OwnerType::SURVEY_SECTION)
             ->whereIn('owner_id', $survey->surveySections->pluck('id'))
             ->get();
 
