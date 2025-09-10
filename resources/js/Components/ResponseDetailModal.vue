@@ -119,7 +119,13 @@
               </div>
               <div v-if="response.respondent.location.latitude && response.respondent.location.longitude" class="flex justify-between">
                 <span>Coordinates:</span>
-                <span>{{ response.respondent.location.latitude }}, {{ response.respondent.location.longitude }}</span>
+                <a 
+                  :href="`https://www.google.com/maps?q=${response.respondent.location.latitude},${response.respondent.location.longitude}`" 
+                  target="_blank" 
+                  class="link link-primary"
+                >
+                  {{ response.respondent.location.latitude }}, {{ response.respondent.location.longitude }}
+                </a>
               </div>
               <div class="flex justify-between">
                 <span>Full Address:</span>
