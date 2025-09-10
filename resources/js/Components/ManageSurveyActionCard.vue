@@ -19,6 +19,12 @@
           <span class="font-medium">Add Question</span>
         </button>
 
+        <button class="gap-2 justify-start w-full h-8 text-xs transition-all duration-200 btn btn-sm hover:shadow-sm"
+          @click="$emit('edit-result-category')">
+          <Target class="size-3" />
+          <span class="font-medium">Edit Result Category</span>
+        </button>
+
         <!-- <div class="m-0 opacity-50 divider"></div>
 
         <button
@@ -34,11 +40,12 @@
 
 <script setup>
 import { defineEmits } from 'vue'
-import { Settings, SquarePlus, CopyPlus } from 'lucide-vue-next'
+import { Target, SquarePlus, CopyPlus } from 'lucide-vue-next'
 
 const emit = defineEmits([
   'add-section',
   'add-question',
+  'edit-result-category',
   'edit-survey',
   'view-responses',
   'share-survey',

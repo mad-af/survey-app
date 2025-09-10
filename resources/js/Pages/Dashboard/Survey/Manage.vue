@@ -31,7 +31,7 @@
         <!-- Quick Actions and Statistics Cards -->
         <div class="lg:col-span-2">
           <div class="sticky top-6 space-y-3">
-            <ManageSurveyActionCard @add-section="openAddSectionDrawer" @add-question="openAddQuestionDrawer" />
+            <ManageSurveyActionCard @add-section="openAddSectionDrawer" @add-question="openAddQuestionDrawer" @edit-result-category="openResultCategoryDrawer" />
             <ManageSurveyResultCategoryCard :survey-id="currentSurveyId" />
           </div>
         </div>
@@ -59,7 +59,14 @@
     <QuestionDrawer :is-open="questionDrawer.isEditOpen" :is-edit-mode="true" :question-data="questionDrawer.editData"
       :section-id="questionDrawer.sectionId" :available-sections="surveySections" title="Edit Question"
       @close="closeQuestionDrawer" @success="handleQuestionSuccess" />
+
+    <ResultCategoryDrawer :is-open="resultCategoryDrawer.isOpen" :category-data="resultCategoryDrawer.categoryData"
+      :is-edit-mode="resultCategoryDrawer.isEditMode" :survey-id="currentSurveyId"
+      title="Edit Result Category"
+      @close="closeResultCategoryDrawer" @success="handleResultCategorySuccess" />
   </DashboardLayout>
+
+  
 </template>
 
 <script setup>
@@ -73,6 +80,7 @@ import ManageSurveyCard from '@/Components/ManageSurveyCard.vue'
 import ManageSurveyResultCategoryCard from '@/Components/ManageSurveyResultCategoryCard.vue'
 import SectionDrawer from '@/Components/SectionDrawer.vue'
 import QuestionDrawer from '@/Components/QuestionDrawer.vue'
+import ResultCategoryDrawer from '@/Components/ResultCategoryDrawer.vue'
 import { ListOrdered } from 'lucide-vue-next'
 
 // ===== PROPS & CONSTANTS =====
@@ -102,6 +110,13 @@ const questionDrawer = reactive({
   isEditOpen: false,
   editData: null,
   sectionId: null
+})
+
+// Result Category Drawer State
+const resultCategoryDrawer = reactive({
+  isOpen: false,
+  isEditMode: false,
+  categoryData: null
 })
 
 // ===== DRAWER METHODS =====
@@ -154,6 +169,33 @@ const handleQuestionSuccess = async (questionData) => {
 
   // Close drawer
   closeQuestionDrawer()
+}
+
+// Result Category Drawer Methods
+const openResultCategoryDrawer = () => {
+  resultCategoryDrawer.isOpen = true
+  resultCategoryDrawer.isEditMode = false
+  resultCategoryDrawer.categoryData = null
+}
+
+const openEditResultCategoryDrawer = (categoryData) => {
+  resultCategoryDrawer.categoryData = categoryData
+  resultCategoryDrawer.isEditMode = true
+  resultCategoryDrawer.isOpen = true
+}
+
+const closeResultCategoryDrawer = () => {
+  resultCategoryDrawer.isOpen = false
+  resultCategoryDrawer.isEditMode = false
+  resultCategoryDrawer.categoryData = null
+}
+
+const handleResultCategorySuccess = async (categoryData) => {
+  // Refresh the survey data to get updated result categories
+  await fetchSurvey()
+
+  // Close drawer
+  closeResultCategoryDrawer()
 }
 
 // ===== EVENT HANDLERS =====
