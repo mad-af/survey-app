@@ -76,9 +76,12 @@ const fetchResultCategories = async () => {
 
 const getRuleBadgeClass = (color) => {
   const classes = {
-    'error': 'badge-error',
-    'success': 'badge-success', 
+    'primary': 'badge-primary',
+    'secondary': 'badge-secondary',
+    'accent': 'badge-accent',
+    'success': 'badge-success',
     'warning': 'badge-warning',
+    'error': 'badge-error',
     'info': 'badge-info'
   }
   return classes[color] || 'badge-ghost'
@@ -86,9 +89,12 @@ const getRuleBadgeClass = (color) => {
 
 const getRuleColorClass = (color) => {
   const classes = {
-    'error': 'bg-error/10 text-error',
+    'primary': 'bg-primary/10 text-primary',
+    'secondary': 'bg-secondary/10 text-secondary',
+    'accent': 'bg-accent/10 text-accent',
     'success': 'bg-success/10 text-success',
-    'warning': 'bg-warning/10 text-warning', 
+    'warning': 'bg-warning/10 text-warning',
+    'error': 'bg-error/10 text-error',
     'info': 'bg-info/10 text-info'
   }
   return classes[color] || 'bg-base-200 text-base-content'

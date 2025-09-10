@@ -81,18 +81,18 @@ class SurveyController extends Controller
 
             // Auto-create default ResultCategory and ResultCategoryRule for the survey
             $resultCategory = ResultCategory::create([
-                'owner_type' => 'App\\Models\\Survey',
+                'owner_type' => 'survey',
                 'owner_id' => $survey->id,
                 'survey_id' => $survey->id,
-                'name' => 'Default Survey Result',
+                'name' => 'Survey',
             ]);
 
             ResultCategoryRule::create([
                 'result_category_id' => $resultCategory->id,
                 'operation' => 'else',
-                'title' => 'Default',
+                'title' => 'Hasil Umum',
                 'score' => 0,
-                'color' => 'primary',
+                'color' => 'info',
             ]);
 
             // Load the owner relationship
@@ -198,7 +198,7 @@ class SurveyController extends Controller
             }
 
             // Auto-delete ResultCategory and ResultCategoryRule associated with this survey
-            $resultCategories = ResultCategory::where('owner_type', 'App\\Models\\Survey')
+            $resultCategories = ResultCategory::where('owner_type', 'survey')
                                              ->where('owner_id', $survey->id)
                                              ->get();
             

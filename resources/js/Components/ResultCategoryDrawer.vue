@@ -65,7 +65,7 @@
                       <span class="label-text">Operation</span>
                       <span class="label-text-alt text-error">*</span>
                     </label>
-                    <div v-if="rule.operation === 'else'" class="w-full input input-bordered input-sm bg-gray-100 text-gray-600 cursor-not-allowed">
+                    <div v-if="rule.operation === 'else'" class="w-full text-gray-600 bg-gray-100 cursor-not-allowed input input-bordered input-sm">
                       Default (else)
                     </div>
                     <select 

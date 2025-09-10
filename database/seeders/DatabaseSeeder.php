@@ -274,7 +274,7 @@ class DatabaseSeeder extends Seeder
                 'operation' => 'else',
                 'title' => 'Skor Sedang',
                 'score' => 0.00, // Not used for 'else' operation
-                'color' => 'warning', // DaisyUI class for medium scores
+                'color' => 'info', // DaisyUI class for medium scores
             ]);
         }
 
@@ -309,7 +309,7 @@ class DatabaseSeeder extends Seeder
                 'operation' => 'else',
                 'title' => 'Skor Sedang',
                 'score' => 0.00, // Not used for 'else' operation
-                'color' => 'warning', // DaisyUI class for medium scores
+                'color' => 'info', // DaisyUI class for medium scores
             ]);
         }
 

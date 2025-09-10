@@ -107,16 +107,16 @@ class SurveySectionController extends Controller
             $resultCategory = ResultCategory::create([
                 'owner_type' => 'survey_section',
                 'owner_id' => $section->id,
-                'name' => 'Section ' . $section->order . ': ' . $section->title,
+                'name' => 'Section ' . $section->order,
             ]);
 
             // Create default rule (else)
             ResultCategoryRule::create([
                 'result_category_id' => $resultCategory->id,
                 'operation' => 'else',
-                'title' => 'Default',
+                'title' => 'Hasil Umum',
                 'score' => 0,
-                'color' => 'primary',
+                'color' => 'info',
             ]);
 
             // Load relationships
@@ -248,7 +248,7 @@ class SurveySectionController extends Controller
                             ->first();
                         if ($resultCategory) {
                             $resultCategory->update([
-                                'name' => 'Section ' . $normalizedOrder . ': ' . $sectionToNormalize->title
+                                'name' => 'Section ' . $normalizedOrder 
                             ]);
                         }
                     }
@@ -267,7 +267,7 @@ class SurveySectionController extends Controller
                     ->first();
                 if ($resultCategory) {
                     $resultCategory->update([
-                        'name' => 'Section ' . $section->order . ': ' . $section->title
+                        'name' => 'Section ' . $section->order
                     ]);
                 }
             }
@@ -332,7 +332,7 @@ class SurveySectionController extends Controller
                     ->first();
                 if ($resultCategory) {
                     $resultCategory->update([
-                        'name' => 'Section ' . $remainingSection->order . ': ' . $remainingSection->title
+                        'name' => 'Section ' . $remainingSection->order
                     ]);
                 }
             }
