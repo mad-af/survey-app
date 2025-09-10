@@ -13,22 +13,34 @@ class ResultCategory extends Model
     use HasFactory;
 
     protected $fillable = [
-        'survey_id',
+        'owner_type',
+        'owner_id',
         'name',
         'description',
-        'min_score',
-        'max_score',
-        'color',
     ];
 
     protected $casts = [
-        'min_score' => 'decimal:2',
-        'max_score' => 'decimal:2',
+        'owner_type' => 'string',
     ];
 
-    public function survey(): BelongsTo
+    public function owner()
     {
-        return $this->belongsTo(Survey::class);
+        return $this->morphTo();
+    }
+
+    public function survey()
+    {
+        return $this->belongsTo(Survey::class, 'owner_id')->where('owner_type', 'survey');
+    }
+
+    public function surveySection()
+    {
+        return $this->belongsTo(SurveySection::class, 'owner_id')->where('owner_type', 'survey_section');
+    }
+
+    public function rules()
+    {
+        return $this->hasMany(ResultCategoryRule::class);
     }
 
     public function responseScores(): HasMany

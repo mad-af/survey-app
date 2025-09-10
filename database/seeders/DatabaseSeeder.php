@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use App\Models\Choice;
 use App\Models\Question;
+use App\Models\ResultCategory;
+use App\Models\ResultCategoryRule;
 use App\Models\Survey;
 use App\Models\SurveySection;
 use App\Models\User;
@@ -240,6 +242,78 @@ class DatabaseSeeder extends Seeder
             'score' => 0.00,
             'order' => 4,
         ]);
+
+        // Create Result Categories for all Surveys
+        $surveys = Survey::all();
+        foreach ($surveys as $survey) {
+            $surveyResultCategory = ResultCategory::create([
+                'owner_type' => 'survey',
+                'owner_id' => $survey->id,
+                'name' => 'Kategori Hasil ' . $survey->title,
+                'description' => 'Kategori hasil untuk survey: ' . $survey->title,
+            ]);
+
+            // Create Result Category Rules for Survey
+            ResultCategoryRule::create([
+                'result_category_id' => $surveyResultCategory->id,
+                'operation' => 'lt',
+                'title' => 'Skor Rendah',
+                'score' => 50.00,
+                'color' => 'error', // DaisyUI class for low scores
+            ]);
+
+            ResultCategoryRule::create([
+                'result_category_id' => $surveyResultCategory->id,
+                'operation' => 'gt',
+                'title' => 'Skor Tinggi',
+                'score' => 80.00,
+                'color' => 'success', // DaisyUI class for high scores
+            ]);
+
+            ResultCategoryRule::create([
+                'result_category_id' => $surveyResultCategory->id,
+                'operation' => 'else',
+                'title' => 'Skor Sedang',
+                'score' => 0.00, // Not used for 'else' operation
+                'color' => 'warning', // DaisyUI class for medium scores
+            ]);
+        }
+
+        // Create Result Categories for all Survey Sections
+        $sections = SurveySection::all();
+        foreach ($sections as $section) {
+            $sectionResultCategory = ResultCategory::create([
+                'owner_type' => 'survey_section',
+                'owner_id' => $section->id,
+                'name' => 'Kategori Hasil ' . $section->title,
+                'description' => 'Kategori hasil untuk section: ' . $section->title,
+            ]);
+
+            // Create Result Category Rules for Section
+            ResultCategoryRule::create([
+                'result_category_id' => $sectionResultCategory->id,
+                'operation' => 'lt',
+                'title' => 'Skor Rendah',
+                'score' => 40.00,
+                'color' => 'error', // DaisyUI class for low scores
+            ]);
+
+            ResultCategoryRule::create([
+                'result_category_id' => $sectionResultCategory->id,
+                'operation' => 'gt',
+                'title' => 'Skor Tinggi',
+                'score' => 75.00,
+                'color' => 'success', // DaisyUI class for high scores
+            ]);
+
+            ResultCategoryRule::create([
+                'result_category_id' => $sectionResultCategory->id,
+                'operation' => 'else',
+                'title' => 'Skor Sedang',
+                'score' => 0.00, // Not used for 'else' operation
+                'color' => 'warning', // DaisyUI class for medium scores
+            ]);
+        }
 
     }
 }

@@ -13,15 +13,13 @@ return new class extends Migration
     {
         Schema::create('result_categories', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('survey_id')->constrained('surveys')->onDelete('cascade');
+            $table->enum('owner_type', ['survey', 'survey_section'])->default('survey')->comment('penentu jenis induk');
+            $table->unsignedBigInteger('owner_id')->default(0)->comment('id survey / section');
             $table->string('name');
             $table->text('description')->nullable();
-            $table->decimal('min_score', 8, 2);
-            $table->decimal('max_score', 8, 2);
-            $table->string('color', 7)->default('#6B7280')->comment('hex color');
             $table->timestamps();
             
-            $table->index(['survey_id', 'min_score', 'max_score']);
+            $table->index(['owner_type', 'owner_id'], 'idx_result_categories_owner');
         });
     }
 
