@@ -341,6 +341,7 @@ const saveAllRules = async () => {
     showToast('Rules saved successfully', 'success')
     await fetchCategoryRules(selectedCategoryId.value)
     emit('success')
+    closeDrawer()
   } catch (error) {
     console.error('Error saving rules:', error)
     const errorMessage = error.response?.data?.message || error.message || 'Failed to save rules'

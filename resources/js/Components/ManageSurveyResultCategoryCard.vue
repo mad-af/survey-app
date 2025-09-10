@@ -23,7 +23,7 @@
 
       <!-- Result Categories List -->
       <div v-else class="join join-vertical bg-base-100">
-        <div v-for="(category, index) in resultCategories" :key="category.id" class="border collapse collapse-arrow join-item border-base-300">
+        <div v-for="(category, index) in sortedResultCategories" :key="category.id" class="border collapse collapse-arrow join-item border-base-300">
           <input type="radio" :name="`result-category-accordion`" :checked="index === 0" />
           <div class="text-xs font-semibold tracking-wider uppercase collapse-title text-primary">{{ getCategoryDisplayName(category) }}</div>
           <div class="text-xs collapse-content">
@@ -44,7 +44,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { Target } from 'lucide-vue-next'
 import axios from 'axios'
 
@@ -59,6 +59,20 @@ const props = defineProps({
 // Reactive data
 const resultCategories = ref([])
 const loading = ref(false)
+
+// Computed properties
+const sortedResultCategories = computed(() => {
+  return resultCategories.value.slice().sort((a, b) => {
+    // Survey categories always come first
+    if (a.owner_type === 'survey' && b.owner_type !== 'survey') return -1
+    if (a.owner_type !== 'survey' && b.owner_type === 'survey') return 1
+    
+    // Then sort by name A-Z
+    const nameA = (a.name || '').toLowerCase()
+    const nameB = (b.name || '').toLowerCase()
+    return nameA < nameB ? -1 : nameA > nameB ? 1 : 0
+  })
+})
 
 // Methods
 const fetchResultCategories = async () => {
@@ -87,19 +101,6 @@ const getRuleBadgeClass = (color) => {
   return classes[color] || 'badge-ghost'
 }
 
-const getRuleColorClass = (color) => {
-  const classes = {
-    'primary': 'bg-primary/10 text-primary',
-    'secondary': 'bg-secondary/10 text-secondary',
-    'accent': 'bg-accent/10 text-accent',
-    'success': 'bg-success/10 text-success',
-    'warning': 'bg-warning/10 text-warning',
-    'error': 'bg-error/10 text-error',
-    'info': 'bg-info/10 text-info'
-  }
-  return classes[color] || 'bg-base-200 text-base-content'
-}
-
 const formatRuleOperation = (rule) => {
   const operation = rule.operation.toLowerCase()
   const score = Math.round(rule.score || 0)
@@ -117,8 +118,8 @@ const getCategoryDisplayName = (category) => {
   if (category.owner_type === 'survey') {
     return 'survey'
   } else if (category.owner_type === 'survey_section') {
-    const sectionNumber = category.section_order || 1
-    return `# section ${sectionNumber}`
+    const categoryName = category.name 
+    return `# ${categoryName}`
   }
   return category.name
 }

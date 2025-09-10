@@ -32,7 +32,7 @@
         <div class="lg:col-span-2">
           <div class="sticky top-6 space-y-3">
             <ManageSurveyActionCard @add-section="openAddSectionDrawer" @add-question="openAddQuestionDrawer" @edit-result-category="openResultCategoryDrawer" />
-            <ManageSurveyResultCategoryCard :survey-id="currentSurveyId" />
+            <ManageSurveyResultCategoryCard ref="resultCategoryCardRef" :survey-id="currentSurveyId" />
           </div>
         </div>
 
@@ -95,6 +95,7 @@ const currentSurveyId = ref(props.surveyId)
 
 // Data from API
 const surveySections = ref([])
+const resultCategoryCardRef = ref(null)
 
 // ===== DRAWER STATE MANAGEMENT =====
 // Section Drawer State
@@ -139,6 +140,11 @@ const closeSectionDrawer = () => {
 const handleSectionSuccess = async (sectionData) => {
   // Refresh the sections list
   await fetchSections()
+
+  // Refresh the result categories data
+  if (resultCategoryCardRef.value) {
+    await resultCategoryCardRef.value.fetchResultCategories()
+  }
 
   // Close drawer
   closeSectionDrawer()
@@ -191,8 +197,10 @@ const closeResultCategoryDrawer = () => {
 }
 
 const handleResultCategorySuccess = async (categoryData) => {
-  // Refresh the survey data to get updated result categories
-  await fetchSurvey()
+  // Refresh the result categories data
+  if (resultCategoryCardRef.value) {
+    await resultCategoryCardRef.value.fetchResultCategories()
+  }
 
   // Close drawer
   closeResultCategoryDrawer()
@@ -211,6 +219,11 @@ const handleDeleteSection = async (section) => {
 
       // Refresh sections list
       await fetchSections()
+
+      // Refresh the result categories data
+      if (resultCategoryCardRef.value) {
+        await resultCategoryCardRef.value.fetchResultCategories()
+      }
 
       // console.log('Section deleted successfully')
     } catch (error) {

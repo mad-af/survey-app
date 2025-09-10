@@ -40,7 +40,7 @@
 
 <script setup>
 import { defineEmits } from 'vue'
-import { Target, SquarePlus, CopyPlus } from 'lucide-vue-next'
+import { Target, SquarePlus, CopyPlus, Settings } from 'lucide-vue-next'
 
 const emit = defineEmits([
   'add-section',
