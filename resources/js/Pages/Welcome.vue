@@ -223,7 +223,7 @@
         <p class="text-sm text-base-content/70">
           Partisipasi Mudah Manfaat Nyata
         </p> 
-        <p>Copyright © 2024 - All right reserved</p>
+        <p>Copyright © 2025 - All right reserved</p>
       </aside>
       <nav>
         <div class="grid grid-flow-col gap-4">
