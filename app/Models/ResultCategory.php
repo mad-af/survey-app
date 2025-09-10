@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\OwnerType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -19,7 +20,7 @@ class ResultCategory extends Model
     ];
 
     protected $casts = [
-        'owner_type' => 'string',
+        'owner_type' => OwnerType::class,
     ];
 
     public function owner()
