@@ -10,6 +10,7 @@ use App\Http\Controllers\SurveyTakeController;
 use App\Http\Controllers\SurveyProcessController;
 use App\Http\Controllers\WilayahController;
 use App\Http\Controllers\ResultCategoryController;
+use App\Http\Controllers\ResultCategoryRuleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +41,12 @@ Route::middleware(['auth:sanctum', 'no.cache'])->group(function () {
     // Result Categories API Routes
     Route::get('surveys/{survey}/result-categories', [ResultCategoryController::class, 'getBySurvey']);
     Route::get('sections/{section}/result-categories', [ResultCategoryController::class, 'getBySection']);
+    
+    // Result Category Rules API Routes
+    Route::apiResource('result-categories.rules', ResultCategoryRuleController::class)->parameters([
+        'result-categories' => 'resultCategory',
+        'rules' => 'rule'
+    ]);
     
     // Survey Sections API Routes
     Route::apiResource('surveys.sections', SurveySectionController::class)->parameters([
