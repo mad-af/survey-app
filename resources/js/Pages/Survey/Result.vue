@@ -34,9 +34,9 @@
               <span v-if="surveyResult.score.category" class="text-sm opacity-90">
                 {{ surveyResult.score.category.name }}
               </span>
-              <span v-if="surveyResult.score.category_rule" class="badge badge-outline" :class="getRuleBadgeClass(surveyResult.score.category_rule.color)">
-                {{ surveyResult.score.category_rule.title }}
-              </span>
+              <!-- <span v-if="surveyResult.score.category && surveyResult.score.category.rule" class="badge badge-outline" :class="getRuleBadgeClass(surveyResult.score.category.rule.color)">
+                {{ surveyResult.score.category.rule.title }}
+              </span> -->
             </div>
           </div>
           <div class="text-right">
@@ -47,15 +47,15 @@
     </div>
 
     <!-- Category Description -->
-    <div v-if="surveyResult.score.category" class="mb-6 alert" :class="getCategoryAlertClass(surveyResult.score.category_rule?.color)">
+    <div v-if="surveyResult.score.category" class="mb-6 alert" :class="getCategoryAlertClass(surveyResult.score.category.rule?.color)">
       <Info class="w-5 h-5" />
       <div>
         <h3 class="font-semibold">{{ surveyResult.score.category.name }}</h3>
-        <p v-if="surveyResult.score.category_rule" class="text-sm mt-1">
-          {{ surveyResult.score.category_rule.title }}
-          <span class="ml-2 opacity-75">
-            ({{ surveyResult.score.category_rule.operation }} {{ surveyResult.score.category_rule.score }})
-          </span>
+        <p v-if="surveyResult.score.category.rule" class="mt-1 text-sm">
+          {{ surveyResult.score.category.rule.title }}
+          <!-- <span class="ml-2 opacity-75">
+            ({{ surveyResult.score.category.rule.operation }} {{ surveyResult.score.category.rule.score }})
+          </span> -->
         </p>
       </div>
     </div>
@@ -94,11 +94,23 @@
               </div>
             </div>
             
+            <!-- Section Category Info -->
+            <div v-if="section.category" class="mb-3">
+              <div class="flex gap-2 items-center">
+                <span class="text-xs text-base-content/80">
+                  {{ section.category.name }}
+                </span>
+                <span v-if="section.category.rule" class="badge badge-sm" :class="getRuleBadgeClass(section.category.rule?.color)">
+                  {{ section.category.rule.title }}
+                </span>
+              </div>
+            </div>
+            
             <!-- Progress Bar -->
             <div class="w-full h-2 rounded-full bg-base-200">
               <div 
                 class="h-2 rounded-full transition-all duration-500"
-                :class="getProgressBarClass(section.percentage)"
+                :class="getProgressBarClass(section.percentage, section.category?.rule?.color)"
                 :style="{ width: section.percentage + '%' }"
               ></div>
             </div>
@@ -175,10 +187,22 @@ const getRuleBadgeClass = (color) => {
   return colorMap[color] || 'badge-info'
 }
 
-const getProgressBarClass = (percentage) => {
-  // if (percentage >= 80) return 'bg-success'
-  // if (percentage >= 60) return 'bg-warning'
-  return 'bg-info'
+const getProgressBarClass = (percentage, ruleColor) => {
+  if (ruleColor) {
+    const colorMap = {
+      'success': 'bg-success',
+      'warning': 'bg-warning',
+      'error': 'bg-error',
+      'info': 'bg-info'
+    }
+    return colorMap[ruleColor] || 'bg-info'
+  }
+  
+  // Fallback based on percentage
+  if (percentage >= 80) return 'bg-success'
+  if (percentage >= 60) return 'bg-warning'
+  if (percentage >= 40) return 'bg-info'
+  return 'bg-error'
 }
 
 const goBack = async () => {
