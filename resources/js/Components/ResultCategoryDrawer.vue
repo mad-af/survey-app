@@ -19,7 +19,7 @@
         </div>
 
         <!-- Result Category Selection -->
-        <div class="form-control mb-4">
+        <div class="mb-4 form-control">
           <label class="text-sm label">
             <span class="label-text">Select Result Category</span>
             <span class="label-text-alt text-error">*</span>
@@ -44,179 +44,127 @@
           </label>
         </div>
 
-        <!-- Selected Category Details -->
-        <div v-if="selectedCategory" class="mb-4 p-3 bg-base-200 rounded-lg">
-          <h4 class="font-medium text-sm mb-2">Category Details:</h4>
-          <div class="space-y-1 text-xs">
-            <p><span class="font-medium">Name:</span> {{ selectedCategory.name }}</p>
-            
-            <p><span class="font-medium">Color:</span> 
-              <span class="badge badge-sm" :class="`badge-${selectedCategory.color}`">{{ selectedCategory.color }}</span>
-            </p>
-          </div>
-        </div>
-
         <!-- Result Category Rules Management -->
         <div v-if="selectedCategory">
-          <!-- Existing Rules List -->
-          <div v-if="categoryRules.length > 0" class="mb-4">
-            <h4 class="font-medium text-sm mb-2">Existing Rules:</h4>
-            <div class="space-y-2">
-              <div 
-                v-for="rule in categoryRules" 
-                :key="rule.id"
-                class="flex items-center justify-between p-2 bg-base-100 rounded border"
-              >
-                <div class="flex-1">
-                  <div class="text-sm font-medium">{{ rule.title }}</div>
-                  <div class="text-xs text-base-content/70">
-                    {{ rule.operation === 'lt' ? 'Less than' : rule.operation === 'gt' ? 'Greater than' : 'Default' }} 
-                    <span v-if="rule.operation !== 'else'">{{ rule.score }}%</span>
+          <!-- Rules Management -->
+          <div class="space-y-3">
+            <div v-for="(rule, index) in categoryRules" :key="rule.id || `new-${index}`">
+              <fieldset class="p-4 border fieldset bg-base-200 border-base-300 rounded-box">
+                <legend class="flex justify-between items-center w-full fieldset-legend">
+                   <span>Rule {{ index + 1 }}</span>
+                   <button v-if="categoryRules.length > 1 && rule.operation !== 'else'" type="button" @click="deleteRule(rule.id)"
+                     class="ml-2 btn btn-xs btn-ghost btn-circle text-error">
+                     <X :size="12" />
+                   </button>
+                 </legend>
+
+                <div class="space-y-3">
+                  <!-- Operation Field -->
+                  <div>
+                    <label class="label">
+                      <span class="label-text">Operation</span>
+                      <span class="label-text-alt text-error">*</span>
+                    </label>
+                    <div v-if="rule.operation === 'else'" class="w-full input input-bordered input-sm bg-gray-100 text-gray-600 cursor-not-allowed">
+                      Default (else)
+                    </div>
+                    <select 
+                      v-else
+                      v-model="rule.operation"
+                      class="w-full select select-bordered select-sm"
+                      required
+                    >
+                      <option value="">Select operation</option>
+                      <option value="lt">Less than (&lt;)</option>
+                      <option value="gt">Greater than (&gt;)</option>
+                    </select>
                   </div>
+
+                  <!-- Score and Title Fields -->
+                  <div class="grid grid-cols-2 gap-3">
+                    <div v-if="rule.operation !== 'else'">
+                      <label class="label">
+                        <span class="label-text">Score (%)</span>
+                      </label>
+                      <input 
+                        v-model.number="rule.score" 
+                        type="number" 
+                        placeholder="Score percentage"
+                        class="w-full input input-bordered input-sm" 
+                        min="0" 
+                        max="100" 
+                        step="0.01" 
+                      />
+                    </div>
+
+                    <div :class="rule.operation === 'else' ? 'col-span-2' : ''">
+                      <label class="label">
+                        <span class="label-text">Rule Title</span>
+                        <span class="label-text-alt text-error">*</span>
+                      </label>
+                      <input 
+                        v-model="rule.title" 
+                        type="text" 
+                        placeholder="Rule title"
+                        class="w-full input input-bordered input-sm" 
+                        required 
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Color Field -->
+                   <div>
+                     <label class="label">
+                       <span class="label-text">Color</span>
+                       <span class="label-text-alt text-error">*</span>
+                     </label>
+                     <div class="flex flex-wrap gap-2">
+                       <button 
+                         v-for="color in colorOptions" 
+                         :key="color.value"
+                         type="button"
+                         @click="rule.color = color.value"
+                         :class="[
+                           'w-8 h-8 rounded-full border-2 transition-all hover:scale-110',
+                           `bg-${color.value}`,
+                           rule.color === color.value
+                             ? 'border-gray-800 ring-2 ring-offset-2 ring-gray-400'
+                             : 'border-gray-300 hover:border-gray-500'
+                         ]"
+                         :title="color.label"
+                       >
+                       </button>
+                     </div>
+                   </div>
                 </div>
-                <div class="flex items-center gap-2">
-                  <span class="badge badge-sm" :class="`badge-${rule.color}`">{{ rule.color }}</span>
-                  <button 
-                    type="button"
-                    @click="editRule(rule)"
-                    class="btn btn-xs btn-ghost"
-                  >
-                    Edit
-                  </button>
-                  <button 
-                    type="button"
-                    @click="deleteRule(rule.id)"
-                    class="btn btn-xs btn-error btn-ghost"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+              </fieldset>
             </div>
           </div>
 
-          <!-- Rule Form -->
-          <form @submit.prevent="handleRuleSubmit" class="space-y-3">
-            <h4 class="font-medium text-sm">{{ editingRule ? 'Edit Rule' : 'Add New Rule' }}</h4>
-            
-            <!-- Operation Field -->
-            <div class="form-control">
-              <label class="text-sm label">
-                <span class="label-text">Operation</span>
-                <span class="label-text-alt text-error">*</span>
-              </label>
-              <select 
-                v-model="ruleForm.operation"
-                class="w-full select select-bordered select-sm"
-                :class="{ 'select-error': errors.operation }"
-                required
-              >
-                <option value="">Select operation</option>
-                <option value="lt">Less than (&lt;)</option>
-                <option value="gt">Greater than (&gt;)</option>
-                <option value="else">Default (else)</option>
-              </select>
-              <label v-if="errors.operation" class="label">
-                <span class="label-text-alt text-error">{{ errors.operation }}</span>
-              </label>
-            </div>
+          <button type="button" @click="addRule" class="mt-3 w-full btn btn-sm btn-outline">
+            Add Rule
+          </button>
 
-            <!-- Score Field -->
-            <div class="form-control" v-if="ruleForm.operation !== 'else'">
-              <label class="text-sm label">
-                <span class="label-text">Score (%)</span>
-                <span class="label-text-alt text-error">*</span>
-              </label>
-              <input 
-                type="number" 
-                v-model.number="ruleForm.score"
-                placeholder="Enter score percentage" 
-                class="w-full input input-bordered input-sm"
-                :class="{ 'input-error': errors.score }"
-                min="0"
-                max="100"
-                step="0.01"
-                required
-              />
-              <label v-if="errors.score" class="label">
-                <span class="label-text-alt text-error">{{ errors.score }}</span>
-              </label>
-            </div>
-
-            <!-- Title Field -->
-            <div class="form-control">
-              <label class="text-sm label">
-                <span class="label-text">Rule Title</span>
-                <span class="label-text-alt text-error">*</span>
-              </label>
-              <input 
-                type="text" 
-                v-model="ruleForm.title"
-                placeholder="Enter rule title" 
-                class="w-full input input-bordered input-sm"
-                :class="{ 'input-error': errors.title }"
-                required
-              />
-              <label v-if="errors.title" class="label">
-                <span class="label-text-alt text-error">{{ errors.title }}</span>
-              </label>
-            </div>
-
-            <!-- Color Field -->
-            <div class="form-control">
-              <label class="text-sm label">
-                <span class="label-text">Color</span>
-                <span class="label-text-alt text-error">*</span>
-              </label>
-              <select 
-                v-model="ruleForm.color"
-                class="w-full select select-bordered select-sm"
-                :class="{ 'select-error': errors.color }"
-                required
-              >
-                <option value="">Select color</option>
-                <option value="primary">Primary</option>
-                <option value="secondary">Secondary</option>
-                <option value="accent">Accent</option>
-                <option value="success">Success</option>
-                <option value="warning">Warning</option>
-                <option value="error">Error</option>
-                <option value="info">Info</option>
-              </select>
-              <label v-if="errors.color" class="label">
-                <span class="label-text-alt text-error">{{ errors.color }}</span>
-              </label>
-            </div>
-
-            <!-- Form Actions -->
-            <div class="flex gap-2 pt-3">
-              <button 
-                type="button" 
-                class="flex-1 btn btn-sm"
-                @click="closeDrawer"
-                :disabled="loading"
-              >
-                Cancel
-              </button>
-              <button 
-                v-if="editingRule"
-                type="button" 
-                class="btn btn-sm btn-ghost"
-                @click="cancelEdit"
-                :disabled="loading"
-              >
-                Cancel Edit
-              </button>
-              <button 
-                type="submit" 
-                class="flex-1 btn btn-primary btn-sm"
-                :disabled="loading || !selectedCategoryId"
-              >
-                <span v-if="loading" class="loading loading-spinner loading-xs"></span>
-                {{ loading ? (editingRule ? 'Updating...' : 'Creating...') : (editingRule ? 'Update Rule' : 'Add Rule') }}
-              </button>
-            </div>
-          </form>
+          <!-- Form Actions -->
+          <div class="flex gap-2 pt-3">
+            <button 
+              type="button" 
+              class="flex-1 btn btn-sm"
+              @click="closeDrawer"
+              :disabled="loading"
+            >
+              Cancel
+            </button>
+            <button 
+              type="button" 
+              class="flex-1 btn btn-primary btn-sm"
+              @click="saveAllRules"
+              :disabled="loading || !selectedCategoryId"
+            >
+              <span v-if="loading" class="loading loading-spinner loading-xs"></span>
+              {{ loading ? 'Saving...' : 'Save Rules' }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -258,20 +206,19 @@ const selectedCategory = ref(null)
 const categoryRules = ref([])
 const editingRule = ref(null)
 
-const ruleForm = reactive({
-  operation: '',
-  title: '',
-  score: 0,
-  color: ''
+const errors = reactive({
+  category: ''
 })
 
-const errors = reactive({
-  category: '',
-  operation: '',
-  title: '',
-  score: '',
-  color: ''
-})
+const colorOptions = [
+  { value: 'primary', label: 'Primary' },
+  { value: 'secondary', label: 'Secondary' },
+  { value: 'accent', label: 'Accent' },
+  { value: 'success', label: 'Success' },
+  { value: 'warning', label: 'Warning' },
+  { value: 'error', label: 'Error' },
+  { value: 'info', label: 'Info' }
+]
 
 // Methods
 const closeDrawer = () => {
@@ -282,31 +229,11 @@ const resetForm = () => {
   selectedCategoryId.value = ''
   selectedCategory.value = null
   categoryRules.value = []
-  editingRule.value = null
-  
-  ruleForm.operation = ''
-  ruleForm.title = ''
-  ruleForm.score = 0
-  ruleForm.color = ''
   
   // Clear errors
   Object.keys(errors).forEach(key => {
     errors[key] = ''
   })
-}
-
-const resetRuleForm = () => {
-  ruleForm.operation = ''
-  ruleForm.title = ''
-  ruleForm.score = 0
-  ruleForm.color = ''
-  editingRule.value = null
-  
-  // Clear rule-related errors
-  errors.operation = ''
-  errors.title = ''
-  errors.score = ''
-  errors.color = ''
 }
 
 const fetchResultCategories = async () => {
@@ -337,134 +264,105 @@ const onCategoryChange = async () => {
   if (selectedCategoryId.value) {
     selectedCategory.value = resultCategories.value.find(cat => cat.id == selectedCategoryId.value)
     await fetchCategoryRules(selectedCategoryId.value)
-    resetRuleForm()
+    
+    // Add default rule if no rules exist
+    if (categoryRules.value.length === 0) {
+      addRule()
+    }
   } else {
     selectedCategory.value = null
     categoryRules.value = []
-    resetRuleForm()
   }
 }
 
-const validateRuleForm = () => {
-  let isValid = true
-  
-  // Clear previous errors
-  errors.operation = ''
-  errors.title = ''
-  errors.score = ''
-  errors.color = ''
-  
-  // Operation validation
-  if (!ruleForm.operation) {
-    errors.operation = 'Operation is required'
-    isValid = false
-  }
-  
-  // Title validation
-  if (!ruleForm.title.trim()) {
-    errors.title = 'Rule title is required'
-    isValid = false
-  }
-  
-  // Score validation (only for lt and gt operations)
-  if (ruleForm.operation !== 'else' && (ruleForm.score < 0 || ruleForm.score > 100)) {
-    errors.score = 'Score must be between 0 and 100'
-    isValid = false
-  }
-  
-  // Color validation
-  if (!ruleForm.color) {
-    errors.color = 'Color is required'
-    isValid = false
-  }
-  
-  return isValid
+const addRule = () => {
+  categoryRules.value.push({
+    operation: '',
+    title: '',
+    score: 0,
+    color: ''
+  })
 }
 
-const handleRuleSubmit = async () => {
-  if (!validateRuleForm()) {
+const validateRules = () => {
+  for (let i = 0; i < categoryRules.value.length; i++) {
+    const rule = categoryRules.value[i]
+    
+    if (!rule.operation) {
+      showToast(`Rule ${i + 1}: Operation is required`, 'error')
+      return false
+    }
+    
+    if (!rule.title?.trim()) {
+      showToast(`Rule ${i + 1}: Title is required`, 'error')
+      return false
+    }
+    
+    if (rule.operation !== 'else' && (rule.score < 0 || rule.score > 100)) {
+      showToast(`Rule ${i + 1}: Score must be between 0 and 100`, 'error')
+      return false
+    }
+    
+    if (!rule.color) {
+      showToast(`Rule ${i + 1}: Color is required`, 'error')
+      return false
+    }
+  }
+  
+  return true
+}
+
+const saveAllRules = async () => {
+  if (!validateRules()) {
     return
   }
   
   loading.value = true
   
   try {
-    const submitData = {
-      operation: ruleForm.operation,
-      title: ruleForm.title,
-      score: ruleForm.operation === 'else' ? 0 : ruleForm.score,
-      color: ruleForm.color
+    // First, delete all existing rules
+    const existingRules = categoryRules.value.filter(rule => rule.id)
+    for (const rule of existingRules) {
+      await axios.delete(`/api/result-categories/${selectedCategoryId.value}/rules/${rule.id}`)
     }
     
-    let response
-    
-    if (editingRule.value) {
-      // Update existing rule
-      response = await axios.put(`/api/result-categories/${selectedCategoryId.value}/rules/${editingRule.value.id}`, submitData)
-    } else {
-      // Create new rule
-      response = await axios.post(`/api/result-categories/${selectedCategoryId.value}/rules`, submitData)
+    // Then create all rules
+    for (const rule of categoryRules.value) {
+      const submitData = {
+        operation: rule.operation,
+        title: rule.title,
+        score: rule.operation === 'else' ? 0 : rule.score,
+        color: rule.color
+      }
+      
+      await axios.post(`/api/result-categories/${selectedCategoryId.value}/rules`, submitData)
     }
     
-    if (response.data.success) {
-      showToast(response.data.message, 'success')
-      await fetchCategoryRules(selectedCategoryId.value) // Refresh rules list
-      resetRuleForm()
-      emit('success', response.data.data)
-    } else {
-      throw new Error(response.data.message || 'Failed to save rule')
-    }
+    showToast('Rules saved successfully', 'success')
+    await fetchCategoryRules(selectedCategoryId.value)
+    emit('success')
   } catch (error) {
-    console.error('Error submitting rule:', error)
-    
-    // Handle validation errors
-    if (error.response?.status === 422 && error.response?.data?.errors) {
-      const validationErrors = error.response.data.errors
-      Object.keys(validationErrors).forEach(key => {
-        if (errors.hasOwnProperty(key)) {
-          errors[key] = validationErrors[key][0]
-        }
-      })
-    } else {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to save rule'
-      showToast(errorMessage, 'error')
-    }
+    console.error('Error saving rules:', error)
+    const errorMessage = error.response?.data?.message || error.message || 'Failed to save rules'
+    showToast(errorMessage, 'error')
   } finally {
     loading.value = false
   }
 }
 
-const editRule = (rule) => {
-  editingRule.value = rule
-  ruleForm.operation = rule.operation
-  ruleForm.title = rule.title
-  ruleForm.score = rule.score
-  ruleForm.color = rule.color
-}
-
-const cancelEdit = () => {
-  resetRuleForm()
-}
-
-const deleteRule = async (ruleId) => {
-  if (!confirm('Are you sure you want to delete this rule?')) {
-    return
-  }
-  
-  try {
-    const response = await axios.delete(`/api/result-categories/${selectedCategoryId.value}/rules/${ruleId}`)
-    
-    if (response.data.success) {
-      showToast(response.data.message, 'success')
-      await fetchCategoryRules(selectedCategoryId.value) // Refresh rules list
-      emit('success')
-    } else {
-      throw new Error(response.data.message || 'Failed to delete rule')
+const deleteRule = (ruleId) => {
+  if (ruleId) {
+    // Remove from array for existing rules
+    const index = categoryRules.value.findIndex(rule => rule.id === ruleId)
+    if (index > -1 && categoryRules.value[index].operation !== 'else') {
+      categoryRules.value.splice(index, 1)
     }
-  } catch (error) {
-    console.error('Error deleting rule:', error)
-    const errorMessage = error.response?.data?.message || error.message || 'Failed to delete rule'
-    showToast(errorMessage, 'error')
+  } else {
+    // Remove last rule for new rules, but not if it's an 'else' operation
+    const lastRule = categoryRules.value[categoryRules.value.length - 1]
+    if (lastRule && lastRule.operation !== 'else') {
+      categoryRules.value.pop()
+    }
   }
 }
 
