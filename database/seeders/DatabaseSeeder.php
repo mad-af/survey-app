@@ -246,6 +246,10 @@ class DatabaseSeeder extends Seeder
         // Create Result Categories for all Surveys
         $surveys = Survey::all();
         foreach ($surveys as $survey) {
+            if ($survey->id == 1) {
+                continue;
+            }
+
             $surveyResultCategory = ResultCategory::create([
                 'owner_type' => 'survey',
                 'owner_id' => $survey->id,
@@ -281,6 +285,10 @@ class DatabaseSeeder extends Seeder
         // Create Result Categories for all Survey Sections
         $sections = SurveySection::all();
         foreach ($sections as $section) {
+            if ($section->survey_id == 1) {
+                continue;
+            }
+
             $sectionResultCategory = ResultCategory::create([
                 'owner_type' => 'survey_section',
                 'owner_id' => $section->id,
