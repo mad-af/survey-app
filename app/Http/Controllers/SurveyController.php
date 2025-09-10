@@ -27,6 +27,7 @@ class SurveyController extends Controller
     {
         try {
             $surveys = Survey::with('owner:id,name')
+                        ->where('owner_id', Auth::id())
                         ->select('id', 'owner_id', 'code', 'title', 'description', 'status', 'visibility', 'starts_at', 'ends_at', 'created_at', 'updated_at')
                         ->orderBy('created_at', 'desc')
                         ->get();
@@ -380,18 +381,24 @@ class SurveyController extends Controller
     public function dashboard()
     {
         try {
-            // Get statistics
-            $totalSurveys = Survey::count();
-            $activeSurveys = Survey::where('status', SurveyStatus::ACTIVE)->count();
-            $draftSurveys = Survey::where('status', SurveyStatus::DRAFT)->count();
-            $closedSurveys = Survey::where('status', SurveyStatus::CLOSED)->count();
+            $userId = Auth::id();
             
-            $totalResponses = Response::count();
-            $completedResponses = Response::whereNotNull('submitted_at')->count();
-            $totalRespondents = Response::distinct('respondent_id')->count('respondent_id');
+            // Get statistics filtered by current user
+            $totalSurveys = Survey::where('owner_id', $userId)->count();
+            $activeSurveys = Survey::where('owner_id', $userId)->where('status', SurveyStatus::ACTIVE)->count();
+            $draftSurveys = Survey::where('owner_id', $userId)->where('status', SurveyStatus::DRAFT)->count();
+            $closedSurveys = Survey::where('owner_id', $userId)->where('status', SurveyStatus::CLOSED)->count();
             
-            // Calculate new respondents this month
-            $newRespondentsThisMonth = Response::whereMonth('created_at', Carbon::now()->month)
+            // Get user's survey IDs for filtering responses
+            $userSurveyIds = Survey::where('owner_id', $userId)->pluck('id');
+            
+            $totalResponses = Response::whereIn('survey_id', $userSurveyIds)->count();
+            $completedResponses = Response::whereIn('survey_id', $userSurveyIds)->whereNotNull('submitted_at')->count();
+            $totalRespondents = Response::whereIn('survey_id', $userSurveyIds)->distinct('respondent_id')->count('respondent_id');
+            
+            // Calculate new respondents this month for user's surveys
+            $newRespondentsThisMonth = Response::whereIn('survey_id', $userSurveyIds)
+                                             ->whereMonth('created_at', Carbon::now()->month)
                                              ->whereYear('created_at', Carbon::now()->year)
                                              ->distinct('respondent_id')
                                              ->count('respondent_id');
@@ -399,8 +406,9 @@ class SurveyController extends Controller
             // Calculate completion rate
             $completionRate = $totalResponses > 0 ? round(($completedResponses / $totalResponses) * 100) : 0;
             
-            // Get recent surveys
+            // Get recent surveys filtered by current user
             $recentSurveys = Survey::with('owner:id,name')
+                                  ->where('owner_id', $userId)
                                   ->withCount('responses')
                                   ->select('id', 'owner_id', 'code', 'title', 'description', 'status', 'created_at')
                                   ->orderBy('created_at', 'desc')
