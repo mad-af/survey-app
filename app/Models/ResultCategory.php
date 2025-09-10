@@ -35,10 +35,15 @@ class ResultCategory extends Model
 
     public function surveySection()
     {
-        return $this->belongsTo(SurveySection::class, 'owner_id')->where('owner_type', 'survey_section');
+        return $this->belongsTo(SurveySection::class, 'owner_id');
     }
 
     public function rules()
+    {
+        return $this->hasMany(ResultCategoryRule::class);
+    }
+
+    public function resultCategoryRules()
     {
         return $this->hasMany(ResultCategoryRule::class);
     }

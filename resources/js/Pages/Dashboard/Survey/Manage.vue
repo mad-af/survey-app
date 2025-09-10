@@ -7,9 +7,9 @@
         :showBackButton="true" />
 
       <!-- Survey Information Cards -->
-      <div class="grid grid-cols-1 gap-3 lg:grid-cols-4">
+      <div class="grid grid-cols-1 gap-3 lg:grid-cols-6">
         <!-- Survey Detail Information Card -->
-        <div class="space-y-3 lg:col-span-3">
+        <div class="space-y-3 lg:col-span-4">
           <ManageSurveyCard v-for="section in surveySections" :key="section.id" :section="section"
             @edit-section="handleEditSection" @delete-section="handleDeleteSection" @add-question="handleAddQuestion"
             @edit-question="handleEditQuestion" @delete-question="handleDeleteQuestion" />
@@ -29,9 +29,14 @@
         </div>
 
         <!-- Quick Actions and Statistics Cards -->
-        <div class="space-y-6">
-          <ManageSurveyActionCard @add-section="openAddSectionDrawer" @add-question="openAddQuestionDrawer" />
+        <div class="lg:col-span-2">
+          <div class="sticky top-6 space-y-3">
+            <ManageSurveyActionCard @add-section="openAddSectionDrawer" @add-question="openAddQuestionDrawer" />
+            <ManageSurveyResultCategoryCard :survey-id="currentSurveyId" />
+          </div>
         </div>
+
+
       </div>
     </div>
 
@@ -47,12 +52,13 @@
     <!-- Question Drawers -->
     <!-- Add Question Drawer -->
     <QuestionDrawer :is-open="questionDrawer.isAddOpen" :is-edit-mode="false" :section-id="questionDrawer.sectionId"
-      :available-sections="surveySections" title="Add New Question" @close="closeQuestionDrawer" @success="handleQuestionSuccess" />
+      :available-sections="surveySections" title="Add New Question" @close="closeQuestionDrawer"
+      @success="handleQuestionSuccess" />
 
     <!-- Edit Question Drawer -->
     <QuestionDrawer :is-open="questionDrawer.isEditOpen" :is-edit-mode="true" :question-data="questionDrawer.editData"
-      :section-id="questionDrawer.sectionId" :available-sections="surveySections" title="Edit Question" @close="closeQuestionDrawer"
-      @success="handleQuestionSuccess" />
+      :section-id="questionDrawer.sectionId" :available-sections="surveySections" title="Edit Question"
+      @close="closeQuestionDrawer" @success="handleQuestionSuccess" />
   </DashboardLayout>
 </template>
 
@@ -64,6 +70,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
 import ManageSurveyActionCard from '@/Components/ManageSurveyActionCard.vue'
 import ManageSurveyCard from '@/Components/ManageSurveyCard.vue'
+import ManageSurveyResultCategoryCard from '@/Components/ManageSurveyResultCategoryCard.vue'
 import SectionDrawer from '@/Components/SectionDrawer.vue'
 import QuestionDrawer from '@/Components/QuestionDrawer.vue'
 import { ListOrdered } from 'lucide-vue-next'
@@ -159,10 +166,10 @@ const handleDeleteSection = async (section) => {
   if (confirm(`Are you sure you want to delete "${section.title}"?`)) {
     try {
       await axios.delete(`/api/surveys/${currentSurveyId.value}/sections/${section.id}`)
-      
+
       // Refresh sections list
       await fetchSections()
-      
+
       // console.log('Section deleted successfully')
     } catch (error) {
       console.error('Error deleting section:', error)
@@ -184,10 +191,10 @@ const handleDeleteQuestion = async (question, section) => {
   if (confirm(`Are you sure you want to delete "${question.text}"?`)) {
     try {
       await axios.delete(`/api/sections/${section.id}/questions/${question.id}`)
-      
+
       // Refresh sections list to get updated questions
       await fetchSections()
-      
+
       // console.log('Question deleted successfully')
     } catch (error) {
       console.error('Error deleting question:', error)

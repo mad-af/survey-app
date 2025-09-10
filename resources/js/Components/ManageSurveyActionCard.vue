@@ -1,5 +1,5 @@
 <template>
-  <div class="sticky top-6 border shadow-sm card card-sm bg-base-100 border-base-200">
+  <div class="border shadow-sm card card-sm bg-base-100 border-base-200">
     <div class="p-4 card-body">
       <h2 class="flex gap-2 items-center mb-3 text-lg card-title">
         <Settings class="w-5 h-5" />
