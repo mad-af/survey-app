@@ -15,6 +15,12 @@
           {{ getQuestionTypeLabel }}
         </div>
         <span v-if="subItem.required" class="badge badge-outline badge-error badge-xs">Required</span>
+        <span v-if="subItem.score_weight > 0" class="badge badge-outline badge-xs">
+          Weight: {{ subItem.score_weight }}
+        </span>
+        <span v-if="getMaxScore > 0" class="badge badge-outline badge-xs">
+          Max Score: {{ getMaxScore }}
+        </span>
       </div>
     </div>
     
@@ -23,13 +29,27 @@
       <!-- Show choices for select, radio, and single_choice types -->
       <div v-if="['single_choice', 'multiple_choice'].includes(subItem.type) && subItem.choices && subItem.choices.length > 0">
         <div class="space-y-1">
-          <div class="mb-1 text-xs font-medium text-base-content/80">Choices:</div>
-          <ul class="space-y-1">
-            <li v-for="(choice, choiceIndex) in subItem.choices" :key="choice.id || choiceIndex" class="flex gap-2 items-center">
-              <span class="w-4 h-4 rounded-full bg-base-300 flex items-center justify-center text-[10px] font-medium">{{ choiceIndex + 1 }}</span>
-              <span class="text-base-content/70">{{ choice.label || choice.text || `Choice ${choiceIndex + 1}` }}</span>
-            </li>
-          </ul>
+          <div class="mb-2 text-xs font-medium text-base-content/80">Choices:</div>
+          <div class="overflow-x-auto border border-base-300">
+            <table class="table table-xs">
+              <thead>
+                <tr class="bg-base-200">
+                  <th class="text-xs text-center">Order</th>
+                  <th class="text-xs text-center">Label</th>
+                  <th class="text-xs text-center">Value</th>
+                  <th class="text-xs text-center">Score</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(choice, choiceIndex) in subItem.choices" :key="choice.id || choiceIndex">
+                  <td class="text-center">{{ choice.order || choiceIndex + 1 }}</td>
+                  <td class="text-center">{{ choice.label || choice.text || `Choice ${choiceIndex + 1}` }}</td>
+                  <td class="text-center">{{ choice.value || '-' }}</td>
+                  <td class="text-center">{{ choice.score || '0' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
       <!-- Show description for other types -->
@@ -134,5 +154,14 @@ const getQuestionTypeLabel = computed(() => {
     'textarea': 'Long Text'
   }
   return typeLabels[props.subItem.type] || 'Short Text'
+})
+
+const getMaxScore = computed(() => {
+  if (!props.subItem.choices || props.subItem.choices.length === 0) {
+    return 0
+  }
+  
+  const scores = props.subItem.choices.map(choice => parseFloat(choice.score) || 0)
+  return Math.max(...scores)
 })
 </script>
