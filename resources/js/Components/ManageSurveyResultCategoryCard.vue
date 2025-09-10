@@ -22,14 +22,14 @@
       </div>
 
       <!-- Result Categories List -->
-      <div v-else class="space-y-3">
-        <div v-for="(category, index) in resultCategories" :key="category.id" class="border collapse collapse-arrow bg-base-100 border-base-300">
+      <div v-else class="join join-vertical bg-base-100">
+        <div v-for="(category, index) in resultCategories" :key="category.id" class="border collapse collapse-arrow join-item border-base-300">
           <input type="radio" :name="`result-category-accordion`" :checked="index === 0" />
           <div class="text-xs font-semibold tracking-wider uppercase collapse-title text-primary">{{ getCategoryDisplayName(category) }}</div>
-          <div class="text-sm collapse-content">
+          <div class="text-xs collapse-content">
             <div v-if="category.rules && category.rules.length > 0" class="space-y-2">
               <div v-for="rule in category.rules" :key="rule.id" class="flex gap-2 items-center">
-                <span :class="getRuleBadgeClass(rule.color)" class="badge badge-xs">{{ rule.operation.toUpperCase() }}</span>
+                <span :class="getRuleBadgeClass(rule.color)" class="badge badge-xs">{{ formatRuleOperation(rule) }}</span>
                 <span>{{ rule.title }}</span>
               </div>
             </div>
@@ -92,6 +92,19 @@ const getRuleColorClass = (color) => {
     'info': 'bg-info/10 text-info'
   }
   return classes[color] || 'bg-base-200 text-base-content'
+}
+
+const formatRuleOperation = (rule) => {
+  const operation = rule.operation.toLowerCase()
+  const score = rule.score || 0
+  
+  if (operation === 'gt') {
+    return `${score} >`
+  } else if (operation === 'lt') {
+    return `${score} <`
+  } else {
+    return 'default'
+  }
 }
 
 const getCategoryDisplayName = (category) => {
