@@ -96,12 +96,12 @@ const getRuleColorClass = (color) => {
 
 const formatRuleOperation = (rule) => {
   const operation = rule.operation.toLowerCase()
-  const score = rule.score || 0
+  const score = Math.round(rule.score || 0)
   
   if (operation === 'gt') {
-    return `${score} >`
+    return `${score}% >`
   } else if (operation === 'lt') {
-    return `${score} <`
+    return `${score}% <`
   } else {
     return 'default'
   }
