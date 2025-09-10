@@ -29,10 +29,17 @@
         </p>
 
         <!-- Questions Count -->
-        <div v-if="section.questions && section.questions.length > 0" class="mt-2">
+        <div v-if="section.questions && section.questions.length > 0" class="flex justify-between items-center mt-2">
           <span class="text-xs text-base-content/50">
             {{ section.questions.length }} question{{ section.questions.length > 1 ? 's' : '' }}
           </span>
+
+          <span v-if="getSectionMaxScore > 0"  class="text-xs text-base-content/50">
+            Max Score {{ getSectionMaxScore }}
+          </span>
+          <!-- <span v-if="getSectionMaxScore > 0" class="badge-xs text-base-content/50">
+            Max Score: {{ getSectionMaxScore }}
+          </span> -->
         </div>
 
         <!-- Questions List -->
@@ -65,6 +72,7 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { Trash2, CopyPlus, PencilLine } from 'lucide-vue-next'
 import ManageSurveySubCard from './ManageSurveySubCard.vue'
 
@@ -100,4 +108,22 @@ const handleEditQuestion = (question) => {
 const handleDeleteQuestion = (question) => {
   emit('delete-question', question, props.section)
 }
+
+// Computed properties
+const getSectionMaxScore = computed(() => {
+  if (!props.section.questions || props.section.questions.length === 0) {
+    return 0
+  }
+
+  let totalMaxScore = 0
+
+  props.section.questions.forEach(question => {
+    if (question.choices && question.choices.length > 0) {
+      const questionMaxScore = Math.max(...question.choices.map(choice => parseFloat(choice.score) || 0))
+      totalMaxScore += questionMaxScore
+    }
+  })
+
+  return totalMaxScore
+})
 </script>

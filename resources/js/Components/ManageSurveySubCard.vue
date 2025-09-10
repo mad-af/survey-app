@@ -11,7 +11,7 @@
     <div>
       <div class="font-medium">{{ subItem.text }}</div>
       <div class="flex gap-2 items-center mt-1">
-        <div class="badge badge-outline badge-xs">
+        <div class="badge badge-outline badge-base badge-xs">
           {{ getQuestionTypeLabel }}
         </div>
         <span v-if="subItem.required" class="badge badge-outline badge-error badge-xs">Required</span>
