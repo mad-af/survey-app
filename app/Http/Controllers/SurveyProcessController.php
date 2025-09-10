@@ -861,9 +861,17 @@ class SurveyProcessController extends Controller
             $survey = $response->survey;
             $resultCategories = \App\Models\ResultCategory::where('owner_type', 'survey')
                 ->where('owner_id', $survey->id)
-                ->orderBy('min_score')
                 ->with('resultCategoryRules')
                 ->get();
+            
+            // Load section result categories
+            $sectionResultCategories = [];
+            foreach ($survey->sections as $section) {
+                $sectionResultCategories[$section->id] = \App\Models\ResultCategory::where('owner_type', 'survey_section')
+                    ->where('owner_id', $section->id)
+                    ->with('resultCategoryRules')
+                    ->get();
+            }
             
             // Manually assign the result categories to survey
             $survey->setRelation('resultCategories', $resultCategories);
@@ -876,13 +884,57 @@ class SurveyProcessController extends Controller
                 foreach ($survey->sections as $section) {
                     $storedScore = collect($responseScore->section_scores)->firstWhere('section_id', $section->id);
                     if ($storedScore) {
+                        // Find matching result category for this section
+                        $sectionMatchingCategory = null;
+                        $sectionMatchingRule = null;
+                        $sectionScore = $storedScore['score'];
+                        
+                        if (isset($sectionResultCategories[$section->id])) {
+                            foreach ($sectionResultCategories[$section->id] as $category) {
+                                foreach ($category->resultCategoryRules as $rule) {
+                                    $ruleMatches = false;
+                                    
+                                    switch ($rule->operation) {
+                                        case 'lt':
+                                            $ruleMatches = $sectionScore < $rule->score;
+                                            break;
+                                        case 'gt':
+                                            $ruleMatches = $sectionScore > $rule->score;
+                                            break;
+                                        case 'else':
+                                            $ruleMatches = true; // Always matches as fallback
+                                            break;
+                                    }
+                                    
+                                    if ($ruleMatches) {
+                                        $sectionMatchingCategory = $category;
+                                        $sectionMatchingRule = $rule;
+                                        break 2; // Break out of both loops
+                                    }
+                                }
+                            }
+                        }
+
+                        // dd($sectionMatchingCategory, $sectionMatchingRule);
+                        
                         $sectionScores[] = [
                             'id' => $section->id,
                             'title' => $section->title,
                             'description' => $section->description,
-                            'score' => $storedScore['score'],
+                            'score' => $sectionScore,
                             'max_score' => $storedScore['max_score'],
-                            'percentage' => round($storedScore['percentage'], 2)
+                            'percentage' => round($storedScore['percentage'], 2),
+                            'category' => $sectionMatchingCategory && $sectionMatchingRule ? [
+                                'id' => $sectionMatchingCategory->id,
+                                'name' => $sectionMatchingCategory->name,
+                                'rule' => [
+                                    'id' => $sectionMatchingRule->id,
+                                    'title' => $sectionMatchingRule->title,
+                                    'operation' => $sectionMatchingRule->operation,
+                                    'score' => $sectionMatchingRule->score,
+                                    'color' => $sectionMatchingRule->color
+                                ]
+                            ] : null
                         ];
                     }
                 }
@@ -906,14 +958,93 @@ class SurveyProcessController extends Controller
                         $sectionMaxScore += $maxChoiceScore * $questionWeight;
                     }
 
+                    // Find matching result category for this section
+                    $sectionMatchingCategory = null;
+                    $sectionMatchingRule = null;
+                    $finalSectionScore = round($sectionScore, 2);
+                    
+                    if (isset($sectionResultCategories[$section->id])) {
+                        foreach ($sectionResultCategories[$section->id] as $category) {
+                            foreach ($category->resultCategoryRules as $rule) {
+                                $ruleMatches = false;
+                                
+                                switch ($rule->operation) {
+                                    case 'lt':
+                                        $ruleMatches = $finalSectionScore < $rule->score;
+                                        break;
+                                    case 'gt':
+                                        $ruleMatches = $finalSectionScore > $rule->score;
+                                        break;
+                                    case 'else':
+                                        $ruleMatches = true; // Always matches as fallback
+                                        break;
+                                }
+                                
+                                if ($ruleMatches) {
+                                    $sectionMatchingCategory = $category;
+                                    $sectionMatchingRule = $rule;
+                                    break 2; // Break out of both loops
+                                }
+                            }
+                        }
+                    }
+
                     $sectionScores[] = [
                         'id' => $section->id,
                         'title' => $section->title,
                         'description' => $section->description,
-                        'score' => round($sectionScore, 2),
+                        'score' => $finalSectionScore,
                         'max_score' => round($sectionMaxScore, 2),
-                        'percentage' => $sectionMaxScore > 0 ? round(($sectionScore / $sectionMaxScore) * 100, 2) : 0
+                        'percentage' => $sectionMaxScore > 0 ? round(($sectionScore / $sectionMaxScore) * 100, 2) : 0,
+                        'category' => $sectionMatchingCategory && $sectionMatchingRule ? [
+                            'id' => $sectionMatchingCategory->id,
+                            'name' => $sectionMatchingCategory->name,
+                            'rule' => [
+                                'id' => $sectionMatchingRule->id,
+                                'title' => $sectionMatchingRule->title,
+                                'operation' => $sectionMatchingRule->operation,
+                                'score' => $sectionMatchingRule->score,
+                                'color' => $sectionMatchingRule->color
+                            ]
+                        ] : null
                     ];
+                }
+            }
+
+            // Get result categories for survey
+            $surveyResultCategories = \App\Models\ResultCategory::where('owner_type', 'survey')
+                ->where('owner_id', $survey->id)
+                ->with('resultCategoryRules')
+                ->get();
+
+            // Find matching result category based on score and rules
+            $matchingCategory = null;
+            $matchingRule = null;
+            $totalScore = $responseScore ? $responseScore->total_score : 0;
+            
+            if ($surveyResultCategories->isNotEmpty()) {
+                foreach ($surveyResultCategories as $category) {
+                    foreach ($category->resultCategoryRules as $rule) {
+                        $ruleMatches = false;
+                        
+                        switch ($rule->operation) {
+                            case 'lt':
+                                $ruleMatches = $totalScore < $rule->score;
+                                break;
+                            case 'gt':
+                                $ruleMatches = $totalScore > $rule->score;
+                                break;
+                            case 'else':
+                                $ruleMatches = true; // Always matches as fallback
+                                break;
+                        }
+                        
+                        if ($ruleMatches) {
+                            $matchingCategory = $category;
+                            $matchingRule = $rule;
+                            break 2; // Break out of both loops
+                        }
+                    }
                 }
             }
 
@@ -926,16 +1057,22 @@ class SurveyProcessController extends Controller
                     'code' => $survey->code
                 ],
                 'score' => [
-                    'total_score' => $responseScore ? $responseScore->total_score : 0,
+                    'total_score' => $totalScore,
                     'max_possible_score' => $responseScore ? $responseScore->max_possible_score : 0,
                     'percentage' => $responseScore ? round($responseScore->percentage, 2) : 0,
-                    'category' => $responseScore && $responseScore->resultCategory ? [
-                        'id' => $responseScore->resultCategory->id,
-                        'name' => $responseScore->resultCategory->name,
-                        'color' => $responseScore->resultCategory->color
+                    'category' => $matchingCategory && $matchingRule ? [
+                        'id' => $matchingCategory->id,
+                        'name' => $matchingCategory->name,
+                        'rule' => [
+                            'id' => $matchingRule->id,
+                            'title' => $matchingRule->title,
+                            'operation' => $matchingRule->operation,
+                            'score' => $matchingRule->score,
+                            'color' => $matchingRule->color
+                        ]
                     ] : null
                 ],
-                'sections' => $sectionScores
+                'sections' => $sectionScores,
             ];
 
             return Inertia::render('Survey/Result', [
