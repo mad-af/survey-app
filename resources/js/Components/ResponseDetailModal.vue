@@ -206,14 +206,6 @@
         </div>
       </div>
 
-      <!-- Debug Info -->
-      <div class="p-4 mb-6 bg-yellow-50 rounded-lg border-2 border-yellow-400">
-        <h4 class="mb-2 text-sm font-bold">Debug Info:</h4>
-        <p class="text-xs">selectedResponse exists: {{ !!response }}</p>
-        <p class="text-xs">answers exists: {{ !!response.answers }}</p>
-        <p class="text-xs">answers count: {{ response.answers ? response.answers.length : 0 }}</p>
-      </div>
-
       <!-- Questions and Answers -->
       <div v-if="response.answers && response.answers.length > 0" class="mb-6">
         <div class="card bg-base-200">

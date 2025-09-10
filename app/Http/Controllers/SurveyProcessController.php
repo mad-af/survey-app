@@ -339,7 +339,6 @@ class SurveyProcessController extends Controller
             return redirect('/survey/questions');
 
         } catch (Exception $e) {
-            dd($e);
             Log::error('Failed to save respondent data: ' . $e->getMessage());
             
             return redirect()->back()->withErrors([
@@ -839,7 +838,7 @@ class SurveyProcessController extends Controller
                 return redirect('/entry')
                     ->withErrors(['message' => 'Survey belum selesai dikerjakan.']);
             }
-            
+
             $surveyId = $response->survey_id;
             $responseId = $response->id;
             $surveyCode = $response->survey->code;
@@ -888,7 +887,7 @@ class SurveyProcessController extends Controller
                         $sectionMatchingCategory = null;
                         $sectionMatchingRule = null;
                         $sectionScore = $storedScore['score'];
-                        
+                        $sectionPercentage = $storedScore['percentage'];
                         if (isset($sectionResultCategories[$section->id])) {
                             foreach ($sectionResultCategories[$section->id] as $category) {
                                 foreach ($category->resultCategoryRules as $rule) {
@@ -896,16 +895,15 @@ class SurveyProcessController extends Controller
                                     
                                     switch ($rule->operation) {
                                         case 'lt':
-                                            $ruleMatches = $sectionScore < $rule->score;
+                                            $ruleMatches = $sectionPercentage < $rule->score;
                                             break;
                                         case 'gt':
-                                            $ruleMatches = $sectionScore > $rule->score;
+                                            $ruleMatches = $sectionPercentage > $rule->score;
                                             break;
                                         case 'else':
                                             $ruleMatches = true; // Always matches as fallback
                                             break;
                                     }
-                                    
                                     if ($ruleMatches) {
                                         $sectionMatchingCategory = $category;
                                         $sectionMatchingRule = $rule;
@@ -914,8 +912,6 @@ class SurveyProcessController extends Controller
                                 }
                             }
                         }
-
-                        // dd($sectionMatchingCategory, $sectionMatchingRule);
                         
                         $sectionScores[] = [
                             'id' => $section->id,
@@ -1021,6 +1017,7 @@ class SurveyProcessController extends Controller
             $matchingCategory = null;
             $matchingRule = null;
             $totalScore = $responseScore ? $responseScore->total_score : 0;
+            $totalPercentage = $responseScore ? $responseScore->percentage : 0;
             
             if ($surveyResultCategories->isNotEmpty()) {
                 foreach ($surveyResultCategories as $category) {
@@ -1029,10 +1026,10 @@ class SurveyProcessController extends Controller
                         
                         switch ($rule->operation) {
                             case 'lt':
-                                $ruleMatches = $totalScore < $rule->score;
+                                $ruleMatches = $totalPercentage < $rule->score;
                                 break;
                             case 'gt':
-                                $ruleMatches = $totalScore > $rule->score;
+                                $ruleMatches = $totalPercentage > $rule->score;
                                 break;
                             case 'else':
                                 $ruleMatches = true; // Always matches as fallback
@@ -1081,7 +1078,6 @@ class SurveyProcessController extends Controller
             ]);
 
         } catch (Exception $e) {
-            dd($e);
             Log::error('Error showing survey result: ' . $e->getMessage());
             return redirect('/entry')
                 ->withErrors(['message' => 'Terjadi kesalahan saat menampilkan hasil survey.']);
