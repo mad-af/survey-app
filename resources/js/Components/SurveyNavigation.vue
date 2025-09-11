@@ -9,12 +9,12 @@
       
       <!-- Buttons Container -->
       <div class="flex flex-col space-y-2">
-        <button @click="$emit('previous-section')" class="w-full btn btn-outline btn-sm" :disabled="!hasPreviousSection">
+        <button @click="handlePreviousSection" class="w-full btn btn-outline btn-sm" :disabled="!hasPreviousSection">
           <ChevronLeft class="mr-1 w-3 h-3" />
           <span class="text-xs">Sebelumnya</span>
         </button>
         
-        <button @click="$emit('next-section')" class="w-full btn btn-primary btn-sm" :disabled="!canProceed">
+        <button @click="handleNextSection" class="w-full btn btn-primary btn-sm" :disabled="!canProceed">
           <span class="text-xs">{{ hasNextSection ? 'Selanjutnya' : 'Selesai' }}</span>
           <ChevronRight v-if="hasNextSection" class="ml-1 w-3 h-3" />
           <Check v-else class="ml-1 w-3 h-3" />
@@ -24,7 +24,7 @@
 
     <!-- Desktop Layout -->
     <div class="hidden justify-between items-center md:flex">
-      <button @click="$emit('previous-section')" class="btn btn-outline btn-md" :disabled="!hasPreviousSection">
+      <button @click="handlePreviousSection" class="btn btn-outline btn-md" :disabled="!hasPreviousSection">
         <ChevronLeft class="mr-2 w-4 h-4" />
         <span class="text-sm">Sebelumnya</span>
       </button>
@@ -33,7 +33,7 @@
         {{ answeredQuestions }} dari {{ totalQuestions }} pertanyaan dijawab
       </div>
 
-      <button @click="$emit('next-section')" class="btn btn-primary btn-md" :disabled="!canProceed">
+      <button @click="handleNextSection" class="btn btn-primary btn-md" :disabled="!canProceed">
         <span class="text-sm">{{ hasNextSection ? 'Selanjutnya' : 'Selesai' }}</span>
         <ChevronRight v-if="hasNextSection" class="ml-2 w-4 h-4" />
         <Check v-else class="ml-2 w-4 h-4" />
@@ -70,8 +70,26 @@ const props = defineProps({
 })
 
 // Define emits
-defineEmits([
+const emit = defineEmits([
   'previous-section',
   'next-section'
 ])
+
+// Methods
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+}
+
+const handlePreviousSection = () => {
+  scrollToTop()
+  emit('previous-section')
+}
+
+const handleNextSection = () => {
+  scrollToTop()
+  emit('next-section')
+}
 </script>

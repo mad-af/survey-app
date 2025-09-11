@@ -36,10 +36,10 @@
           <div class="flex space-x-4 min-w-max">
             <div v-for="(section, index) in sections" :key="section.id"
               :ref="el => { if (currentSectionId === section.id) activeCardRef = el }"
-              class="flex-shrink-0 transition-all cursor-pointer" @click="handleSectionChange(section.id)">
-              <div class="border-2 shadow-md transition-all duration-400 card bg-base-100 hover:shadow-lg" :class="{
+              class="flex-shrink-0 transition-all cursor-not-allowed opacity-75">
+              <div class="border-2 shadow-md transition-all duration-400 card bg-base-100" :class="{
                 'border-primary bg-primary/5': currentSectionId === section.id,
-                'border-base-300 hover:border-primary/50': currentSectionId !== section.id
+                'border-base-300': currentSectionId !== section.id
               }">
                 <div class="p-4 transition-all duration-300 min-h-36 card-body" :class="{
                   'min-w-[200px] max-w-[250px] lg:min-w-[280px] lg:max-w-[560px]': currentSectionId === section.id,
