@@ -18,7 +18,7 @@
           <p class="px-2 mb-2 text-xs font-semibold tracking-wider uppercase text-base-content/60">Main menu</p>
           <ul class="gap-1 w-full menu menu-sm">
             <li v-for="item in menuItems" :key="item.name">
-              <a :href="item.href" :class="[
+              <Link :href="item.href" :class="[
                 'flex items-center gap-2 p-2 rounded-lg text-sm',
                 item.active 
                   ? 'bg-primary text-primary-content font-medium' 
@@ -27,7 +27,7 @@
                 <component :is="item.icon" class="w-4 h-4" />
                 <span>{{ item.name }}</span>
                 <div v-if="item.badge" class="ml-auto badge badge-xs badge-primary">{{ item.badge }}</div>
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -36,7 +36,7 @@
           <p class="px-2 mb-2 text-xs font-semibold tracking-wider uppercase text-base-content/60">Other</p>
           <ul class="gap-1 w-full menu menu-sm">
             <li v-for="item in otherMenuItems" :key="item.name">
-              <a :href="item.href" :class="[
+              <Link :href="item.href" :class="[
                 'flex items-center gap-2 p-2 rounded-lg text-sm',
                 item.active 
                   ? 'bg-primary text-primary-content font-medium' 
@@ -48,7 +48,7 @@
                   'badge badge-xs ml-auto',
                   item.badgeType === 'success' ? 'badge-success' : 'badge-primary'
                 ]">{{ item.badge }}</div>
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
@@ -66,7 +66,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { usePage, router } from '@inertiajs/vue3'
+import { usePage, router, Link } from '@inertiajs/vue3'
 import { 
   ClipboardList,
   Home, 

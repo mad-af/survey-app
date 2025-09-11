@@ -96,10 +96,10 @@
                 <FileText class="w-5 h-5 text-primary" />
                 Survey Terbaru
               </h2>
-              <a href="/dashboard/survey" class="gap-2 btn btn-sm btn-outline">
+              <Link href="/dashboard/survey" class="gap-2 btn btn-sm btn-outline">
                 <Eye class="w-4 h-4" />
                 Lihat Semua
-              </a>
+              </Link>
             </div>
             
             <div class="space-y-3">
@@ -115,24 +115,24 @@
                   </div>
                 </div>
                 <div class="flex gap-2">
-                  <a :href="`/dashboard/survey/${survey.id}`" class="gap-1 btn btn-sm btn-ghost">
+                  <Link :href="`/dashboard/survey/${survey.id}`" class="gap-1 btn btn-sm btn-ghost">
                     <Eye class="w-3 h-3" />
                     Lihat
-                  </a>
-                  <a :href="`/dashboard/survey/${survey.id}/responses`" class="gap-1 btn btn-sm btn-primary">
+                  </Link>
+                  <Link :href="`/dashboard/survey/${survey.id}/responses`" class="gap-1 btn btn-sm btn-primary">
                     <BarChart3 class="w-3 h-3" />
                     Hasil
-                  </a>
+                  </Link>
                 </div>
               </div>
               
               <div v-if="props.recentSurveys.length === 0" class="py-8 text-center">
                 <FileText class="mx-auto mb-3 w-12 h-12 text-base-content/30" />
                 <p class="text-base-content/60">Belum ada survey yang dibuat</p>
-                <a href="/dashboard/survey" class="gap-2 mt-3 btn btn-sm btn-primary">
+                <Link href="/dashboard/survey" class="gap-2 mt-3 btn btn-sm btn-primary">
                   <Plus class="w-4 h-4" />
                   Buat Survey Pertama
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -149,18 +149,18 @@
               Aksi Cepat
             </h2>
             <div class="space-y-3">
-              <a href="/dashboard/survey" class="gap-2 w-full btn btn-sm btn-primary">
+              <Link href="/dashboard/survey" class="gap-2 w-full btn btn-sm btn-primary">
                 <Plus class="w-4 h-4" />
                 Buat Survey Baru
-              </a>
-              <a href="/dashboard/survey" class="gap-2 w-full btn btn-sm btn-outline">
+              </Link>
+              <Link href="/dashboard/survey" class="gap-2 w-full btn btn-sm btn-outline">
                 <FileText class="w-4 h-4" />
                 Kelola Survey
-              </a>
-              <a href="/dashboard/user-management" class="gap-2 w-full btn btn-sm btn-outline">
+              </Link>
+              <Link href="/dashboard/user-management" class="gap-2 w-full btn btn-sm btn-outline">
                 <Users class="w-4 h-4" />
                 Kelola Pengguna
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -232,7 +232,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { Head, router } from '@inertiajs/vue3'
+import { Head, router, Link } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import { 
   FileText,

@@ -12,8 +12,8 @@
           <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
             <li><a href="#surveys">Survey Aktif</a></li>
             <li><a href="#about">Tentang Kami</a></li>
-            <li><a href="/entry">Ikuti Survey</a></li>
-            <li><a href="/login">Login Admin</a></li>
+            <li><Link href="/entry">Ikuti Survey</Link></li>
+            <li><Link href="/login">Login Admin</Link></li>
           </ul>
         </div>
         <a class="text-xl font-bold btn btn-ghost">
@@ -33,7 +33,7 @@
         <ul class="px-1 menu menu-horizontal">
           <li><a href="#surveys" class="hover:text-primary">Survey Aktif</a></li>
           <li><a href="#about" class="hover:text-primary">Tentang Kami</a></li>
-          <!-- <li><a href="/entry" class="hover:text-primary">Ikuti Survey</a></li> -->
+          <!-- <li><Link href="/entry" class="hover:text-primary">Ikuti Survey</Link></li> -->
         </ul>
       </div>
       
@@ -43,10 +43,10 @@
             <Play class="w-4 h-4" />
             Ikuti Survey
           </a> -->
-          <a href="/login" class="gap-2 btn btn-sm btn-ghost">
+          <Link href="/login" class="gap-2 btn btn-sm btn-ghost">
             <LogIn class="w-4 h-4" />
             Login
-          </a>
+          </Link>
         </div>
       </div>
     </header>
@@ -65,10 +65,10 @@
             Platform survey modern untuk kabupaten yang memudahkan partisipasi masyarakat dalam memberikan masukan dan pendapat.
           </p>
           <div class="flex flex-col gap-4 justify-center sm:flex-row">
-            <a href="/entry" class="gap-2 btn btn-primary btn-lg">
+            <Link href="/entry" class="gap-2 btn btn-primary btn-lg">
               <Play class="w-5 h-5" />
               Ikuti Survey
-            </a>
+            </Link>
             <!-- <a href="/login" class="gap-2 btn btn-outline btn-lg">
               <LogIn class="w-5 h-5" />
               Login Admin
@@ -146,10 +146,10 @@
               </div>
               
               <div class="justify-end card-actions">
-                <a href="/entry" class="gap-2 btn btn-primary">
+                <Link href="/entry" class="gap-2 btn btn-primary">
                   <Play class="w-4 h-4" />
                   Ikuti Survey
-                </a>
+                </Link>
               </div>
             </div>
           </div>
@@ -228,9 +228,9 @@
       <nav>
         <div class="grid grid-flow-col gap-4">
           <a href="#about" class="link link-hover">Tentang Kami</a>
-          <a href="/entry" class="link link-hover">Ikuti Survey</a>
-          <a href="/login" class="link link-hover">Login Admin</a>
-          <!-- <a href="/dashboard" class="link link-hover">Dashboard</a> -->
+          <Link href="/entry" class="link link-hover">Ikuti Survey</Link>
+          <Link href="/login" class="link link-hover">Login Admin</Link>
+          <!-- <Link href="/dashboard" class="link link-hover">Dashboard</Link> -->
         </div>
       </nav>
     </footer>

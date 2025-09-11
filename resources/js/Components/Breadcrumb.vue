@@ -2,7 +2,7 @@
   <div class="breadcrumbs text-sm px-4 border-b border-base-300">
     <ul>
       <li v-for="(item, index) in processedBreadcrumbs" :key="index">
-        <a 
+        <Link 
           v-if="item.href && index < processedBreadcrumbs.length - 1" 
           :href="item.href" 
           class="group flex items-center gap-2 text-base-content/70 hover:text-primary transition-colors"
@@ -13,7 +13,7 @@
             class="text-base-content/60 group-hover:text-primary transition-colors"
           />
           {{ item.label }}
-        </a>
+        </Link>
         
         <span 
           v-else 

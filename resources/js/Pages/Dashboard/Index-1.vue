@@ -50,18 +50,18 @@
           Aksi Cepat
         </h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a href="/surveys/create" class="btn btn-primary gap-2">
+          <Link href="/surveys/create" class="btn btn-primary gap-2">
             <Plus class="w-4 h-4" />
             Buat Survey Baru
-          </a>
+          </Link>
           <button class="btn btn-outline btn-secondary gap-2">
             <Send class="w-4 h-4" />
             Kirim Undangan
           </button>
-          <a href="/surveys" class="btn btn-outline btn-accent gap-2">
+          <Link href="/surveys" class="btn btn-outline btn-accent gap-2">
             <BarChart3 class="w-4 h-4" />
             Lihat Survey
-          </a>
+          </Link>
         </div>
       </div>
     </div>
@@ -98,7 +98,7 @@
                     <FileText class="w-4 h-4 text-primary" />
                     <div>
                       <div class="font-bold">
-                        <a :href="`/surveys/${survey.id}`" class="link link-hover">{{ survey.title }}</a>
+                        <Link :href="`/surveys/${survey.id}`" class="link link-hover">{{ survey.title }}</Link>
                       </div>
                       <div class="text-sm opacity-50">{{ survey.description }}</div>
                     </div>
@@ -179,7 +179,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { Head } from '@inertiajs/vue3'
+import { Head, Link } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import {
   BarChart3,
