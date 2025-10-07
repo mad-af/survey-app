@@ -5,22 +5,21 @@ namespace App\Http\Controllers;
 use App\Enums\OperationType;
 use App\Enums\OwnerType;
 use App\Enums\QuestionType;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
-use App\Models\Survey;
-use App\Models\SurveyLock;
-use App\Models\Response;
+use App\Enums\ResponseStatus;
 use App\Models\Answer;
-use App\Models\Respondent;
 use App\Models\Choice;
+use App\Models\Location;
+use App\Models\Respondent;
+use App\Models\Response;
 use App\Models\ResponseScore;
 use App\Models\ResultCategory;
-use App\Models\Location;
-use App\Enums\ResponseStatus;
+use App\Models\Survey;
+use App\Models\SurveyLock;
 use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -28,56 +27,52 @@ class SurveyProcessController extends Controller
 {
     /**
      * Entry point for survey access
-     * 
-     * @param Request $request
-     * @return InertiaResponse
      */
     public function entry(Request $request): InertiaResponse
     {
         try {
             // Get available surveys for public access
             $surveys = Survey::where('status', 'active')
-                        ->where('visibility', 'public')
-                        ->where(function($query) {
-                            $query->whereNull('starts_at')
-                                  ->orWhere('starts_at', '<=', now());
-                        })
-                        ->where(function($query) {
-                            $query->whereNull('ends_at')
-                                  ->orWhere('ends_at', '>=', now());
-                        })
-                        ->select('id', 'code', 'title', 'description', 'starts_at', 'ends_at')
-                        ->orderBy('created_at', 'desc')
-                        ->get();
+                ->where('visibility', 'public')
+                ->where(function ($query) {
+                    $query->whereNull('starts_at')
+                        ->orWhere('starts_at', '<=', now());
+                })
+                ->where(function ($query) {
+                    $query->whereNull('ends_at')
+                        ->orWhere('ends_at', '>=', now());
+                })
+                ->select('id', 'code', 'title', 'description', 'starts_at', 'ends_at')
+                ->orderBy('created_at', 'desc')
+                ->get();
 
             return Inertia::render('Entry', [
-                'publicSurveys' => $surveys
+                'publicSurveys' => $surveys,
             ]);
 
         } catch (Exception $e) {
-            Log::error('Failed to retrieve available surveys: ' . $e->getMessage());
-            
+            Log::error('Failed to retrieve available surveys: '.$e->getMessage());
+
             return Inertia::render('Entry', [
-                'publicSurveys' => []
+                'publicSurveys' => [],
             ]);
         }
     }
 
     /**
      * Enter survey with survey code
-     * 
-     * @param Request $request
+     *
      * @return \Illuminate\Http\RedirectResponse
      */
     public function enter(Request $request)
     {
         // Validate survey code
         $validator = Validator::make($request->all(), [
-            'survey_code' => 'required|string|max:255'
+            'survey_code' => 'required|string|max:255',
         ], [
             'survey_code.required' => 'Kode survey wajib diisi.',
             'survey_code.string' => 'Kode survey harus berupa teks.',
-            'survey_code.max' => 'Kode survey maksimal 255 karakter.'
+            'survey_code.max' => 'Kode survey maksimal 255 karakter.',
         ]);
 
         if ($validator->fails()) {
@@ -87,12 +82,12 @@ class SurveyProcessController extends Controller
         try {
             // Find survey by code
             $survey = Survey::where('code', $request->survey_code)
-                          ->where('status', 'active')
-                          ->first();
+                ->where('status', 'active')
+                ->first();
 
-            if (!$survey) {
+            if (! $survey) {
                 return redirect()->back()->withErrors([
-                    'survey_code' => 'Kode survey tidak ditemukan atau survey tidak aktif.'
+                    'survey_code' => 'Kode survey tidak ditemukan atau survey tidak aktif.',
                 ])->withInput();
             }
 
@@ -100,16 +95,16 @@ class SurveyProcessController extends Controller
             $now = now();
             if ($survey->starts_at && $now->lt($survey->starts_at)) {
                 return redirect()->back()->withErrors([
-                    'survey_code' => 'Survey belum dimulai.'
+                    'survey_code' => 'Survey belum dimulai.',
                 ])->withInput();
             }
 
             if ($survey->ends_at && $now->gt($survey->ends_at)) {
                 return redirect()->back()->withErrors([
-                    'survey_code' => 'Survey sudah berakhir.'
+                    'survey_code' => 'Survey sudah berakhir.',
                 ])->withInput();
             }
-            
+
             // Generate unique token for this response
             $token = \Illuminate\Support\Str::uuid()->toString();
 
@@ -121,7 +116,7 @@ class SurveyProcessController extends Controller
                 'started_at' => now(),
                 'current_step' => Response::STEP_RESPONDENT_DATA,
                 'status' => ResponseStatus::STARTED,
-                'meta' => []
+                'meta' => [],
             ]);
 
             // Store survey session data
@@ -137,18 +132,17 @@ class SurveyProcessController extends Controller
             return redirect('/survey/respondent-data');
 
         } catch (Exception $e) {
-            Log::error('Failed to enter survey: ' . $e->getMessage());
-            
+            Log::error('Failed to enter survey: '.$e->getMessage());
+
             return redirect()->back()->withErrors([
-                'survey_code' => 'Terjadi kesalahan saat memproses kode survey. Silakan coba lagi.'
+                'survey_code' => 'Terjadi kesalahan saat memproses kode survey. Silakan coba lagi.',
             ])->withInput();
         }
-     }
+    }
 
     /**
      * Show respondent data form page
-     * 
-     * @param Request $request
+     *
      * @return InertiaResponse|\Illuminate\Http\RedirectResponse
      */
     public function showRespondentData(Request $request)
@@ -171,7 +165,7 @@ class SurveyProcessController extends Controller
                     'code' => $survey->code,
                     'title' => $survey->title,
                     'description' => $survey->description,
-                    'is_anonymous' => $survey->is_anonymous
+                    'is_anonymous' => $survey->is_anonymous,
                 ],
                 'surveyCode' => $surveyCode,
                 'existingRespondent' => $existingRespondent ? [
@@ -188,23 +182,22 @@ class SurveyProcessController extends Controller
                     'location' => $existingRespondent->location,
                     'demographics' => $existingRespondent->demographics,
                     'consent' => $existingRespondent->consent,
-                    'consent_at' => $existingRespondent->consent_at
-                ] : null
+                    'consent_at' => $existingRespondent->consent_at,
+                ] : null,
             ]);
 
         } catch (Exception $e) {
-            Log::error('Failed to show respondent data page: ' . $e->getMessage());
-            
+            Log::error('Failed to show respondent data page: '.$e->getMessage());
+
             return redirect('/entry')->withErrors([
-                'survey_code' => 'Terjadi kesalahan saat memuat halaman. Silakan coba lagi.'
+                'survey_code' => 'Terjadi kesalahan saat memuat halaman. Silakan coba lagi.',
             ]);
         }
     }
 
     /**
      * Store respondent data and update response
-     * 
-     * @param Request $request
+     *
      * @return \Illuminate\Http\RedirectResponse
      */
     public function submitRespondentData(Request $request)
@@ -220,7 +213,7 @@ class SurveyProcessController extends Controller
                 'email' => 'nullable|email|max:255',
                 'phone' => 'nullable|string|max:20',
                 'gender' => 'nullable|in:male,female,other',
-                'birth_year' => 'nullable|integer|min:1900|max:' . date('Y'),
+                'birth_year' => 'nullable|integer|min:1900|max:'.date('Y'),
                 'organization' => 'nullable|string|max:255',
                 'department' => 'nullable|string|max:255',
                 'role_title' => 'nullable|string|max:255',
@@ -236,7 +229,7 @@ class SurveyProcessController extends Controller
                 'detailed_address' => 'nullable|string|max:500',
                 'demographics' => 'nullable|array',
                 'consent' => 'required|boolean|accepted',
-                'consent_at' => 'nullable|date'
+                'consent_at' => 'nullable|date',
             ], [
                 'name.required' => 'Nama wajib diisi.',
                 'name.string' => 'Nama harus berupa teks.',
@@ -257,7 +250,7 @@ class SurveyProcessController extends Controller
                 'village_code.required' => 'Kelurahan/Desa wajib dipilih.',
                 'village_name.required' => 'Nama kelurahan/desa wajib diisi.',
                 'consent.required' => 'Persetujuan wajib diberikan.',
-                'consent.accepted' => 'Anda harus menyetujui untuk melanjutkan.'
+                'consent.accepted' => 'Anda harus menyetujui untuk melanjutkan.',
             ]);
 
             if ($validator->fails()) {
@@ -288,7 +281,7 @@ class SurveyProcessController extends Controller
             ]);
 
             // Check if respondent already exists for this response
-            if (!empty($response->respondent_id)) {
+            if (! empty($response->respondent_id)) {
                 // Update existing respondent
                 $respondent = $response->respondent;
                 $respondent->update([
@@ -322,37 +315,36 @@ class SurveyProcessController extends Controller
 
                 // Link respondent to response
                 $response->update([
-                    'respondent_id' => $respondent->id
+                    'respondent_id' => $respondent->id,
                 ]);
             }
 
             // Update response to next step
             $response->update([
                 'current_step' => Response::STEP_QUESTIONS,
-                'status' => ResponseStatus::IN_PROGRESS
+                'status' => ResponseStatus::IN_PROGRESS,
             ]);
 
             // Update session
             session([
-                'current_step' => Response::STEP_QUESTIONS
+                'current_step' => Response::STEP_QUESTIONS,
             ]);
 
             // Redirect to questions page
             return redirect('/survey/questions');
 
         } catch (Exception $e) {
-            Log::error('Failed to save respondent data: ' . $e->getMessage());
-            
+            Log::error('Failed to save respondent data: '.$e->getMessage());
+
             return redirect()->back()->withErrors([
-                'general' => 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.'
+                'general' => 'Terjadi kesalahan saat menyimpan data. Silakan coba lagi.',
             ])->withInput();
         }
     }
 
     /**
      * Show survey questions page
-     * 
-     * @param Request $request
+     *
      * @return InertiaResponse|\Illuminate\Http\RedirectResponse
      */
     public function showQuestions(Request $request)
@@ -363,32 +355,31 @@ class SurveyProcessController extends Controller
             $surveyCode = session('survey_code');
             $responseId = session('response_id');
 
-
             // Get survey with sections and questions
             $survey = Survey::with([
-                'sections' => function($query) {
+                'sections' => function ($query) {
                     $query->orderBy('order');
                 },
-                'sections.questions' => function($query) {
+                'sections.questions' => function ($query) {
                     $query->orderBy('order');
                 },
-                'sections.questions.choices' => function($query) {
+                'sections.questions.choices' => function ($query) {
                     $query->orderBy('order');
-                }
+                },
             ])->where('id', $surveyId)
-              ->where('code', $surveyCode)
-              ->first();
+                ->where('code', $surveyCode)
+                ->first();
 
-            if (!$survey) {
+            if (! $survey) {
                 return redirect('/entry')->withErrors([
-                    'general' => 'Survey tidak ditemukan atau tidak aktif.'
+                    'general' => 'Survey tidak ditemukan atau tidak aktif.',
                 ]);
             }
 
             // Get existing response with answers
             $response = Response::with([
                 'answers.question',
-                'answers.choice'
+                'answers.choice',
             ])->find($responseId);
 
             // Format existing answers for frontend
@@ -399,7 +390,7 @@ class SurveyProcessController extends Controller
                         'choice_id' => $answer->choice_id,
                         'value_text' => $answer->value_text,
                         'value_number' => $answer->value_number,
-                        'value_json' => $answer->value_json
+                        'value_json' => $answer->value_json,
                     ];
                 }
             }
@@ -408,34 +399,33 @@ class SurveyProcessController extends Controller
             if ($response) {
                 $existingResponse = [
                     'id' => $response->id,
-                    'answers' => $existingAnswers
+                    'answers' => $existingAnswers,
                 ];
             }
 
             return Inertia::render('Survey/Questions', [
                 'surveyCode' => $surveyCode,
                 'surveyData' => $survey,
-                'existingResponse' => $existingResponse
+                'existingResponse' => $existingResponse,
             ]);
 
         } catch (Exception $e) {
-            Log::error('Failed to load survey questions: ' . $e->getMessage());
-            
+            Log::error('Failed to load survey questions: '.$e->getMessage());
+
             return redirect('/entry')->withErrors([
-                'general' => 'Terjadi kesalahan saat memuat pertanyaan survey.'
+                'general' => 'Terjadi kesalahan saat memuat pertanyaan survey.',
             ]);
         }
     }
 
     /**
      * Submit survey questions answers (Partial Save)
-     * 
-     * @param Request $request
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function submitQuestionPartials(Request $request)
     {
-        return $this->executeWithQueueLock(function() use ($request) {
+        return $this->executeWithQueueLock(function () use ($request) {
             // Get survey data from session
             $surveyId = session('survey_id');
             $responseId = session('response_id');
@@ -449,7 +439,7 @@ class SurveyProcessController extends Controller
                 'answers.*.value_number' => 'nullable|numeric',
                 'answers.*.value_json' => 'nullable|string',
                 'section_id' => 'nullable|integer|exists:survey_sections,id',
-                'meta' => 'nullable|array'
+                'meta' => 'nullable|array',
             ], [
                 'answers.required' => 'Data jawaban harus diisi.',
                 'answers.array' => 'Format data jawaban tidak valid.',
@@ -458,23 +448,23 @@ class SurveyProcessController extends Controller
                 'answers.*.choice_id.exists' => 'Pilihan jawaban tidak ditemukan.',
                 'answers.*.value_text.max' => 'Teks jawaban terlalu panjang.',
                 'answers.*.value_number.numeric' => 'Nilai harus berupa angka.',
-                'section_id.exists' => 'Bagian survey tidak ditemukan.'
+                'section_id.exists' => 'Bagian survey tidak ditemukan.',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data tidak valid.',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
             // Get response record
             $response = Response::find($responseId);
-            if (!$response) {
+            if (! $response) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Response survey tidak ditemukan.'
+                    'message' => 'Response survey tidak ditemukan.',
                 ], 404);
             }
 
@@ -482,7 +472,7 @@ class SurveyProcessController extends Controller
             if ($response->survey_id != $surveyId) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Response tidak sesuai dengan survey.'
+                    'message' => 'Response tidak sesuai dengan survey.',
                 ], 403);
             }
 
@@ -494,23 +484,23 @@ class SurveyProcessController extends Controller
                 $meta = $request->input('meta', []);
 
                 // Sort answers by question_id to prevent deadlock
-                usort($answersData, function($a, $b) {
+                usort($answersData, function ($a, $b) {
                     return $a['question_id'] <=> $b['question_id'];
                 });
 
                 foreach ($answersData as $answerData) {
-                     // Use updateOrCreate to handle insert/update in single query
-                     Answer::updateOrCreate(
+                    // Use updateOrCreate to handle insert/update in single query
+                    Answer::updateOrCreate(
                         [
                             'response_id' => $responseId,
-                            'question_id' => $answerData['question_id']
+                            'question_id' => $answerData['question_id'],
                         ],
                         [
                             'choice_id' => $answerData['choice_id'] ?? null,
                             'value_text' => $answerData['value_text'] ?? null,
                             'value_number' => $answerData['value_number'] ?? null,
                             'value_json' => $answerData['value_json'] ?? null,
-                            'updated_at' => now()
+                            'updated_at' => now(),
                         ]
                     );
                 }
@@ -518,11 +508,11 @@ class SurveyProcessController extends Controller
                 // Update response status and metadata for partial save
                 $responseUpdateData = [
                     'status' => ResponseStatus::IN_PROGRESS,
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ];
 
                 // Update meta information
-                if (!empty($meta)) {
+                if (! empty($meta)) {
                     $existingMeta = $response->meta ? json_decode($response->meta, true) : [];
                     $updatedMeta = array_merge($existingMeta, $meta);
                     $responseUpdateData['meta'] = json_encode($updatedMeta);
@@ -537,7 +527,7 @@ class SurveyProcessController extends Controller
                     'success' => true,
                     'message' => 'Jawaban berhasil disimpan.',
                     'responseId' => $responseId,
-                    'is_partial' => true
+                    'is_partial' => true,
                 ]);
 
             } catch (Exception $e) {
@@ -549,13 +539,12 @@ class SurveyProcessController extends Controller
 
     /**
      * Submit survey questions answers (Final Submission)
-     * 
-     * @param Request $request
+     *
      * @return \Illuminate\Http\RedirectResponse|\Illuminate\Http\JsonResponse
      */
     public function submitQuestions(Request $request)
     {
-        return $this->executeWithQueueLock(function() use ($request) {
+        return $this->executeWithQueueLock(function () use ($request) {
             // Get survey data from session
             $surveyId = session('survey_id');
             $responseId = session('response_id');
@@ -569,7 +558,7 @@ class SurveyProcessController extends Controller
                 'answers.*.value_number' => 'nullable|numeric',
                 'answers.*.value_json' => 'nullable|string',
                 'section_id' => 'nullable|integer|exists:survey_sections,id',
-                'meta' => 'nullable|array'
+                'meta' => 'nullable|array',
             ], [
                 'answers.required' => 'Data jawaban harus diisi.',
                 'answers.array' => 'Format data jawaban tidak valid.',
@@ -578,23 +567,23 @@ class SurveyProcessController extends Controller
                 'answers.*.choice_id.exists' => 'Pilihan jawaban tidak ditemukan.',
                 'answers.*.value_text.max' => 'Teks jawaban terlalu panjang.',
                 'answers.*.value_number.numeric' => 'Nilai harus berupa angka.',
-                'section_id.exists' => 'Bagian survey tidak ditemukan.'
+                'section_id.exists' => 'Bagian survey tidak ditemukan.',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Data tidak valid.',
-                    'errors' => $validator->errors()
+                    'errors' => $validator->errors(),
                 ], 422);
             }
 
             // Get response record
             $response = Response::find($responseId);
-            if (!$response) {
+            if (! $response) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Response survey tidak ditemukan.'
+                    'message' => 'Response survey tidak ditemukan.',
                 ], 404);
             }
 
@@ -602,7 +591,7 @@ class SurveyProcessController extends Controller
             if ($response->survey_id != $surveyId) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Response tidak sesuai dengan survey.'
+                    'message' => 'Response tidak sesuai dengan survey.',
                 ], 403);
             }
 
@@ -614,23 +603,23 @@ class SurveyProcessController extends Controller
                 $meta = $request->input('meta', []);
 
                 // Sort answers by question_id to prevent deadlock
-                usort($answersData, function($a, $b) {
+                usort($answersData, function ($a, $b) {
                     return $a['question_id'] <=> $b['question_id'];
                 });
 
                 foreach ($answersData as $answerData) {
-                     // Use updateOrCreate to handle insert/update in single query
-                     Answer::updateOrCreate(
+                    // Use updateOrCreate to handle insert/update in single query
+                    Answer::updateOrCreate(
                         [
                             'response_id' => $responseId,
-                            'question_id' => $answerData['question_id']
+                            'question_id' => $answerData['question_id'],
                         ],
                         [
                             'choice_id' => $answerData['choice_id'] ?? null,
                             'value_text' => $answerData['value_text'] ?? null,
                             'value_number' => $answerData['value_number'] ?? null,
                             'value_json' => $answerData['value_json'] ?? null,
-                            'updated_at' => now()
+                            'updated_at' => now(),
                         ]
                     );
                 }
@@ -640,24 +629,24 @@ class SurveyProcessController extends Controller
                     'status' => ResponseStatus::COMPLETED,
                     'submitted_at' => now(),
                     'current_step' => Response::STEP_RESULT,
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ];
 
                 // Update meta information
-                if (!empty($meta)) {
+                if (! empty($meta)) {
                     $existingMeta = $response->meta ? json_decode($response->meta, true) : [];
                     $updatedMeta = array_merge($existingMeta, $meta);
                     $responseUpdateData['meta'] = json_encode($updatedMeta);
                 }
 
                 $response->update($responseUpdateData);
-                
+
                 // Calculate and save score for completed response
                 $this->calculateScore($response);
 
                 // Update session
                 session([
-                    'current_step' => Response::STEP_RESULT
+                    'current_step' => Response::STEP_RESULT,
                 ]);
 
                 DB::commit();
@@ -665,10 +654,10 @@ class SurveyProcessController extends Controller
                 // Clear survey session data
                 session()->forget([
                     'survey_token',
-                    'survey_id', 
+                    'survey_id',
                     'survey_code',
                     'response_id',
-                    'current_step'
+                    'current_step',
                 ]);
 
                 // Final submission - redirect to result page
@@ -690,7 +679,7 @@ class SurveyProcessController extends Controller
             $totalScore = 0;
             $maxPossibleScore = 0;
             $sectionScores = [];
-            
+
             // Get all answers for this response with related question, choice, and section data
             $answers = Answer::where('response_id', $response->id)
                 ->with(['question.section', 'question.choices', 'choice'])
@@ -766,7 +755,7 @@ class SurveyProcessController extends Controller
                     'section_id' => $sectionId,
                     'score' => $sectionScore,
                     'max_score' => $sectionMaxScore,
-                    'percentage' => $sectionMaxScore > 0 ? ($sectionScore / $sectionMaxScore) * 100 : 0
+                    'percentage' => $sectionMaxScore > 0 ? ($sectionScore / $sectionMaxScore) * 100 : 0,
                 ];
 
                 $totalScore += $sectionScore;
@@ -791,22 +780,21 @@ class SurveyProcessController extends Controller
                     'max_possible_score' => round($maxPossibleScore, 2),
                     'percentage' => round($percentage, 2),
                     'section_scores' => $sectionScores,
-                    'updated_at' => now()
+                    'updated_at' => now(),
                 ]
             );
 
             Log::info("Score calculated for response {$response->id}: {$totalScore}/{$maxPossibleScore} ({$percentage}%)");
 
         } catch (Exception $e) {
-            Log::error('Error calculating score: ' . $e->getMessage());
+            Log::error('Error calculating score: '.$e->getMessage());
             // Don't throw exception to avoid breaking the main flow
         }
     }
 
     /**
      * Show survey result page
-     * 
-     * @param Request $request
+     *
      * @return InertiaResponse|\Illuminate\Http\RedirectResponse
      */
     public function showResult(Request $request)
@@ -814,10 +802,10 @@ class SurveyProcessController extends Controller
         try {
             // Check if token is provided as query parameter
             $validator = Validator::make($request->all(), [
-                'token' => 'required|string'
+                'token' => 'required|string',
             ], [
                 'token.required' => 'Token survey wajib diisi.',
-                'token.string' => 'Token survey harus berupa teks.'
+                'token.string' => 'Token survey harus berupa teks.',
             ]);
 
             if ($validator->fails()) {
@@ -826,11 +814,11 @@ class SurveyProcessController extends Controller
             }
 
             $token = $request->query('token');
-            
+
             // If token is provided, use it to find the response
             $response = Response::where('respondent_token', $token)->first();
-            
-            if (!$response) {
+
+            if (! $response) {
                 return redirect('/entry')
                     ->withErrors(['message' => 'Token survey tidak valid.']);
             }
@@ -850,10 +838,10 @@ class SurveyProcessController extends Controller
                 'survey.sections',
                 'score.resultCategory',
                 'answers.question.section',
-                'answers.choice'
+                'answers.choice',
             ])->find($responseId);
 
-            if (!$response || $response->survey_id != $surveyId) {
+            if (! $response || $response->survey_id != $surveyId) {
                 return redirect('/entry')
                     ->withErrors(['message' => 'Data response tidak ditemukan.']);
             }
@@ -864,7 +852,7 @@ class SurveyProcessController extends Controller
                 ->where('owner_id', $survey->id)
                 ->with('resultCategoryRules')
                 ->get();
-            
+
             // Load section result categories
             $sectionResultCategories = [];
             foreach ($survey->sections as $section) {
@@ -873,7 +861,7 @@ class SurveyProcessController extends Controller
                     ->with('resultCategoryRules')
                     ->get();
             }
-            
+
             // Manually assign the result categories to survey
             $survey->setRelation('resultCategories', $resultCategories);
             $responseScore = $response->score;
@@ -894,13 +882,14 @@ class SurveyProcessController extends Controller
                             foreach ($sectionResultCategories[$section->id] as $category) {
                                 foreach ($category->resultCategoryRules as $rule) {
                                     $ruleMatches = false;
-                                    
+                                    $ruleScore = round($rule->score, 2);
+
                                     switch ($rule->operation) {
                                         case OperationType::LT:
-                                            $ruleMatches = $sectionPercentage < $rule->score;
+                                            $ruleMatches = $sectionPercentage < $ruleScore;
                                             break;
                                         case OperationType::GT:
-                                            $ruleMatches = $sectionPercentage > $rule->score;
+                                            $ruleMatches = $sectionPercentage > $ruleScore;
                                             break;
                                         case OperationType::ELSE:
                                             $ruleMatches = true; // Always matches as fallback
@@ -914,7 +903,7 @@ class SurveyProcessController extends Controller
                                 }
                             }
                         }
-                        
+
                         $sectionScores[] = [
                             'id' => $section->id,
                             'title' => $section->title,
@@ -930,14 +919,17 @@ class SurveyProcessController extends Controller
                                     'title' => $sectionMatchingRule->title,
                                     'operation' => $sectionMatchingRule->operation,
                                     'score' => $sectionMatchingRule->score,
-                                    'color' => $sectionMatchingRule->color
-                                ]
-                            ] : null
+                                    'color' => $sectionMatchingRule->color,
+                                ],
+                            ] : null,
                         ];
                     }
                 }
             } else {
                 // Calculate section scores manually if not stored
+                $calculatedTotalScore = 0;
+                $calculatedMaxPossibleScore = 0;
+
                 foreach ($survey->sections as $section) {
                     $sectionAnswers = $response->answers->where('question.section_id', $section->id);
                     $sectionScore = 0;
@@ -950,34 +942,40 @@ class SurveyProcessController extends Controller
                         } elseif ($answer->value_number !== null) {
                             $sectionScore += $answer->value_number * $questionWeight;
                         }
-                        
+
                         // Calculate max possible score for this question
                         $maxChoiceScore = $answer->question->choices->max('score') ?? 1;
                         $sectionMaxScore += $maxChoiceScore * $questionWeight;
                     }
 
+                    // Add to total scores
+                    $calculatedTotalScore += $sectionScore;
+                    $calculatedMaxPossibleScore += $sectionMaxScore;
+
                     // Find matching result category for this section
                     $sectionMatchingCategory = null;
                     $sectionMatchingRule = null;
                     $finalSectionScore = round($sectionScore, 2);
-                    
+                    $percentage = $sectionMaxScore > 0 ? round(($finalSectionScore / $sectionMaxScore) * 100, 2) : 0;
+
                     if (isset($sectionResultCategories[$section->id])) {
                         foreach ($sectionResultCategories[$section->id] as $category) {
                             foreach ($category->resultCategoryRules as $rule) {
                                 $ruleMatches = false;
-                                
+                                $ruleScore = round($rule->score, 2);
+
                                 switch ($rule->operation) {
                                     case OperationType::LT:
-                                        $ruleMatches = $finalSectionScore < $rule->score;
+                                        $ruleMatches = $percentage < $ruleScore;
                                         break;
                                     case OperationType::GT:
-                                        $ruleMatches = $finalSectionScore > $rule->score;
+                                        $ruleMatches = $percentage > $ruleScore;
                                         break;
                                     case OperationType::ELSE:
                                         $ruleMatches = true; // Always matches as fallback
                                         break;
                                 }
-                                
+
                                 if ($ruleMatches) {
                                     $sectionMatchingCategory = $category;
                                     $sectionMatchingRule = $rule;
@@ -993,7 +991,7 @@ class SurveyProcessController extends Controller
                         'description' => $section->description,
                         'score' => $finalSectionScore,
                         'max_score' => round($sectionMaxScore, 2),
-                        'percentage' => $sectionMaxScore > 0 ? round(($sectionScore / $sectionMaxScore) * 100, 2) : 0,
+                        'percentage' => $sectionMaxScore > 0 ? round(($finalSectionScore / $sectionMaxScore) * 100, 2) : 0,
                         'category' => $sectionMatchingCategory && $sectionMatchingRule ? [
                             'id' => $sectionMatchingCategory->id,
                             'name' => $sectionMatchingCategory->name,
@@ -1002,9 +1000,9 @@ class SurveyProcessController extends Controller
                                 'title' => $sectionMatchingRule->title,
                                 'operation' => $sectionMatchingRule->operation,
                                 'score' => $sectionMatchingRule->score,
-                                'color' => $sectionMatchingRule->color
-                            ]
-                        ] : null
+                                'color' => $sectionMatchingRule->color,
+                            ],
+                        ] : null,
                     ];
                 }
             }
@@ -1018,14 +1016,15 @@ class SurveyProcessController extends Controller
             // Find matching result category based on score and rules
             $matchingCategory = null;
             $matchingRule = null;
-            $totalScore = $responseScore ? $responseScore->total_score : 0;
-            $totalPercentage = $responseScore ? $responseScore->percentage : 0;
-            
+            $totalScore = $responseScore ? $responseScore->total_score : (isset($calculatedTotalScore) ? $calculatedTotalScore : 0);
+            $maxPossibleScore = $responseScore ? $responseScore->max_possible_score : (isset($calculatedMaxPossibleScore) ? $calculatedMaxPossibleScore : 0);
+            $totalPercentage = $responseScore ? $responseScore->percentage : ($maxPossibleScore > 0 ? round(($totalScore / $maxPossibleScore) * 100, 2) : 0);
+
             if ($surveyResultCategories->isNotEmpty()) {
                 foreach ($surveyResultCategories as $category) {
                     foreach ($category->resultCategoryRules as $rule) {
                         $ruleMatches = false;
-                        
+
                         switch ($rule->operation) {
                             case OperationType::LT:
                                 $ruleMatches = $totalPercentage < $rule->score;
@@ -1037,7 +1036,7 @@ class SurveyProcessController extends Controller
                                 $ruleMatches = true; // Always matches as fallback
                                 break;
                         }
-                        
+
                         if ($ruleMatches) {
                             $matchingCategory = $category;
                             $matchingRule = $rule;
@@ -1053,12 +1052,12 @@ class SurveyProcessController extends Controller
                     'id' => $survey->id,
                     'title' => $survey->title,
                     'description' => $survey->description,
-                    'code' => $survey->code
+                    'code' => $survey->code,
                 ],
                 'score' => [
                     'total_score' => $totalScore,
-                    'max_possible_score' => $responseScore ? $responseScore->max_possible_score : 0,
-                    'percentage' => $responseScore ? round($responseScore->percentage, 2) : 0,
+                    'max_possible_score' => $maxPossibleScore,
+                    'percentage' => round($totalPercentage, 2),
                     'category' => $matchingCategory && $matchingRule ? [
                         'id' => $matchingCategory->id,
                         'name' => $matchingCategory->name,
@@ -1067,20 +1066,22 @@ class SurveyProcessController extends Controller
                             'title' => $matchingRule->title,
                             'operation' => $matchingRule->operation,
                             'score' => $matchingRule->score,
-                            'color' => $matchingRule->color
-                        ]
-                    ] : null
+                            'color' => $matchingRule->color,
+                        ],
+                    ] : null,
                 ],
                 'sections' => $sectionScores,
             ];
+            // dd($surveyResult);
 
             return Inertia::render('Survey/Result', [
                 'surveyCode' => $surveyCode,
-                'surveyResult' => $surveyResult
+                'surveyResult' => $surveyResult,
             ]);
 
         } catch (Exception $e) {
-            Log::error('Error showing survey result: ' . $e->getMessage());
+            Log::error('Error showing survey result: '.$e->getMessage());
+
             return redirect('/entry')
                 ->withErrors(['message' => 'Terjadi kesalahan saat menampilkan hasil survey.']);
         }
@@ -1088,61 +1089,59 @@ class SurveyProcessController extends Controller
 
     /**
      * Execute database operation with queue-based locking mechanism
-     * 
-     * @param callable $callback
-     * @param string $lockKey
-     * @param int $maxWaitTime
+     *
      * @return mixed
      */
-    private function executeWithQueueLock(callable $callback, string $lockKey = null, int $maxWaitTime = 30)
+    private function executeWithQueueLock(callable $callback, ?string $lockKey = null, int $maxWaitTime = 30)
     {
         // Generate unique lock key based on response_id if not provided
         $responseId = session('response_id');
-        if (!$lockKey) {
+        if (! $lockKey) {
             $lockKey = "survey_submit_lock_{$responseId}";
         }
-        
+
         $lock = null;
         $startTime = time();
-        
+
         try {
             // Try to acquire lock with timeout
-            while (!$lock && (time() - $startTime) < $maxWaitTime) {
+            while (! $lock && (time() - $startTime) < $maxWaitTime) {
                 // Use SurveyLock model for database-based locking
                 $lock = SurveyLock::acquireLock($lockKey, $responseId, 'submit', $maxWaitTime);
-                
-                if (!$lock) {
+
+                if (! $lock) {
                     // Get queue position for user feedback
                     $queuePosition = SurveyLock::getQueuePosition($lockKey);
-                    
+
                     // Wait 500ms before trying again
                     usleep(500000);
                     Log::info("Waiting for lock: {$lockKey}, Queue position: {$queuePosition}");
                 }
             }
-            
-            if (!$lock) {
+
+            if (! $lock) {
                 Log::error("Failed to acquire lock within {$maxWaitTime} seconds: {$lockKey}");
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Sistem sedang sibuk, silakan coba lagi dalam beberapa saat.',
-                    'queue_full' => true
+                    'queue_full' => true,
                 ], 503);
             }
-            
+
             Log::info("Lock acquired: {$lockKey}, Lock ID: {$lock->id}");
-            
+
             // Execute the callback with acquired lock
             return $callback();
-            
+
         } catch (Exception $e) {
-            Log::error('Failed to execute with queue lock: ' . $e->getMessage());
-            
+            Log::error('Failed to execute with queue lock: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat menyimpan jawaban. Silakan coba lagi.'
+                'message' => 'Terjadi kesalahan saat menyimpan jawaban. Silakan coba lagi.',
             ], 500);
-            
+
         } finally {
             // Always release the lock
             if ($lock) {
@@ -1151,28 +1150,28 @@ class SurveyProcessController extends Controller
             }
         }
     }
-    
+
     /**
      * Get queue status for current response
-     * 
+     *
      * @return \Illuminate\Http\JsonResponse
      */
     public function getQueueStatus()
     {
         $responseId = session('response_id');
         $lockKey = "survey_submit_lock_{$responseId}";
-        
+
         // Clean up expired locks
         SurveyLock::cleanupExpiredLocks();
-        
+
         $queuePosition = SurveyLock::getQueuePosition($lockKey);
         $totalInQueue = SurveyLock::where('expires_at', '>', now())->count();
-        
+
         return response()->json([
             'success' => true,
             'queue_position' => $queuePosition,
             'total_in_queue' => $totalInQueue,
-            'estimated_wait_time' => $queuePosition * 5 // Estimate 5 seconds per operation
+            'estimated_wait_time' => $queuePosition * 5, // Estimate 5 seconds per operation
         ]);
     }
 }

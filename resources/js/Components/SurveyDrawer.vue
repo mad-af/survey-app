@@ -5,10 +5,10 @@
       <!-- This is where the main content would be, but we're using this as a component -->
     </div>
     <div class="drawer-side">
-      <label for="survey-drawer-toggle" aria-label="close sidebar" class="drawer-overlay z-40" @click="closeDrawer"></label>
-      <div class="bg-base-200 text-base-content min-h-full w-80 p-3 relative z-50 overflow-visible">
+      <label for="survey-drawer-toggle" aria-label="close sidebar" class="z-40 drawer-overlay" @click="closeDrawer"></label>
+      <div class="overflow-visible relative z-50 p-3 w-80 min-h-full bg-base-200 text-base-content">
         <!-- Drawer Header -->
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex justify-between items-center mb-4">
           <h3 class="text-base font-semibold">{{ title }}</h3>
           <button 
             class="btn btn-xs btn-circle btn-ghost" 
@@ -22,7 +22,7 @@
         <form @submit.prevent="handleSubmit" class="space-y-3">
           <!-- Title Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Title</span>
               <span class="label-text-alt text-error">*</span>
             </label>
@@ -30,7 +30,7 @@
               type="text" 
               v-model="form.title"
               placeholder="Enter survey title" 
-              class="input input-bordered input-sm w-full"
+              class="w-full input input-bordered input-sm"
               :class="{ 'input-error': errors.title }"
               required
             />
@@ -41,13 +41,13 @@
 
           <!-- Description Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Description</span>
             </label>
             <textarea 
               v-model="form.description"
               placeholder="Enter survey description" 
-              class="textarea textarea-bordered textarea-sm w-full h-20 resize-none"
+              class="w-full h-20 resize-none textarea textarea-bordered textarea-sm"
               :class="{ 'textarea-error': errors.description }"
             ></textarea>
             <label v-if="errors.description" class="label">
@@ -57,13 +57,13 @@
 
           <!-- Status Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Status</span>
               <span class="label-text-alt text-error">*</span>
             </label>
             <select 
               v-model="form.status"
-              class="select select-bordered select-sm w-full"
+              class="w-full select select-bordered select-sm"
               :class="{ 'select-error': errors.status }"
               required
             >
@@ -79,13 +79,13 @@
 
           <!-- Visibility Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Visibility</span>
               <span class="label-text-alt text-error">*</span>
             </label>
             <select 
               v-model="form.visibility"
-              class="select select-bordered select-sm w-full"
+              class="w-full select select-bordered select-sm"
               :class="{ 'select-error': errors.visibility }"
               required
             >
@@ -101,13 +101,13 @@
 
           <!-- Start Date Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Start Date</span>
             </label>
             <input 
               type="datetime-local" 
               v-model="form.start_date"
-              class="input input-bordered input-sm w-full"
+              class="w-full input input-bordered input-sm"
               :class="{ 'input-error': errors.start_date }"
             />
             <label v-if="errors.start_date" class="label">
@@ -117,13 +117,13 @@
 
           <!-- End Date Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">End Date</span>
             </label>
             <input 
               type="datetime-local" 
               v-model="form.end_date"
-              class="input input-bordered input-sm w-full"
+              class="w-full input input-bordered input-sm"
               :class="{ 'input-error': errors.end_date }"
             />
             <label v-if="errors.end_date" class="label">
@@ -135,7 +135,7 @@
           <div class="flex gap-2 pt-3">
             <button 
               type="button" 
-              class="btn btn-sm flex-1"
+              class="flex-1 btn btn-sm"
               @click="closeDrawer"
               :disabled="loading"
             >
@@ -143,7 +143,7 @@
             </button>
             <button 
               type="submit" 
-              class="btn btn-primary btn-sm flex-1"
+              class="flex-1 btn btn-primary btn-sm"
               :disabled="loading"
             >
               <span v-if="loading" class="loading loading-spinner loading-xs"></span>
