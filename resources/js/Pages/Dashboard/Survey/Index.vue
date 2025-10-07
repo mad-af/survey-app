@@ -36,6 +36,20 @@
     <!-- Edit Survey Drawer -->
     <SurveyDrawer :is-open="isEditSurveyDrawerOpen" :is-edit-mode="true" :survey-data="editingSurvey"
       title="Edit Survey" @close="closeEditSurveyDrawer" @success="handleSurveySuccess" />
+
+    <!-- Delete Confirmation Modal -->
+    <ConfirmationModal
+      ref="deleteModal"
+      modal-id="delete_survey_modal"
+      title="Hapus Survey"
+      :message="`Apakah Anda yakin ingin menghapus survey '${surveyToDelete?.title}'? Tindakan ini tidak dapat dibatalkan.`"
+      confirm-text="Hapus"
+      cancel-text="Batal"
+      confirm-button-type="error"
+      :loading="isLoading"
+      @confirm="confirmDeleteSurvey"
+      @cancel="cancelDeleteSurvey"
+    />
   </DashboardLayout>
 </template>
 
@@ -48,6 +62,7 @@ import PageHeader from '@/Components/PageHeader.vue'
 import FilterSearch from '@/Components/FilterSearch.vue'
 import DataTable from '@/Components/DataTable.vue'
 import SurveyDrawer from '@/Components/SurveyDrawer.vue'
+import ConfirmationModal from '@/Components/ConfirmationModal.vue'
 import {
   Plus,
   Eye,
@@ -90,6 +105,10 @@ const isEditSurveyDrawerOpen = ref(false)
 const editingSurvey = ref(null)
 const isLoading = ref(false)
 const surveys = ref([])
+
+// Delete modal state
+const deleteModal = ref(null)
+const surveyToDelete = ref(null)
 
 // Inject toast function from layout
 const showToast = inject('showToast', () => {
@@ -318,15 +337,28 @@ const editSurvey = (survey) => {
   isEditSurveyDrawerOpen.value = true
 }
 
-const deleteSurvey = async (survey) => {
-  if (confirm(`Are you sure you want to delete survey "${survey.title}"?`)) {
+const deleteSurvey = (survey) => {
+  // Set survey to delete and open modal
+  surveyToDelete.value = survey
+  deleteModal.value?.openModal()
+}
+
+// Modal event handlers
+const confirmDeleteSurvey = async () => {
+  if (surveyToDelete.value) {
     try {
-      await removeSurvey(survey.id)
+      await removeSurvey(surveyToDelete.value.id)
       // console.log('Survey deleted successfully')
     } catch (err) {
       console.error('Failed to delete survey:', err)
+    } finally {
+      surveyToDelete.value = null
     }
   }
+}
+
+const cancelDeleteSurvey = () => {
+  surveyToDelete.value = null
 }
 
 const openAddSurveyDrawer = () => {
