@@ -64,6 +64,30 @@
       :is-edit-mode="resultCategoryDrawer.isEditMode" :survey-id="currentSurveyId"
       title="Edit Result Category"
       @close="closeResultCategoryDrawer" @success="handleResultCategorySuccess" />
+
+    <!-- Delete Section Confirmation Modal -->
+    <ConfirmationModal
+      modal-id="delete-section-modal"
+      :title="`Delete Section`"
+      :message="`Are you sure you want to delete '${sectionToDelete?.title}'? This action cannot be undone.`"
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      confirm-button-type="error"
+      @confirm="confirmDeleteSection"
+      @cancel="cancelDeleteSection"
+    />
+
+    <!-- Delete Question Confirmation Modal -->
+    <ConfirmationModal
+      modal-id="delete-question-modal"
+      :title="`Delete Question`"
+      :message="`Are you sure you want to delete '${questionToDelete?.section?.title} - ${questionToDelete?.question?.text}'? This action cannot be undone.`"
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      confirm-button-type="error"
+      @confirm="confirmDeleteQuestion"
+      @cancel="cancelDeleteQuestion"
+    />
   </DashboardLayout>
 
   
@@ -81,6 +105,7 @@ import ManageSurveyResultCategoryCard from '@/Components/ManageSurveyResultCateg
 import SectionDrawer from '@/Components/SectionDrawer.vue'
 import QuestionDrawer from '@/Components/QuestionDrawer.vue'
 import ResultCategoryDrawer from '@/Components/ResultCategoryDrawer.vue'
+import ConfirmationModal from '@/Components/ConfirmationModal.vue'
 import { ListOrdered } from 'lucide-vue-next'
 
 // ===== PROPS & CONSTANTS =====
@@ -96,6 +121,10 @@ const currentSurveyId = ref(props.surveyId)
 // Data from API
 const surveySections = ref([])
 const resultCategoryCardRef = ref(null)
+
+// Delete Modal State
+const sectionToDelete = ref(null)
+const questionToDelete = ref(null)
 
 // ===== DRAWER STATE MANAGEMENT =====
 // Section Drawer State
@@ -213,24 +242,37 @@ const handleEditSection = (section) => {
 }
 
 const handleDeleteSection = async (section) => {
-  if (confirm(`Are you sure you want to delete "${section.title}"?`)) {
-    try {
-      await axios.delete(`/api/surveys/${currentSurveyId.value}/sections/${section.id}`)
+  sectionToDelete.value = section
+  document.getElementById('delete-section-modal').showModal()
+}
 
-      // Refresh sections list
-      await fetchSections()
+// Confirm delete section
+const confirmDeleteSection = async () => {
+  if (!sectionToDelete.value) return
 
-      // Refresh the result categories data
-      if (resultCategoryCardRef.value) {
-        await resultCategoryCardRef.value.fetchResultCategories()
-      }
+  try {
+    await axios.delete(`/api/surveys/${currentSurveyId.value}/sections/${sectionToDelete.value.id}`)
 
-      // console.log('Section deleted successfully')
-    } catch (error) {
-      console.error('Error deleting section:', error)
-      alert('Error deleting section. Please try again.')
+    // Refresh sections list
+    await fetchSections()
+
+    // Refresh the result categories data
+    if (resultCategoryCardRef.value) {
+      await resultCategoryCardRef.value.fetchResultCategories()
     }
+
+    // console.log('Section deleted successfully')
+  } catch (error) {
+    console.error('Error deleting section:', error)
+    alert('Error deleting section. Please try again.')
+  } finally {
+    sectionToDelete.value = null
   }
+}
+
+// Cancel delete section
+const cancelDeleteSection = () => {
+  sectionToDelete.value = null
 }
 
 // Question Event Handlers
@@ -243,19 +285,34 @@ const handleEditQuestion = (question, section) => {
 }
 
 const handleDeleteQuestion = async (question, section) => {
-  if (confirm(`Are you sure you want to delete "${question.text}"?`)) {
-    try {
-      await axios.delete(`/api/sections/${section.id}/questions/${question.id}`)
+  questionToDelete.value = { question, section }
+  document.getElementById('delete-question-modal').showModal()
+}
 
-      // Refresh sections list to get updated questions
-      await fetchSections()
+// Confirm delete question
+const confirmDeleteQuestion = async () => {
+  if (!questionToDelete.value) return
 
-      // console.log('Question deleted successfully')
-    } catch (error) {
-      console.error('Error deleting question:', error)
-      alert('Error deleting question. Please try again.')
-    }
+  const { question, section } = questionToDelete.value
+
+  try {
+    await axios.delete(`/api/sections/${section.id}/questions/${question.id}`)
+
+    // Refresh sections list to get updated questions
+    await fetchSections()
+
+    // console.log('Question deleted successfully')
+  } catch (error) {
+    console.error('Error deleting question:', error)
+    alert('Error deleting question. Please try again.')
+  } finally {
+    questionToDelete.value = null
   }
+}
+
+// Cancel delete question
+const cancelDeleteQuestion = () => {
+  questionToDelete.value = null
 }
 
 // ===== API METHODS =====
