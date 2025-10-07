@@ -1072,7 +1072,6 @@ class SurveyProcessController extends Controller
                 ],
                 'sections' => $sectionScores,
             ];
-            // dd($surveyResult);
 
             return Inertia::render('Survey/Result', [
                 'surveyCode' => $surveyCode,
