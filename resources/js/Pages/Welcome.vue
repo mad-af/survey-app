@@ -39,11 +39,14 @@
       
       <div class="navbar-end">
         <div class="flex gap-2 items-center">
+          <a href="/Manual%20Book%20KUSUKA.pdf" download="Manual Book KUSUKA.pdf" class="btn btn-sm btn-outline btn-primary">        
+            Unduh Manual Book
+          </a>
           <!-- <a href="/entry" class="gap-2 btn btn-sm btn-primary">
             <Play class="w-4 h-4" />
             Ikuti Survey
           </a> -->
-          <Link href="/login" class="gap-2 btn btn-sm btn-ghost">
+          <Link href="/login" class="gap-2 btn btn-sm">
             <LogIn class="w-4 h-4" />
             Login
           </Link>
@@ -252,7 +255,8 @@ import {
   BarChart3,
   Shield,
   LogIn,
-  Play
+  Play,
+  Download
 } from 'lucide-vue-next'
 import ThemeSelector from '@/Components/ThemeSelector.vue'
 
