@@ -35,6 +35,21 @@
     <!-- Edit User Drawer -->
     <UserDrawer :is-open="isEditUserDrawerOpen" :is-edit-mode="true" :user-data="editingUser" title="Edit User"
       @close="closeEditUserDrawer" @submit="handleUpdateUser" />
+
+    <!-- Delete Confirmation Modal -->
+    <ConfirmationModal
+      ref="deleteUserModal"
+      modal-id="delete_user_modal"
+      :title="`Delete User`"
+      :message="`Are you sure you want to delete '${userToDelete?.name}'? This action cannot be undone.`"
+      confirm-text="Delete"
+      cancel-text="Cancel"
+      confirm-button-type="error"
+      confirm-button-class="btn-error"
+      :loading="isLoading"
+      @confirm="confirmDeleteUser"
+      @cancel="cancelDeleteUser"
+    />
   </DashboardLayout>
 </template>
 
@@ -47,6 +62,7 @@ import PageHeader from '@/Components/PageHeader.vue'
 import FilterSearch from '@/Components/FilterSearch.vue'
 import DataTable from '@/Components/DataTable.vue'
 import UserDrawer from '@/Components/UserDrawer.vue'
+import ConfirmationModal from '@/Components/ConfirmationModal.vue'
 import {
   Users,
   Plus,
@@ -88,11 +104,11 @@ const isEditUserDrawerOpen = ref(false)
 const editingUser = ref(null)
 const isLoading = ref(false)
 const users = ref([])
+const deleteUserModal = ref(null)
+const userToDelete = ref(null)
 
 // Inject toast function from layout
-const showToast = inject('showToast', () => {
-  console.warn('showToast injection not available')
-})
+const showToast = inject('showToast', () => { })
 
 // Table configuration
 const tableColumns = ref([
@@ -280,15 +296,30 @@ const editUser = (user) => {
   isEditUserDrawerOpen.value = true
 }
 
-const deleteUser = async (user) => {
-  if (confirm(`Are you sure you want to delete user ${user.name}?`)) {
-    try {
-      await removeUser(user.id)
-      // console.log('User deleted successfully')
-    } catch (err) {
-      console.error('Failed to delete user:', err)
-    }
+const deleteUser = (user) => {
+  userToDelete.value = user
+  // Open modal via ref for consistency with other pages
+  deleteUserModal.value?.openModal()
+}
+
+const confirmDeleteUser = async () => {
+  if (!userToDelete.value) return
+
+  try {
+    await removeUser(userToDelete.value.id)
+    showToast('User deleted successfully!', 'success')
+    // Success toast already handled inside removeUser
+  } catch (err) {
+    // Error toast already handled inside removeUser
+    console.error('Failed to delete user:', err)
+    showToast('Failed to delete user!', 'error')
+  } finally {
+    userToDelete.value = null
   }
+}
+
+const cancelDeleteUser = () => {
+  userToDelete.value = null
 }
 
 const openAddUserDrawer = () => {

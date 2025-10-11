@@ -76,6 +76,7 @@
       confirm-text="Delete"
       cancel-text="Cancel"
       confirm-button-type="error"
+      confirm-button-class="btn-error"
       @confirm="confirmDeleteSection"
       @cancel="cancelDeleteSection"
     />
@@ -88,6 +89,7 @@
       confirm-text="Delete"
       cancel-text="Cancel"
       confirm-button-type="error"
+      confirm-button-class="btn-error"
       @confirm="confirmDeleteQuestion"
       @cancel="cancelDeleteQuestion"
     />
@@ -97,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, inject } from 'vue'
 import { Head, router } from '@inertiajs/vue3'
 import axios from 'axios'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
@@ -150,6 +152,11 @@ const resultCategoryDrawer = reactive({
   isOpen: false,
   isEditMode: false,
   categoryData: null
+})
+
+// Toast injection
+const showToast = inject('showToast', () => {
+  console.warn('showToast not available')
 })
 
 // ===== DRAWER METHODS =====
@@ -264,10 +271,13 @@ const confirmDeleteSection = async () => {
       await resultCategoryCardRef.value.fetchResultCategories()
     }
 
-    // console.log('Section deleted successfully')
+    // Success toast
+    showToast('Section deleted successfully', 'success')
   } catch (error) {
     console.error('Error deleting section:', error)
-    alert('Error deleting section. Please try again.')
+    // Error toast
+    const errorMessage = error.response?.data?.message || error.message || 'Error deleting section. Please try again.'
+    showToast(errorMessage, 'error')
   } finally {
     sectionToDelete.value = null
   }
@@ -304,10 +314,13 @@ const confirmDeleteQuestion = async () => {
     // Refresh sections list to get updated questions
     await fetchSections()
 
-    // console.log('Question deleted successfully')
+    // Success toast
+    showToast('Question deleted successfully', 'success')
   } catch (error) {
     console.error('Error deleting question:', error)
-    alert('Error deleting question. Please try again.')
+    // Error toast
+    const errorMessage = error.response?.data?.message || error.message || 'Error deleting question. Please try again.'
+    showToast(errorMessage, 'error')
   } finally {
     questionToDelete.value = null
   }

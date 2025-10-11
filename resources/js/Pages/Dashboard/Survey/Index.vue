@@ -43,7 +43,7 @@
     <!-- Delete Confirmation Modal -->
     <ConfirmationModal ref="deleteModal" modal-id="delete_survey_modal" title="Hapus Survey"
       :message="`Apakah Anda yakin ingin menghapus survey '${surveyToDelete?.title}'? Tindakan ini tidak dapat dibatalkan.`"
-      confirm-text="Hapus" cancel-text="Batal" confirm-button-type="error" :loading="isLoading"
+      confirm-text="Hapus" cancel-text="Batal" confirm-button-type="error" :loading="isLoading" confirm-button-class="btn-error"
       @confirm="confirmDeleteSurvey" @cancel="cancelDeleteSurvey" />
   </DashboardLayout>
 </template>
@@ -237,6 +237,7 @@ const filterOptions = ref([
   }
 ])
 
+
 // API Functions
 const fetchSurveys = async () => {
   try {
@@ -344,8 +345,10 @@ const confirmDeleteSurvey = async () => {
     try {
       await removeSurvey(surveyToDelete.value.id)
       // console.log('Survey deleted successfully')
+      showToast('Survey deleted successfully', 'success')
     } catch (err) {
       console.error('Failed to delete survey:', err)
+      showToast('Failed to delete survey', 'error')
     } finally {
       surveyToDelete.value = null
     }
