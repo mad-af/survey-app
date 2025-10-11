@@ -36,7 +36,7 @@
           <div class="flex space-x-4 min-w-max">
             <div v-for="(section, index) in sections" :key="section.id"
               :ref="el => { if (currentSectionId === section.id) activeCardRef = el }"
-              class="flex-shrink-0 transition-all cursor-not-allowed opacity-75">
+              class="flex-shrink-0 opacity-75 transition-all cursor-not-allowed">
               <div class="border-2 shadow-md transition-all duration-400 card bg-base-100" :class="{
                 'border-primary bg-primary/5': currentSectionId === section.id,
                 'border-base-300': currentSectionId !== section.id

@@ -5,10 +5,10 @@
       <!-- This is where the main content would be, but we're using this as a component -->
     </div>
     <div class="drawer-side">
-      <label for="user-drawer-toggle" aria-label="close sidebar" class="drawer-overlay z-40" @click="closeDrawer"></label>
-      <div class="bg-base-200 text-base-content min-h-full w-72 p-3 relative z-50 overflow-y-auto">
+      <label for="user-drawer-toggle" aria-label="close sidebar" class="z-40 drawer-overlay" @click="closeDrawer"></label>
+      <div class="overflow-y-auto relative z-50 p-3 w-72 min-h-full bg-base-200 text-base-content">
         <!-- Drawer Header -->
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex justify-between items-center mb-4">
           <h3 class="text-base font-semibold">{{ title }}</h3>
           <button 
             class="btn btn-xs btn-circle btn-ghost" 
@@ -22,7 +22,7 @@
         <form @submit.prevent="handleSubmit" class="space-y-3">
           <!-- Name Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Name</span>
               <span class="label-text-alt text-error">*</span>
             </label>
@@ -30,7 +30,7 @@
               type="text" 
               v-model="form.name"
               placeholder="Enter full name" 
-              class="input input-bordered input-sm w-full"
+              class="w-full input input-bordered input-sm"
               :class="{ 'input-error': errors.name }"
               required
             />
@@ -41,7 +41,7 @@
 
           <!-- Email Field -->
           <div class="form-control">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Email</span>
               <span class="label-text-alt text-error">*</span>
             </label>
@@ -49,7 +49,7 @@
               type="email" 
               v-model="form.email"
               placeholder="Enter email address" 
-              class="input input-bordered input-sm w-full"
+              class="w-full input input-bordered input-sm"
               :class="{ 'input-error': errors.email }"
               required
             />
@@ -62,7 +62,7 @@
 
           <!-- Role Field -->
           <div class="form-control relative z-[60]">
-            <label class="label text-sm">
+            <label class="text-sm label">
               <span class="label-text">Role</span>
               <span class="label-text-alt text-error">*</span>
             </label>
@@ -85,7 +85,7 @@
           <div class="flex gap-2 pt-3">
             <button 
               type="button" 
-              class="btn btn-sm flex-1"
+              class="flex-1 btn btn-sm"
               @click="closeDrawer"
               :disabled="loading"
             >
@@ -93,7 +93,7 @@
             </button>
             <button 
               type="submit" 
-              class="btn btn-primary btn-sm flex-1"
+              class="flex-1 btn btn-primary btn-sm"
               :disabled="loading"
             >
               <span v-if="loading" class="loading loading-spinner loading-xs"></span>
@@ -107,7 +107,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, inject } from 'vue'
 import { X } from 'lucide-vue-next'
 
 // Props
@@ -132,6 +132,9 @@ const props = defineProps({
 
 // Emits
 const emit = defineEmits(['close', 'submit'])
+
+// Toast notification
+const showToast = inject('showToast', () => { console.warn('showToast injection not available') })
 
 // Reactive data
 const loading = ref(false)
@@ -197,6 +200,11 @@ const validateForm = () => {
     isValid = false
   }
   
+  // Show toast error if validation fails
+  if (!isValid) {
+    showToast('Mohon perbaiki input yang tidak valid', 'error')
+  }
+  
   return isValid
 }
 
@@ -216,6 +224,7 @@ const handleSubmit = async () => {
       submitData.id = props.userData.id
     }
     
+    showToast('Data pengguna berhasil disimpan', 'success')
     // Emit the form data to parent component
     emit('submit', submitData)
     
@@ -223,6 +232,8 @@ const handleSubmit = async () => {
     resetForm()
   } catch (error) {
     console.error('Error submitting user:', error)
+    const errorMessage = error?.response?.data?.message || error?.message || 'Gagal mengirim data pengguna'
+    showToast(errorMessage, 'error')
   } finally {
     loading.value = false
   }

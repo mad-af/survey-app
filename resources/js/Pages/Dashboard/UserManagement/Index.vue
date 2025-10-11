@@ -1,6 +1,6 @@
 <template>
   <Head title="User Management" />
-  <DashboardLayout :pageTitle="'User Management'">
+  <DashboardLayout>
     <div class="space-y-6">
       <!-- Header Section -->
       <PageHeader title="User Management" description="Manage system users and their permissions">

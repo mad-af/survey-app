@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 
 // Props
 const props = defineProps({
@@ -108,11 +108,27 @@ const props = defineProps({
   disabled: {
     type: Boolean,
     default: false
+  },
+  
+  // Toast control props
+  // Show success toast immediately on confirm click
+  successOnConfirm: {
+    type: Boolean,
+    default: true
+  },
+  successMessage: {
+    type: String,
+    default: 'Aksi berhasil'
   }
 })
 
 // Emits
 const emit = defineEmits(['confirm', 'cancel', 'close'])
+
+// Toast notification
+const showToast = inject('showToast', () => { })
+
+// NOTE: Toast control props are merged into the main props above
 
 // Computed classes for buttons
 const confirmButtonClass = computed(() => {
@@ -165,6 +181,10 @@ const closeModal = () => {
 const handleConfirm = () => {
   if (!props.disabled && !props.loading) {
     emit('confirm')
+    // Show success toast (configurable)
+    if (props.successOnConfirm) {
+      showToast(props.successMessage, 'success')
+    }
     closeModal()
   }
 }

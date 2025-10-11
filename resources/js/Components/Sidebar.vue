@@ -5,9 +5,7 @@
         <div class="flex flex-col gap-2 justify-center items-center text-center">
           <img src="/beraksi.webp" alt="AKUSUKA Logo" class="h-6 lg:h-8 lg:w-32" />
           <!-- <div class="text-start"> -->
-            <!-- <span class="block text-sm font-bold tracking-wide text-base-content">AKUSUKA</span> -->
-            <!-- <span class="block text-xs text-base-content/80">Aplikasi kuisioner dan survey kabupaten</span> -->
-            <!-- <span class="block mt-1 text-xs font-medium text-primary">Partisipasi Mudah Manfaat Nyata</span> -->
+            
           <!-- </div> -->
         </div>
       </div>
