@@ -1,5 +1,5 @@
 <template>
-  <Head title="AKUSUKA - Aplikasi kuisioner dan survey kabupaten" />
+  <Head title="Aplikasi kuisioner dan survey kabupaten" />
   
   <div class="min-h-screen bg-base-100">
     <!-- Navigation Header -->

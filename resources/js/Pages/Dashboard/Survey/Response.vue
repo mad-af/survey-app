@@ -1,4 +1,5 @@
 <template>
+  <Head title="Survey Responses" />
   <DashboardLayout 
     :pageTitle="'Survey Responses'"
   >
@@ -127,6 +128,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { Head } from '@inertiajs/vue3'
 import { Eye, RefreshCw, FileText, X, BarChart3, Download } from 'lucide-vue-next'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'

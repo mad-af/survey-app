@@ -1,4 +1,5 @@
 <template>
+  <Head title="User Management" />
   <DashboardLayout :pageTitle="'User Management'">
     <div class="space-y-6">
       <!-- Header Section -->
@@ -39,6 +40,7 @@
 
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
+import { Head } from '@inertiajs/vue3'
 import axios from 'axios'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'

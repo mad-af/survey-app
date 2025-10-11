@@ -1,4 +1,7 @@
 <template>
+
+  <Head title="Survey Management" />
+
   <DashboardLayout :pageTitle="'Survey Management'">
     <div class="space-y-6">
       <!-- Header Section -->
@@ -38,24 +41,16 @@
       title="Edit Survey" @close="closeEditSurveyDrawer" @success="handleSurveySuccess" />
 
     <!-- Delete Confirmation Modal -->
-    <ConfirmationModal
-      ref="deleteModal"
-      modal-id="delete_survey_modal"
-      title="Hapus Survey"
+    <ConfirmationModal ref="deleteModal" modal-id="delete_survey_modal" title="Hapus Survey"
       :message="`Apakah Anda yakin ingin menghapus survey '${surveyToDelete?.title}'? Tindakan ini tidak dapat dibatalkan.`"
-      confirm-text="Hapus"
-      cancel-text="Batal"
-      confirm-button-type="error"
-      :loading="isLoading"
-      @confirm="confirmDeleteSurvey"
-      @cancel="cancelDeleteSurvey"
-    />
+      confirm-text="Hapus" cancel-text="Batal" confirm-button-type="error" :loading="isLoading"
+      @confirm="confirmDeleteSurvey" @cancel="cancelDeleteSurvey" />
   </DashboardLayout>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
-import { router } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
 import axios from 'axios'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'

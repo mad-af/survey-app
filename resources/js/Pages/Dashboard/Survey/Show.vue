@@ -1,4 +1,5 @@
 <template>
+  <Head title="Survey Details" />
   <DashboardLayout :pageTitle="'Survey Management'">
     <div class="space-y-6">
       <!-- Header Section -->
@@ -58,7 +59,7 @@
 <script setup>
 import { ref, reactive, onMounted, inject } from 'vue'
 import axios from 'axios'
-import { router } from '@inertiajs/vue3'
+import { Head, router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
 import SurveyDetailCard from '@/Components/SurveyDetailCard.vue'
