@@ -55,7 +55,7 @@
 
 <script setup>
 import { ref, computed, onMounted, inject } from 'vue'
-import { Head } from '@inertiajs/vue3'
+import { Head, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import PageHeader from '@/Components/PageHeader.vue'
@@ -110,6 +110,10 @@ const userToDelete = ref(null)
 // Inject toast function from layout
 const showToast = inject('showToast', () => { })
 
+// Auth user from Inertia page props
+const page = usePage()
+const authUser = computed(() => page.props?.auth?.user)
+
 // Table configuration
 const tableColumns = ref([
   {
@@ -149,7 +153,7 @@ const tableActions = ref([
     label: 'Delete',
     tooltip: 'Delete User',
     class: 'text-error',
-    visible: true
+    visible: (item) => item?.id !== authUser.value?.id
   }
 ])
 

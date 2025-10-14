@@ -56,7 +56,7 @@
                 <td v-if="actions.length > 0">
                   <!-- Single action - display directly -->
                   <button 
-                    v-if="actions.length === 1"
+                    v-if="actions.length === 1 && getActionVisible(actions[0], item)"
                     class="p-1 h-6 btn btn-ghost btn-xs min-h-6" 
                     @click="$emit(actions[0].event, item)"
                     :class="actions[0].class || ''"
@@ -80,7 +80,7 @@
                       :id="`popover-${getItemId(item)}`" 
                       :style="`position-anchor: --anchor-${getItemId(item)}`"
                     >
-                      <li v-for="action in actions" :key="action.name" v-show="action.visible !== false">
+                      <li v-for="action in actions" :key="action.name" v-show="getActionVisible(action, item)">
                         <a @click="$emit(action.event, item); $event.target.closest('[popover]').hidePopover()" :class="`text-xs flex items-center gap-2 ${action.class || ''}`">
                           <component :is="action.icon" :size="12" v-if="action.icon" />
                           {{ action.label }}
@@ -264,6 +264,19 @@ const formatDate = (dateString) => {
     month: 'short',
     day: 'numeric'
   })
+}
+
+const getActionVisible = (action, item) => {
+  if (typeof action.visible === 'function') {
+    try {
+      return !!action.visible(item)
+    } catch (e) {
+      console.warn('Action visible function error:', e)
+      return true
+    }
+  }
+  // default show unless explicitly false
+  return action.visible !== false
 }
 
 const copyToClipboard = async (text) => {

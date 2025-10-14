@@ -39,7 +39,7 @@
       
       <div class="navbar-end">
         <div class="flex gap-2 items-center">
-          <a href="/Manual%20Book%20KUSUKA.pdf" download="Manual Book KUSUKA.pdf" class="btn btn-sm btn-outline btn-primary">        
+          <a href="/Manual%20Book%20AKUSUKA.pdf" download="Manual Book AKUSUKA.pdf" class="btn btn-sm btn-outline btn-primary">        
             Unduh Manual Book
           </a>
           <!-- <a href="/entry" class="gap-2 btn btn-sm btn-primary">
