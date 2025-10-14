@@ -83,19 +83,6 @@
        </button>
      </form>
 
-     <!-- Info Card -->
-     <div class="mt-6 alert alert-info">
-       <Info class="w-5 h-5" />
-       <div>
-         <h3 class="font-bold">Akun Demo</h3>
-         <div class="mt-1 text-xs">
-           <strong>Email:</strong> admin@survey.com<br>
-           <strong>Password:</strong> password<br>
-           <span class="block mt-1 text-info-content/70">Gunakan akun demo di atas untuk mencoba website ini.</span>
-         </div>
-       </div>
-     </div>
-
      <!-- Help Section -->
      <div class="mt-6 text-center">
        <p class="text-sm text-base-content/70">
