@@ -231,7 +231,6 @@ const filterOptions = ref([
     placeholder: 'All Visibility',
     options: [
       { value: 'private', label: 'Private' },
-      { value: 'link', label: 'Link Only' },
       { value: 'public', label: 'Public' }
     ]
   }
