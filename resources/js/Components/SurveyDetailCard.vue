@@ -95,7 +95,7 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+import { defineProps, inject } from 'vue'
 import { 
   FileText, 
   Copy 
@@ -107,6 +107,9 @@ const props = defineProps({
     default: null
   }
 })
+
+// Toast
+const showToast = inject('showToast', () => {})
 
 const getStatusBadgeClass = (status) => {
   const baseClass = 'badge'
@@ -156,9 +159,10 @@ const formatDate = (dateString) => {
 const copyToClipboard = async (text) => {
   try {
     await navigator.clipboard.writeText(text)
-    // You can add a toast notification here
+    showToast('Tersalin ke clipboard', 'success')
   } catch (err) {
     console.error('Failed to copy text: ', err)
+    showToast('Gagal menyalin teks ke clipboard', 'error')
   }
 }
 </script>

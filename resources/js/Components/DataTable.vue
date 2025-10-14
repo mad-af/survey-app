@@ -123,7 +123,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, inject } from 'vue'
 import { ChevronLeft, ChevronRight, EllipsisVertical, Copy } from 'lucide-vue-next'
 import Avatar from './Avatar.vue'
 
@@ -178,6 +178,9 @@ const emit = defineEmits([
   'edit-user',
   'delete-user'
 ])
+
+// Toast notification
+const showToast = inject('showToast', () => { })
 
 // Reactive data
 const currentPage = ref(1)
@@ -283,9 +286,11 @@ const copyToClipboard = async (text) => {
   try {
     await navigator.clipboard.writeText(text)
     emit('copy-success', text)
+    showToast('Tersalin ke clipboard', 'success')
   } catch (err) {
     console.error('Failed to copy: ', err)
     emit('copy-error', text)
+    showToast('Gagal menyalin ke clipboard', 'error')
   }
 }
 
