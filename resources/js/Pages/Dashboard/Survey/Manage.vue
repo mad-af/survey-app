@@ -156,7 +156,6 @@ const resultCategoryDrawer = reactive({
 
 // Toast injection
 const showToast = inject('showToast', () => {
-  console.warn('showToast not available')
 })
 
 // ===== DRAWER METHODS =====

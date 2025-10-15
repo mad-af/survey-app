@@ -107,7 +107,6 @@ const surveyToDelete = ref(null)
 
 // Inject toast function from layout
 const showToast = inject('showToast', () => {
-  console.warn('showToast not available')
 })
 
 // Copy event handlers

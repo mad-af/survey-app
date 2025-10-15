@@ -91,7 +91,6 @@
             >
               <option value="">Select visibility</option>
               <option value="private">Private</option>
-              <option value="link">Link</option>
               <option value="public">Public</option>
             </select>
             <label v-if="errors.visibility" class="label">
